@@ -1,0 +1,16 @@
+# AUTO-RELEASE — publishes the izumi workspace crates to crates.io on merge to
+# main. Uses the per-language Rust *workspace* reusable DIRECTLY (not the
+# polymorphic auto-release.yml@main shim, which startup_failures per the org
+# CLAUDE.md 2026-06-26 known issue). Multi-crate dep-order publish is handled by
+# rust-auto-release.yml (izumi → izumi-sources/izumi-config → izumi-lisp →
+# izumi-board).
+name: auto-release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  release:
+    uses: pleme-io/substrate/.github/workflows/rust-auto-release.yml@main
+    secrets: inherit

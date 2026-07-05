@@ -1,0 +1,14 @@
+{
+  "id": 5534030949349014540,
+  "source": "jira-sprint",
+  "title": "ASM-1234 fix the parser",
+  "detail": "sprint 42 · in progress",
+  "urgency": "normal",
+  "spawn": {
+    "cwd": "/code/asm",
+    "name": "asm-1234",
+    "initial_command": null
+  },
+  "score": 500,
+  "corr": "jira:ASM-1234"
+}

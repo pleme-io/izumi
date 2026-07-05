@@ -1,0 +1,30 @@
+[package]
+name = "izumi-board"
+version = "0.1.0"
+description = "Headless fresh-source board daemon/CLI — consumer #2 of the izumi substrate (mado's Ctrl-S picker is #1)"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+izumi = { path = "../izumi", version = "0.1.0" }
+izumi-sources = { path = "../izumi-sources", version = "0.1.0" }
+izumi-config = { path = "../izumi-config", version = "0.1.0" }
+shikumi = "0.1"
+clap = { version = "4", features = ["derive"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+# `net` + `io-util` on top of the workspace features (rt-multi-thread, time,
+# sync): the control socket is a tokio `UnixListener` serving newline-delimited
+# JSON.
+tokio = { workspace = true, features = ["net", "io-util"] }
+tracing = { workspace = true }
+dirs = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "net", "io-util", "test-util"] }
+
+[lints]
+workspace = true

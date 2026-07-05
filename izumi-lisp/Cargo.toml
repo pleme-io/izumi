@@ -1,0 +1,30 @@
+[package]
+name = "izumi-lisp"
+version = "0.1.0"
+description = "tatara-lisp authoring surface for izumi boards — (defizumisource …) + (defizumiboard …) typed forms compiled onto izumi-config"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+# Direct requirement, not transitive convenience: the pinned TataraDomain
+# derive (0.2.4) emits `::serde_json::from_value` INTO this crate for the
+# Tier-1 serde-bridged field (`params`), so serde_json must resolve at
+# this crate's root.
+serde_json = { workspace = true }
+tatara-lisp = "0.2"
+# Load-bearing pin. crates.io tatara-lisp tops out at 0.2.4, whose domain
+# module ships `parse_kwargs` + the `sexp_to_json` bridge. The derive crate
+# kept auto-releasing past it (0.2.67…0.2.149) and now emits calls to
+# `parse_kwargs_strict` / `extract_via_serde`, which exist only in the
+# unpublished tatara git HEAD — letting the derive float to ^0.2.2's newest
+# match breaks every `#[derive(TataraDomain)]` expansion with E0425. Pinning
+# `=0.2.4` keeps the emitted code inside the published 0.2.4 API. Drop the
+# pin when a tatara-lisp ≥0.2.67 lands on crates.io.
+tatara-lisp-derive = "=0.2.4"
+izumi-config = { path = "../izumi-config", version = "0.1.0" }
+
+[lints]
+workspace = true

@@ -1,0 +1,23 @@
+[workspace]
+resolver = "3"
+members = ["izumi", "izumi-sources", "izumi-config", "izumi-lisp", "izumi-board"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+authors = ["pleme-io"]
+repository = "https://github.com/pleme-io/izumi"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+tokio = { version = "1", features = ["rt-multi-thread", "time", "sync"] }
+blake3 = "1"
+parking_lot = "0.12"
+tracing = "0.1"
+dirs = "5"
+proptest = "1"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
