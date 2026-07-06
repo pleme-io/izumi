@@ -177,22 +177,127 @@ pub struct RealEnvironment {
     code_root: PathBuf,
     home: PathBuf,
     pacer: crate::pace::HostPacer,
+    /// The session-augmented `PATH` every child gets (see [`augmented_path`]).
+    /// A GUI/Dock-launched consumer inherits the bare system `PATH`
+    /// (`/usr/bin:/bin:/usr/sbin:/sbin`), where `gh`/`kubectl`/`tend`/… do
+    /// not resolve — the same launch mode the `GH_TOKEN` secret fallback in
+    /// the sources exists for. Discovered once; a per-[`Cmd`] `PATH` env
+    /// still wins.
+    path: String,
+    /// The kubeconfig chain to hand children when the process env carries no
+    /// `KUBECONFIG` (again the GUI-launch case). Follows the workspace
+    /// convention `~/.kube/configs/* : ~/.kube/config : ~/.kube/credentials`.
+    kubeconfig: Option<String>,
 }
 
 impl RealEnvironment {
     /// Discover roots from the environment (`PLEME_CODE_ROOT` override, else
-    /// `~/code`).
+    /// `~/code`) plus the session env a GUI-launched process lacks (`PATH`
+    /// augmentation, kubeconfig chain).
     #[must_use]
     pub fn discover() -> Self {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"));
         let code_root = std::env::var_os("PLEME_CODE_ROOT")
             .map_or_else(|| home.join("code"), PathBuf::from);
+        let current_path = std::env::var("PATH").ok();
+        let path = augmented_path(current_path.as_deref(), &home);
+        let kubeconfig = if std::env::var_os("KUBECONFIG").is_some() {
+            // The process already carries a chain — children inherit it.
+            None
+        } else {
+            kubeconfig_chain(&kube_config_entries(&home.join(".kube")))
+        };
         Self {
             code_root,
             home,
             pacer: crate::pace::HostPacer::gentle(),
+            path,
+            kubeconfig,
         }
     }
+}
+
+/// Well-known bin dirs a login shell puts on `PATH` but a Dock/GUI launch
+/// does not (nix profiles, homebrew, the classic locals). Appended AFTER the
+/// inherited `PATH` so an operator's own ordering always wins; harmless when
+/// a dir is absent (resolution just skips it).
+fn session_path_candidates(home: &Path) -> Vec<PathBuf> {
+    let mut v = vec![home.join(".nix-profile/bin")];
+    if let Some(user) = home.file_name() {
+        v.push(
+            PathBuf::from("/etc/profiles/per-user")
+                .join(user)
+                .join("bin"),
+        );
+    }
+    v.extend(
+        [
+            "/run/current-system/sw/bin",
+            "/nix/var/nix/profiles/default/bin",
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+            "/usr/sbin",
+            "/sbin",
+        ]
+        .map(PathBuf::from),
+    );
+    v
+}
+
+/// Compose the child `PATH`: the inherited entries first (order preserved),
+/// then every [`session_path_candidates`] dir not already present. Pure —
+/// unit-tested without touching the process env.
+fn augmented_path(current: Option<&str>, home: &Path) -> String {
+    let mut entries: Vec<String> = current
+        .unwrap_or_default()
+        .split(':')
+        .filter(|e| !e.is_empty())
+        .map(str::to_owned)
+        .collect();
+    for cand in session_path_candidates(home) {
+        let s = cand.to_string_lossy().into_owned();
+        if !entries.contains(&s) {
+            entries.push(s);
+        }
+    }
+    entries.join(":")
+}
+
+/// The existing kubeconfig files under `~/.kube`, workspace-convention
+/// order: `configs/*` (sorted) then `config` then `credentials`. The impure
+/// half feeding [`kubeconfig_chain`].
+fn kube_config_entries(kube: &Path) -> Vec<PathBuf> {
+    let mut v: Vec<PathBuf> = std::fs::read_dir(kube.join("configs"))
+        .into_iter()
+        .flatten()
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.is_file())
+        .collect();
+    v.sort();
+    for tail in ["config", "credentials"] {
+        let p = kube.join(tail);
+        if p.exists() {
+            v.push(p);
+        }
+    }
+    v
+}
+
+/// Compose the `KUBECONFIG` colon-chain from the discovered entries; `None`
+/// when nothing was found (children then fall back to kubectl's own
+/// default). Pure over its input.
+fn kubeconfig_chain(entries: &[PathBuf]) -> Option<String> {
+    if entries.is_empty() {
+        return None;
+    }
+    let parts: Vec<String> = entries
+        .iter()
+        .map(|p| p.to_string_lossy().into_owned())
+        .collect();
+    Some(parts.join(":"))
 }
 
 /// Wall-clock cap on a watcher subprocess — mirrors the `curl --max-time 10`
@@ -213,7 +318,16 @@ impl Environment for RealEnvironment {
             tracing::debug!("skipping gh call — GitHub API cooling down");
             return None;
         }
-        let mut child = Command::new(cmd.program())
+        // Session env the child needs even under a GUI/Dock launch: the
+        // augmented PATH (program resolution) and — when the process itself
+        // has none — the conventional KUBECONFIG chain. Applied BEFORE the
+        // Cmd's own envs so a per-invocation override always wins.
+        let mut builder = Command::new(cmd.program());
+        builder.env("PATH", &self.path);
+        if let Some(kc) = &self.kubeconfig {
+            builder.env("KUBECONFIG", kc);
+        }
+        let mut child = builder
             .args(cmd.args_slice())
             .envs(cmd.envs_slice().iter().map(|(k, v)| (k.as_str(), v.as_str())))
             .stdin(Stdio::null())
@@ -458,6 +572,54 @@ mod tests {
         let r = HttpReq::new("https://x").bearer("tok");
         assert_eq!(r.headers()[0].0, "Authorization");
         assert_eq!(r.headers()[0].1, "Bearer tok");
+    }
+
+    #[test]
+    fn augmented_path_keeps_operator_order_and_appends_session_dirs() {
+        let home = Path::new("/home/op");
+        let p = augmented_path(Some("/custom/bin:/usr/bin"), home);
+        let entries: Vec<&str> = p.split(':').collect();
+        // Inherited entries first, order preserved.
+        assert_eq!(entries[0], "/custom/bin");
+        assert_eq!(entries[1], "/usr/bin");
+        // Session dirs appended (nix profiles, per-user profile, brew, base).
+        assert!(entries.contains(&"/home/op/.nix-profile/bin"));
+        assert!(entries.contains(&"/etc/profiles/per-user/op/bin"));
+        assert!(entries.contains(&"/run/current-system/sw/bin"));
+        assert!(entries.contains(&"/opt/homebrew/bin"));
+        assert!(entries.contains(&"/bin"));
+        // No duplicates — /usr/bin was inherited, not re-appended.
+        assert_eq!(entries.iter().filter(|e| **e == "/usr/bin").count(), 1);
+    }
+
+    #[test]
+    fn augmented_path_from_the_bare_gui_env_still_resolves_everything() {
+        // The Dock-launch case: bare system PATH in, nix profiles appended.
+        let p = augmented_path(
+            Some("/usr/bin:/bin:/usr/sbin:/sbin"),
+            Path::new("/Users/op"),
+        );
+        assert!(p.starts_with("/usr/bin:/bin:/usr/sbin:/sbin"));
+        assert!(p.contains("/etc/profiles/per-user/op/bin"));
+        assert!(p.contains("/run/current-system/sw/bin"));
+        // And a missing PATH entirely is safe.
+        let bare = augmented_path(None, Path::new("/Users/op"));
+        assert!(bare.contains("/usr/bin"));
+        assert!(!bare.starts_with(':'));
+    }
+
+    #[test]
+    fn kubeconfig_chain_joins_in_order_and_is_none_when_empty() {
+        assert_eq!(kubeconfig_chain(&[]), None);
+        let chain = kubeconfig_chain(&[
+            PathBuf::from("/h/.kube/configs/rio"),
+            PathBuf::from("/h/.kube/config"),
+            PathBuf::from("/h/.kube/credentials"),
+        ]);
+        assert_eq!(
+            chain.as_deref(),
+            Some("/h/.kube/configs/rio:/h/.kube/config:/h/.kube/credentials")
+        );
     }
 
     #[test]

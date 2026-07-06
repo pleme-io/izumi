@@ -191,10 +191,10 @@ const OPSGENIE: &str = r#"{
     ]
 }"#;
 
-const KURAGE: &str = r#"[
-    {"id":"a1","name":"refactor the suggest registry","status":"RUNNING","repository":"pleme-io/mado"},
-    {"id":"a3","name":"draft docs","status":"QUEUED","repository":"standalone"}
-]"#;
+const KURAGE: &str = r#"{"agents":[
+    {"id":"a1","name":"refactor the suggest registry","status":"RUNNING","source":{"repository":"github.com/pleme-io/mado"}},
+    {"id":"a3","name":"draft docs","status":"CREATING","source":{"repository":"standalone"}}
+]}"#;
 
 const AWS: &str = r#"{
     "events": [
@@ -283,11 +283,12 @@ fn matrix() -> Vec<MatrixRow> {
             env: || {
                 MockEnvironment::new()
                     .roots("/code", "/home/op")
+                    .path("Cargo.toml")
                     .cmd("cargo check --message-format json", CARGO)
             },
             cfg: SourceConfig::for_kind,
             min_items: 1,
-            unconfigured: Some(SourceStatus::Error),
+            unconfigured: Some(SourceStatus::Unconfigured),
         },
         MatrixRow {
             slug: "todo-backlog",
@@ -542,7 +543,7 @@ fn matrix() -> Vec<MatrixRow> {
                 MockEnvironment::new()
                     .roots("/code", "/home/op")
                     .path("/code/github/pleme-io/mado")
-                    .cmd("kurage list-agents --json", KURAGE)
+                    .cmd("kurage list --output json", KURAGE)
             },
             cfg: SourceConfig::for_kind,
             min_items: 2,

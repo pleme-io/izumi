@@ -3,12 +3,17 @@
 //! own session. Enter drops you into the agent's repo so you can review or follow
 //! up on its work.
 //!
-//! Live wiring: `kurage list-agents --json` → an array of `{id, name, status,
-//! repository}`. An agent whose status is not terminal (FINISHED / COMPLETED /
-//! STOPPED) becomes an item landing in that agent's working copy.
-//! Honesty contract: only an OBSERVED run is `Fetched` (garbage JSON parses
-//! to empty — the upstream WAS observed); `kurage` missing/failing is
-//! `Unavailable(Error)` — a CLI blip never reads as "no agents in flight".
+//! Live wiring: `kurage list --output json` → `{agents:[{id, name, status,
+//! source:{repository}}]}` (the real kurage CLI surface — the crate's first
+//! cut assumed a `list-agents --json` subcommand that never existed, so the
+//! source erred on every poll). `repository` arrives host-qualified
+//! (`github.com/owner/repo`); the trailing `owner/repo` maps to the working
+//! copy via the workspace convention. An agent whose status is not terminal
+//! (FINISHED / COMPLETED / STOPPED / EXPIRED) becomes an item landing in that
+//! agent's working copy. Honesty contract: only an OBSERVED run is `Fetched`
+//! (garbage JSON parses to empty — the upstream WAS observed); `kurage`
+//! missing/failing is `Unavailable(Error)` — a CLI blip never reads as "no
+//! agents in flight".
 
 use izumi::{Catalog, Cmd, Environment, Item, PollOutcome, SourceConfig, Source, SpawnSpec, Urgency};
 
@@ -29,7 +34,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for KurageAgents<K> {
     }
 
     fn poll(&self, env: &dyn Environment, cfg: &SourceConfig) -> PollOutcome<K, SpawnSpec> {
-        let cmd = Cmd::new("kurage").arg("list-agents").arg("--json");
+        let cmd = Cmd::new("kurage").arg("list").arg("--output").arg("json");
         let Some(out) = env.run(&cmd) else {
             return PollOutcome::error();
         };
@@ -39,24 +44,45 @@ impl<K: Catalog> Source<K, SpawnSpec> for KurageAgents<K> {
     }
 }
 
-/// Parse `kurage list-agents --json` output into items for in-flight
+/// The trailing `owner/repo` of a possibly host-qualified repository
+/// coordinate (`github.com/pleme-io/mado` → `pleme-io/mado`); `None` when the
+/// string carries no slash at all.
+fn owner_repo(repository: &str) -> Option<String> {
+    let trimmed = repository.trim_end_matches('/');
+    let mut tail: Vec<&str> = trimmed.rsplit('/').take(2).collect();
+    if tail.len() < 2 || tail.iter().any(|s| s.is_empty()) {
+        return None;
+    }
+    tail.reverse();
+    let mut out = String::new();
+    out.push_str(tail[0]);
+    out.push('/');
+    out.push_str(tail[1]);
+    Some(out)
+}
+
+/// Parse `kurage list --output json` output into items for in-flight
 /// agents. Pure — the unit the source is tested through.
 fn parse<K: Catalog>(kind: K, json: &str, env: &dyn Environment) -> Vec<Item<K, SpawnSpec>> {
-    let Ok(rows) = serde_json::from_str::<Vec<AgentRow>>(json) else {
+    let Ok(page) = serde_json::from_str::<AgentsPage>(json) else {
         return Vec::new();
     };
-    rows.into_iter()
+    page.agents
+        .into_iter()
         .filter(|a| {
             let status = a.status.to_ascii_uppercase();
-            !matches!(status.as_str(), "FINISHED" | "COMPLETED" | "STOPPED")
+            !matches!(
+                status.as_str(),
+                "FINISHED" | "COMPLETED" | "STOPPED" | "EXPIRED"
+            )
         })
         .filter_map(|a| {
-            // An `owner/repo` repository resolves to its working copy; anything
-            // else (or blank) falls back to the code root.
-            let cwd = if a.repository.contains('/') {
-                crate::util::repo_cwd(env, &a.repository)
-            } else {
-                env.code_root()
+            // A host-qualified repository resolves to its working copy via
+            // the trailing `owner/repo`; anything else falls back to the
+            // code root.
+            let cwd = match owner_repo(&a.source.repository) {
+                Some(or) => crate::util::repo_cwd(env, &or),
+                None => env.code_root(),
             };
             let short: String = a.name.chars().take(24).collect();
             let mut name = String::from("\u{1F916} "); // 🤖
@@ -76,6 +102,12 @@ fn parse<K: Catalog>(kind: K, json: &str, env: &dyn Environment) -> Vec<Item<K, 
 }
 
 #[derive(serde::Deserialize, Default)]
+struct AgentsPage {
+    #[serde(default)]
+    agents: Vec<AgentRow>,
+}
+
+#[derive(serde::Deserialize, Default)]
 struct AgentRow {
     #[serde(default)]
     id: String,
@@ -83,6 +115,12 @@ struct AgentRow {
     name: String,
     #[serde(default)]
     status: String,
+    #[serde(default)]
+    source: AgentSource,
+}
+
+#[derive(serde::Deserialize, Default)]
+struct AgentSource {
     #[serde(default)]
     repository: String,
 }
@@ -93,25 +131,26 @@ mod tests {
     use crate::testkit::TestKind;
     use izumi::MockEnvironment;
 
-    const FIXTURE: &str = r#"[
-        {"id":"a1","name":"refactor the suggest registry","status":"RUNNING","repository":"pleme-io/mado"},
-        {"id":"a2","name":"bump deps","status":"FINISHED","repository":"pleme-io/tear"},
-        {"id":"a3","name":"draft docs","status":"QUEUED","repository":"standalone"}
-    ]"#;
+    const FIXTURE: &str = r#"{"agents":[
+        {"id":"bc-a1","name":"refactor the suggest registry","status":"RUNNING","source":{"repository":"github.com/pleme-io/mado","ref":"main"}},
+        {"id":"bc-a2","name":"bump deps","status":"FINISHED","source":{"repository":"github.com/pleme-io/tear"}},
+        {"id":"bc-a3","name":"draft docs","status":"CREATING","source":{"repository":"standalone"}},
+        {"id":"bc-a4","name":"stale run","status":"EXPIRED","source":{"repository":"github.com/pleme-io/tear"}}
+    ]}"#;
 
     #[test]
     fn surfaces_in_flight_agents_in_their_repos() {
         let env = MockEnvironment::new()
             .roots("/code", "/home/op")
             .path("/code/github/pleme-io/mado")
-            .cmd("kurage list-agents --json", FIXTURE);
+            .cmd("kurage list --output json", FIXTURE);
         let mut cfg = SourceConfig::for_kind(TestKind::KurageAgents);
         cfg.max_items = 10;
         let PollOutcome::Fetched(out) = KurageAgents::new(TestKind::KurageAgents).poll(&env, &cfg)
         else {
             panic!("an observed kurage run is Fetched");
         };
-        assert_eq!(out.len(), 2, "finished agent excluded");
+        assert_eq!(out.len(), 2, "finished + expired agents excluded");
         let work = out.iter().find(|s| s.title.contains("refactor")).unwrap();
         assert!(work.title.contains("[RUNNING]"));
         assert_eq!(work.urgency, Urgency::Normal);
@@ -121,8 +160,20 @@ mod tests {
         );
         // A repository without an `owner/repo` slash falls back to the code root.
         let docs = out.iter().find(|s| s.title.contains("draft docs")).unwrap();
-        assert!(docs.title.contains("[QUEUED]"));
+        assert!(docs.title.contains("[CREATING]"));
         assert_eq!(docs.spawn.cwd().to_str().unwrap(), "/code");
+    }
+
+    #[test]
+    fn owner_repo_takes_the_trailing_two_segments() {
+        assert_eq!(
+            owner_repo("github.com/pleme-io/mado").as_deref(),
+            Some("pleme-io/mado")
+        );
+        assert_eq!(owner_repo("pleme-io/mado").as_deref(), Some("pleme-io/mado"));
+        assert_eq!(owner_repo("github.com/pleme-io/mado/").as_deref(), Some("pleme-io/mado"));
+        assert_eq!(owner_repo("standalone"), None);
+        assert_eq!(owner_repo(""), None);
     }
 
     #[test]
