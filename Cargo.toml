@@ -3,7 +3,7 @@ resolver = "3"
 members = ["izumi", "izumi-sources", "izumi-config", "izumi-lisp", "izumi-board"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "MIT"
 authors = ["pleme-io"]
