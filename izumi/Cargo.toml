@@ -1,6 +1,6 @@
 [package]
 name = "izumi"
-version = "0.1.0"
+version.workspace = true
 description = "Fresh-source board substrate - continuously-refreshing, ranked, cache-fresh, actionable data sources (the generalized mado Ctrl-S suggestion plane)"
 edition.workspace = true
 license.workspace = true

@@ -1,6 +1,6 @@
 [package]
 name = "izumi-config"
-version = "0.1.0"
+version.workspace = true
 description = "shikumi TieredConfig board-config surface for izumi — BoardConfig + SourceEntry + the effective_sources merge + the engine-config bridge"
 edition.workspace = true
 license.workspace = true

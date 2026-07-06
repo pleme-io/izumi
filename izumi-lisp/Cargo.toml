@@ -1,6 +1,6 @@
 [package]
 name = "izumi-lisp"
-version = "0.1.0"
+version.workspace = true
 description = "tatara-lisp authoring surface for izumi boards — (defizumisource …) + (defizumiboard …) typed forms compiled onto izumi-config"
 edition.workspace = true
 license.workspace = true

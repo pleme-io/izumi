@@ -1,6 +1,6 @@
 [package]
 name = "izumi-sources"
-version = "0.1.0"
+version.workspace = true
 description = "The generic izumi provider catalog — 25 data-source providers ported from mado's suggestion plane, generic over any izumi Catalog"
 edition.workspace = true
 license.workspace = true
