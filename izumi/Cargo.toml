@@ -10,6 +10,7 @@ repository.workspace = true
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
+url = { workspace = true }
 # `macros` on top of the workspace features: the refresh loop's nudge path is a
 # `tokio::select!` (ported verbatim from mado's livestream), which lives behind
 # tokio's `macros` feature.

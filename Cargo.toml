@@ -13,6 +13,9 @@ repository = "https://github.com/pleme-io/izumi"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"
+# Typed URL for prewarm deep-links (PrewarmStep::OpenUrl) — a malformed
+# runbook/dashboard link is parse-time-rejected before it can build a step.
+url = { version = "2", features = ["serde"] }
 tokio = { version = "1", features = ["rt-multi-thread", "time", "sync"] }
 blake3 = "1"
 parking_lot = "0.12"

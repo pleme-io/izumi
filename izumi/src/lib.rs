@@ -41,6 +41,7 @@ pub mod maintain;
 pub mod pace;
 pub mod payload;
 pub mod persist;
+pub mod prewarm;
 pub mod raw;
 pub mod refresh;
 pub mod source;
@@ -53,6 +54,7 @@ pub use engine::Engine;
 pub use env::{Cmd, Environment, HttpReq, MockEnvironment, RealEnvironment};
 pub use item::{fnv1a, CorrKey, Item, ItemId, PickerLabel, Rank, SourceStatus, Urgency};
 pub use payload::Payload;
+pub use prewarm::{reject_injection, PrewarmSpec, PrewarmStep};
 pub use source::{apply_poll, refresh_once, EngineConfig, PollOutcome, Source, SourceConfig};
 pub use spawn::SpawnSpec;
 pub use store::{

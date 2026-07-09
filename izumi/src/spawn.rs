@@ -6,6 +6,8 @@
 
 use std::path::{Path, PathBuf};
 
+use crate::prewarm::{reject_injection, PrewarmSpec, PrewarmStep};
+
 /// Everything needed to turn an item into a live session — the
 /// always-spawnable contract.
 ///
@@ -25,6 +27,16 @@ pub struct SpawnSpec {
     cwd: PathBuf,
     name: String,
     initial_command: Option<String>,
+    /// An ordered prewarm strategy — the multi-step generalization of
+    /// `initial_command` (kube-context / describe / open-link on session
+    /// birth). Additive + wire-invisible when empty: `#[serde(default)]` loads
+    /// pre-prewarm snapshots unchanged, and `skip_serializing_if` emits NO
+    /// `prewarm` key for an empty spec, so a SpawnSpec with no strategy
+    /// serializes byte-identically to before this field existed (golden
+    /// fixtures unchanged). `initial_command` stays a back-compat convenience
+    /// that [`Self::prewarm`] folds in as the first `RunCommand`.
+    #[serde(default, skip_serializing_if = "PrewarmSpec::is_empty")]
+    prewarm: PrewarmSpec,
 }
 
 /// Untrusted wire shape for [`SpawnSpec`]. The `TryFrom` runs the same
@@ -36,17 +48,22 @@ struct SpawnSpecWire {
     name: String,
     #[serde(default)]
     initial_command: Option<String>,
+    /// Additive — old snapshots (no `prewarm` key) default to an empty spec, so
+    /// the wire form stays byte-compatible.
+    #[serde(default)]
+    prewarm: PrewarmSpec,
 }
 
 impl TryFrom<SpawnSpecWire> for SpawnSpec {
     type Error = String;
     fn try_from(w: SpawnSpecWire) -> Result<Self, Self::Error> {
-        let spec = SpawnSpec::new(w.cwd, w.name)
+        let mut spec = SpawnSpec::new(w.cwd, w.name)
             .ok_or_else(|| String::from("SpawnSpec: cwd and name must be non-empty"))?;
-        Ok(match w.initial_command {
-            Some(c) => spec.with_command(c),
-            None => spec,
-        })
+        if let Some(c) = w.initial_command {
+            spec = spec.with_command(c);
+        }
+        spec.prewarm = w.prewarm;
+        Ok(spec)
     }
 }
 
@@ -64,6 +81,7 @@ impl SpawnSpec {
             cwd,
             name,
             initial_command: None,
+            prewarm: PrewarmSpec::default(),
         })
     }
 
@@ -72,13 +90,21 @@ impl SpawnSpec {
     /// control byte (`\n`, `\r`, ESC, …): the kickoff is delivered as PTY
     /// keystrokes + one Enter, so an embedded newline in upstream data (a
     /// ticket summary, an alert label) would EXECUTE a second command. That
-    /// injection is rejected at this typed border, not per-provider.
+    /// injection is rejected at this typed border (the shared
+    /// [`reject_injection`](crate::prewarm::reject_injection) guard), not
+    /// per-provider.
     #[must_use]
     pub fn with_command(mut self, cmd: impl Into<String>) -> Self {
-        let c = cmd.into();
-        if !c.trim().is_empty() && !c.chars().any(char::is_control) {
-            self.initial_command = Some(c);
-        }
+        self.initial_command = reject_injection(&cmd.into());
+        self
+    }
+
+    /// Attach an ordered prewarm strategy — the multi-step generalization of
+    /// [`Self::with_command`] (set kube-context, describe the subject, open a
+    /// deep-link on session birth).
+    #[must_use]
+    pub fn with_prewarm(mut self, prewarm: PrewarmSpec) -> Self {
+        self.prewarm = prewarm;
         self
     }
 
@@ -93,6 +119,21 @@ impl SpawnSpec {
     #[must_use]
     pub fn initial_command(&self) -> Option<&str> {
         self.initial_command.as_deref()
+    }
+
+    /// The full ordered prewarm strategy to run at session birth: the legacy
+    /// `initial_command` (if any) folded in as the FIRST `RunCommand`, then the
+    /// richer [`Self::with_prewarm`] steps. So a consumer runs ONE ordered list
+    /// whether the item carries a single command, a rich strategy, or both.
+    #[must_use]
+    pub fn prewarm(&self) -> PrewarmSpec {
+        let mut spec = self.prewarm.clone();
+        if let Some(cmd) = &self.initial_command {
+            if let Some(step) = PrewarmStep::run(cmd) {
+                spec.push_front(step);
+            }
+        }
+        spec
     }
 }
 
