@@ -1,11 +1,17 @@
-//! `tend-repos` — workspace repos that need attention (dirty / missing /
-//! unknown), surfaced as "go tidy this" items. Local CLI, no auth.
+//! `tend-repos` — workspace repos that need attention (dirty / stuck /
+//! missing / unknown), surfaced as "go tidy this" items. Local CLI, no auth.
 //!
 //! Live wiring: `tend status --json` → an array of `{name, path, state}`. A
 //! repo whose state is not `clean` becomes an item whose spawn drops you
 //! in that repo's directory. Honesty contract: a failed/absent `tend` run is
 //! `Unavailable(Error)` — only an OBSERVED run output is `Fetched` (so a
 //! tooling blip never reads as "every repo clean").
+//!
+//! `stuck` (mid rebase/merge/cherry-pick) ranks `High`, distinct from the
+//! `Low` given to routine `dirty` drift — a stuck repo can silently strand
+//! real committed and uncommitted work under a conflict for weeks with no
+//! other signal (the incident this distinction exists for: a rebase
+//! abandoned 2026-05-29, found 2026-07-09, six weeks with zero visibility).
 
 use izumi::{Catalog, Cmd, Environment, Item, PollOutcome, SourceConfig, Source, SpawnSpec, Urgency};
 
@@ -42,7 +48,9 @@ fn parse<K: Catalog>(kind: K, json: &str, env: &dyn Environment) -> Vec<Item<K, 
         .filter(|r| !r.state.eq_ignore_ascii_case("clean") && !r.state.is_empty())
         .filter_map(|r| {
             let missing = r.state.eq_ignore_ascii_case("missing") || r.path.is_empty();
-            let mut name = String::from("\u{1F9F9} "); // 🧹
+            let stuck = r.state.eq_ignore_ascii_case("stuck");
+            let icon = if stuck { "\u{1F6A7} " } else { "\u{1F9F9} " }; // 🚧 vs 🧹
+            let mut name = String::from(icon);
             name.push_str(&r.name);
             let spawn = if missing {
                 if r.name.is_empty() {
@@ -58,6 +66,7 @@ fn parse<K: Catalog>(kind: K, json: &str, env: &dyn Environment) -> Vec<Item<K, 
                 SpawnSpec::new(r.path.clone(), name)?
             };
             let urgency = match r.state.to_ascii_lowercase().as_str() {
+                "stuck" => Urgency::High,
                 "missing" => Urgency::Normal,
                 _ => Urgency::Low,
             };
@@ -95,6 +104,11 @@ mod tests {
         {"name":"newrepo","path":"","state":"missing"}
     ]"#;
 
+    const STUCK_FIXTURE: &str = r#"[
+        {"name":"engenho-promessa-controllers","path":"/code/github/pleme-io/engenho-promessa-controllers","state":"stuck"},
+        {"name":"mado","path":"/code/github/pleme-io/mado","state":"dirty"}
+    ]"#;
+
     #[test]
     fn surfaces_only_non_clean_repos() {
         let env = MockEnvironment::new().cmd("tend status --json", FIXTURE);
@@ -113,6 +127,24 @@ mod tests {
         // (the bare name is not a cwd).
         assert_eq!(missing.spawn.cwd().to_str().unwrap(), "/code");
         assert_eq!(missing.spawn.initial_command(), Some("tend sync newrepo"));
+    }
+
+    #[test]
+    fn stuck_repo_ranks_above_routine_dirty() {
+        let env = MockEnvironment::new().cmd("tend status --json", STUCK_FIXTURE);
+        let cfg = SourceConfig::for_kind(TestKind::TendRepos);
+        let PollOutcome::Fetched(out) = TendRepos::new(TestKind::TendRepos).poll(&env, &cfg) else {
+            panic!("an observed run is Fetched");
+        };
+        let stuck = out
+            .iter()
+            .find(|s| s.title.contains("engenho-promessa-controllers"))
+            .unwrap();
+        assert_eq!(stuck.urgency, Urgency::High, "a stuck repo must outrank routine dirty drift");
+        assert!(stuck.title.contains("stuck"));
+        let dirty = out.iter().find(|s| s.title.contains("mado")).unwrap();
+        assert_eq!(dirty.urgency, Urgency::Low);
+        assert!(stuck.urgency > dirty.urgency, "stuck must rank above dirty");
     }
 
     #[test]
