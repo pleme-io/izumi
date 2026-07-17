@@ -65,10 +65,24 @@ const RECUR_BONUS_PER_SEEN: u64 = 40;
 /// …counting at most this many re-sightings (10 → +400).
 const RECUR_BONUS_CAP: u32 = 10;
 
+/// Freshness boost: a newly-FIRST-seen row surfaces near the top of its urgency
+/// tier, then settles as it ages — so genuinely-new work "slides in" above a
+/// pile of long-standing (oft-recurring / long-waited) rows instead of being
+/// buried under them. Without it, a monitor that has been alerting for days
+/// (max aging + recurrence) permanently pins the top and the board looks frozen;
+/// with it, the just-broke thing rises for a bit, then recedes as the chronic
+/// alerts reclaim their place. Peak boost for a brand-new row (waited 0)…
+const FRESH_BONUS_MAX: u64 = 800;
+/// …decaying linearly to 0 over this many minutes. Pure (a function of
+/// `first_seen_ms` + `now_ms`), so the motion costs nothing — no extra fetch, no
+/// timer; the per-frame re-rank already runs. Bounded so freshness only
+/// re-orders WITHIN a tier, never crosses urgency.
+const FRESH_WINDOW_MIN: u64 = 20;
+
 /// The low-bit budget of the composite rank key (urgency sits above bit 20).
-/// score (≤1000) + aging (≤360) + recurrence (≤400) ≤ 1760 fits comfortably;
-/// the mask is defense-in-depth so a future bonus can never leak into the
-/// urgency bits.
+/// score (≤1000) + aging (≤360) + recurrence (≤400) + freshness (≤800) ≤ 2560
+/// fits comfortably; the mask is defense-in-depth so a future bonus can never
+/// leak into the urgency bits.
 const RANK_LOW_MASK: u64 = 0xF_FFFF;
 
 /// Where an item sits in its worked-on lifecycle. Serialized in the snapshot
@@ -222,10 +236,14 @@ pub fn effective_rank_key<K: Catalog, A: Payload>(st: &StoredItem<K, A>, now_ms:
         _ => st.item.urgency,
     };
     let waited_min = now_ms.saturating_sub(st.first_seen_ms) / 60_000;
+    // Freshness decays linearly from FRESH_BONUS_MAX (waited 0) to 0 at
+    // FRESH_WINDOW_MIN — a new row rises, then recedes as it ages.
+    let freshness = FRESH_BONUS_MAX * FRESH_WINDOW_MIN.saturating_sub(waited_min) / FRESH_WINDOW_MIN;
     let bonus = u64::from(st.item.score.min(1000))
         + waited_min.min(AGE_BONUS_CAP_MIN) * AGE_BONUS_PER_MIN
         + u64::from(st.times_seen.saturating_sub(1).min(RECUR_BONUS_CAP))
-            * RECUR_BONUS_PER_SEEN;
+            * RECUR_BONUS_PER_SEEN
+        + freshness;
     (u64::from(urgency.weight()) << 20) | (bonus & RANK_LOW_MASK)
 }
 
@@ -916,19 +934,53 @@ mod tests {
             times_seen,
             state: ItemState::Offered,
         };
-        // Same tier: an old repeat offender outranks a fresh first-timer.
-        let fresh = mk(now, 1, Urgency::Normal);
+        // Same tier, PAST the freshness window (so freshness has faded from
+        // both): an old repeat offender outranks an equally-settled first-timer
+        // — aging + recurrence still escalate once the "slides in" boost is gone.
+        let settled = (FRESH_WINDOW_MIN + 1) * 60_000;
+        let first_timer = mk(now - settled, 1, Urgency::Normal);
         let veteran = mk(now - 3_600_000, 5, Urgency::Normal);
         assert!(
-            effective_rank_key(&veteran, now) > effective_rank_key(&fresh, now),
-            "aging + recurrence escalate within the tier"
+            effective_rank_key(&veteran, now) > effective_rank_key(&first_timer, now),
+            "past the freshness window, aging + recurrence escalate within the tier"
         );
-        // Across tiers: no amount of aging/recurrence beats real urgency.
+        // Across tiers: no amount of aging/recurrence/freshness beats real urgency.
         let ancient_low = mk(0, u32::MAX, Urgency::Low);
         let fresh_normal = mk(now, 1, Urgency::Normal);
         assert!(
             effective_rank_key(&fresh_normal, now) > effective_rank_key(&ancient_low, now),
             "urgency stays the dominant axis"
+        );
+    }
+
+    #[test]
+    fn freshness_surfaces_a_new_row_then_recedes_within_the_tier() {
+        // The living-board motion the operator asked for: a just-appeared row
+        // rises to the top of its urgency tier (so new work is VISIBLE, not
+        // buried under a pile of chronic alerts), then recedes as it ages and
+        // the long-standing escalation reclaims its place.
+        let mk = |first_seen_ms: u64, times_seen: u32| StoredItem {
+            item: sug(TestKind::TendRepos, "k", "t").urgent(Urgency::Critical),
+            first_seen_ms,
+            last_seen_ms: 0,
+            times_seen,
+            state: ItemState::Offered,
+        };
+        let now = 100 * 60 * 60 * 1000; // 100h — well past any window
+        // A chronic critical: ancient + oft-seen (maxed aging + recurrence) —
+        // this is the datadog-alerting-for-15-days row that froze the board.
+        let chronic = mk(0, 50);
+        // A brand-new critical, same tier, just appeared.
+        let brand_new = mk(now, 1);
+        assert!(
+            effective_rank_key(&brand_new, now) > effective_rank_key(&chronic, now),
+            "a brand-new row surfaces above even a maxed-chronic row within its tier"
+        );
+        // …then recedes: past the freshness window, the chronic escalation wins.
+        let later = now + (FRESH_WINDOW_MIN + 5) * 60_000;
+        assert!(
+            effective_rank_key(&chronic, later) > effective_rank_key(&brand_new, later),
+            "once freshness fades, the chronic (aging + recurrence) row reclaims the top"
         );
     }
 

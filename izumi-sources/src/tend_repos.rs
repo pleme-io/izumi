@@ -32,7 +32,11 @@ impl<K: Catalog> Source<K, SpawnSpec> for TendRepos<K> {
     }
 
     fn poll(&self, env: &dyn Environment, _cfg: &SourceConfig) -> PollOutcome<K, SpawnSpec> {
-        let Some(out) = env.run(&Cmd::new("tend").arg("status").arg("--json")) else {
+        // `tend status` scans every workspace repo (100+ git statuses) and
+        // legitimately runs ~25-30s — declare it Slow so it doesn't time out
+        // under the default 20s cap and error() on every poll (the "ever_ok
+        // false for 200+ polls" failure this seals).
+        let Some(out) = env.run(&Cmd::new("tend").arg("status").arg("--json").slow()) else {
             return PollOutcome::error();
         };
         PollOutcome::Fetched(parse(self.kind, &out, env))

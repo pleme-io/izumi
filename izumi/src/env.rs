@@ -16,14 +16,46 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+/// The latency class of a command — how long it may legitimately run before a
+/// watcher treats it as hung and kills it. A single fixed global cap silently
+/// kills a slow-but-working fleet aggregator (`tend status` over 100+ repos
+/// ≈ 27 s > the 20 s cap → the source `error()`s on EVERY poll, forever, with
+/// `ever_ok == false`). Making the budget a TYPED property of the `Cmd` removes
+/// that whole mismatch class: a known-slow tool DECLARES [`Slow`](Self::Slow),
+/// so "a 27 s tool under a 20 s cap" is no longer a hidden constant to
+/// rediscover after 200 failed polls — it's a one-word choice at the call site,
+/// visible in review. Still bounded (a truly-hung tool can never wedge forever).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum LatencyBudget {
+    /// Interactive / HTTP-ish (the `curl --max-time`-style default): a 20 s cap.
+    #[default]
+    Quick,
+    /// A known-slow fleet aggregator (`tend status`, `kubectl` over many
+    /// resources): a 60 s cap. Bounded, but wide enough for a real fleet scan.
+    Slow,
+}
+
+impl LatencyBudget {
+    /// The wall-clock cap this budget grants a subprocess.
+    #[must_use]
+    pub const fn cap(self) -> std::time::Duration {
+        match self {
+            Self::Quick => std::time::Duration::from_secs(20),
+            Self::Slow => std::time::Duration::from_secs(60),
+        }
+    }
+}
+
 /// A typed external command — program + argv (+ optional per-invocation env
-/// vars), never a shell string. The one sanctioned subprocess shape (per the
-/// NO SHELL law: a typed wrapper that constructs `Command` from typed pieces).
+/// vars + a typed latency budget), never a shell string. The one sanctioned
+/// subprocess shape (per the NO SHELL law: a typed wrapper that constructs
+/// `Command` from typed pieces).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Cmd {
     program: String,
     args: Vec<String>,
     envs: Vec<(String, String)>,
+    budget: LatencyBudget,
 }
 
 impl Cmd {
@@ -33,7 +65,19 @@ impl Cmd {
             program: program.into(),
             args: Vec::new(),
             envs: Vec::new(),
+            budget: LatencyBudget::Quick,
         }
+    }
+
+    /// Declare this command a known-slow fleet aggregator ([`LatencyBudget::Slow`]
+    /// — a 60 s cap instead of the 20 s default). Use for a tool that scans the
+    /// whole fleet (`tend status`, a broad `kubectl … -o json`) and legitimately
+    /// runs tens of seconds — without this it times out under the default cap and
+    /// the source `error()`s forever.
+    #[must_use]
+    pub fn slow(mut self) -> Self {
+        self.budget = LatencyBudget::Slow;
+        self
     }
 
     #[must_use]
@@ -74,6 +118,11 @@ impl Cmd {
     #[must_use]
     pub fn envs_slice(&self) -> &[(String, String)] {
         &self.envs
+    }
+    /// This command's typed latency budget (default [`LatencyBudget::Quick`]).
+    #[must_use]
+    pub fn budget(&self) -> LatencyBudget {
+        self.budget
     }
 
     /// Stable lookup key (program + space-joined args) for [`MockEnvironment`].
@@ -300,11 +349,6 @@ fn kubeconfig_chain(entries: &[PathBuf]) -> Option<String> {
     Some(parts.join(":"))
 }
 
-/// Wall-clock cap on a watcher subprocess — mirrors the `curl --max-time 10`
-/// contract so a hung `kubectl`/`gh` (VPN down, unreachable cluster) can't wedge
-/// its watcher or leak a blocking-pool thread for the process lifetime.
-const RUN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
-
 impl Environment for RealEnvironment {
     fn run(&self, cmd: &Cmd) -> Option<String> {
         use std::io::Read;
@@ -344,7 +388,7 @@ impl Environment for RealEnvironment {
             let _ = out.read_to_end(&mut buf);
             buf
         });
-        let deadline = std::time::Instant::now() + RUN_TIMEOUT;
+        let deadline = std::time::Instant::now() + cmd.budget().cap();
         let status = loop {
             match child.try_wait() {
                 Ok(Some(status)) => break Some(status),
@@ -565,6 +609,24 @@ mod tests {
     fn cmd_key_is_program_plus_args() {
         let c = Cmd::new("gh").arg("pr").arg("list").args(["--json", "title"]);
         assert_eq!(c.key(), "gh pr list --json title");
+    }
+
+    #[test]
+    fn cmd_latency_budget_defaults_quick_and_slow_widens_the_cap() {
+        // The seal: a command's timeout budget is a typed property, not a hidden
+        // global. Default is Quick (20s); a declared-Slow fleet tool gets 60s —
+        // so a 27s `tend status` no longer times out + error()s on every poll.
+        let quick = Cmd::new("gh").arg("pr").arg("list");
+        assert_eq!(quick.budget(), LatencyBudget::Quick);
+        assert_eq!(quick.budget().cap(), std::time::Duration::from_secs(20));
+
+        let slow = Cmd::new("tend").arg("status").arg("--json").slow();
+        assert_eq!(slow.budget(), LatencyBudget::Slow);
+        assert_eq!(slow.budget().cap(), std::time::Duration::from_secs(60));
+        // Slow strictly widens the window — a 27s tool fits Slow, not Quick.
+        let tend_runtime = std::time::Duration::from_secs(27);
+        assert!(tend_runtime > quick.budget().cap(), "27s tool times out under Quick");
+        assert!(tend_runtime < slow.budget().cap(), "27s tool fits under Slow");
     }
 
     #[test]
