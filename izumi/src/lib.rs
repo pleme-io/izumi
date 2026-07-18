@@ -51,7 +51,9 @@ pub mod writer;
 
 pub use catalog::Catalog;
 pub use engine::Engine;
-pub use env::{Cmd, Environment, HttpReq, MockEnvironment, RealEnvironment};
+pub use env::{
+    Cmd, Environment, HttpReq, LatencyBudget, MockEnvironment, RealEnvironment, RunOutcome,
+};
 pub use item::{fnv1a, CorrKey, Item, ItemId, PickerLabel, Rank, SourceStatus, Urgency};
 pub use payload::Payload;
 pub use prewarm::{reject_injection, PrewarmSpec, PrewarmStep};

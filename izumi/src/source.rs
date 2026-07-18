@@ -72,7 +72,13 @@ impl<K, A> PollOutcome<K, A> {
     pub const fn auth_missing() -> Self {
         Self::Unavailable(SourceStatus::AuthMissing)
     }
-    /// The fetch/parse failed (network, timeout, tool exit, bad shape).
+    /// The tool ran but exceeded its `LatencyBudget` (slow, not broken) — the
+    /// honest report for a working-but-slow tool, distinct from `error()`.
+    #[must_use]
+    pub const fn timed_out() -> Self {
+        Self::Unavailable(SourceStatus::TimedOut)
+    }
+    /// The fetch/parse failed (network, tool exit, bad shape) — NOT a timeout.
     #[must_use]
     pub const fn error() -> Self {
         Self::Unavailable(SourceStatus::Error)

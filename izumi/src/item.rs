@@ -44,7 +44,14 @@ pub enum SourceStatus {
     Unconfigured,
     /// The source's credential/secret is absent.
     AuthMissing,
-    /// The fetch or parse failed (network, timeout, tool exit, bad shape).
+    /// The tool ran but exceeded its `LatencyBudget` and was killed — SLOW, not
+    /// broken. Distinct from [`Error`](Self::Error) so a working-but-slow fleet
+    /// tool (e.g. `tend status` scanning 100+ repos) reads as "raise its budget",
+    /// never as "the tool is broken". The distinction the old `None`-collapse
+    /// erased — see [`crate::env::RunOutcome`].
+    TimedOut,
+    /// The fetch or parse failed (network, tool exit, bad shape). NOT a timeout —
+    /// a genuinely broken / missing / mis-shaped upstream.
     Error,
 }
 
@@ -56,6 +63,7 @@ impl SourceStatus {
             SourceStatus::Ok => "ok",
             SourceStatus::Unconfigured => "needs config",
             SourceStatus::AuthMissing => "needs auth",
+            SourceStatus::TimedOut => "timed out",
             SourceStatus::Error => "erroring",
         }
     }

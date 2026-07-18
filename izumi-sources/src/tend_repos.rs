@@ -13,7 +13,10 @@
 //! other signal (the incident this distinction exists for: a rebase
 //! abandoned 2026-05-29, found 2026-07-09, six weeks with zero visibility).
 
-use izumi::{Catalog, Cmd, Environment, Item, PollOutcome, SourceConfig, Source, SpawnSpec, Urgency};
+use izumi::{
+    Catalog, Cmd, Environment, Item, PollOutcome, RunOutcome, Source, SourceConfig, SpawnSpec,
+    Urgency,
+};
 
 pub struct TendRepos<K: Catalog> {
     kind: K,
@@ -33,13 +36,17 @@ impl<K: Catalog> Source<K, SpawnSpec> for TendRepos<K> {
 
     fn poll(&self, env: &dyn Environment, _cfg: &SourceConfig) -> PollOutcome<K, SpawnSpec> {
         // `tend status` scans every workspace repo (100+ git statuses) and
-        // legitimately runs ~25-30s — declare it Slow so it doesn't time out
-        // under the default 20s cap and error() on every poll (the "ever_ok
-        // false for 200+ polls" failure this seals).
-        let Some(out) = env.run(&Cmd::new("tend").arg("status").arg("--json").slow()) else {
-            return PollOutcome::error();
-        };
-        PollOutcome::Fetched(parse(self.kind, &out, env))
+        // legitimately runs ~25-30s — declare it Slow (60s cap) so it doesn't
+        // time out under the default 20s cap. And read the TYPED outcome so a
+        // timeout reports as TimedOut ("slow — raise the budget"), never the
+        // misleading Error ("broken"): the "ever_ok false for 200+ polls, looks
+        // broken but is only slow" failure this seals.
+        let cmd = Cmd::new("tend").arg("status").arg("--json").slow();
+        match env.run_outcome(&cmd) {
+            RunOutcome::Produced(out) => PollOutcome::Fetched(parse(self.kind, &out, env)),
+            RunOutcome::TimedOut(_) => PollOutcome::timed_out(),
+            RunOutcome::Failed => PollOutcome::error(),
+        }
     }
 }
 
@@ -160,5 +167,17 @@ mod tests {
             TendRepos::new(TestKind::TendRepos).poll(&MockEnvironment::new(), &cfg),
             PollOutcome::error()
         );
+    }
+
+    #[test]
+    fn a_slow_tend_reports_timed_out_not_error() {
+        // The seal end-to-end: a tend that TIMED OUT (slow, but alive) reads as
+        // TimedOut ("raise the budget"), NEVER the broken Error — the "erroring
+        // for 200+ polls, looks broken but is only slow" failure this seals.
+        let cfg = SourceConfig::for_kind(TestKind::TendRepos);
+        let env = MockEnvironment::new().cmd_timed_out("tend status --json");
+        let outcome = TendRepos::new(TestKind::TendRepos).poll(&env, &cfg);
+        assert_eq!(outcome, PollOutcome::timed_out());
+        assert_ne!(outcome, PollOutcome::error(), "a timeout is NOT the broken Error");
     }
 }

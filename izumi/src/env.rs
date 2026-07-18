@@ -46,6 +46,44 @@ impl LatencyBudget {
     }
 }
 
+/// The typed outcome of running a [`Cmd`] — WHY it did or didn't produce output.
+/// The lossy `Option<String>` of [`Environment::run`] collapsed a slow-tool
+/// TIMEOUT into the same `None` as a spawn-failure / non-zero exit, so a source
+/// could only report the generic [`SourceStatus::Error`] ("erroring") — the
+/// operator couldn't tell "the tool is slow, raise its budget" from "the tool
+/// is broken / missing". Making the failure MODE typed is what lets a source
+/// report [`SourceStatus::TimedOut`] instead of a misleading `Error`.
+///
+/// [`SourceStatus::Error`]: crate::item::SourceStatus::Error
+/// [`SourceStatus::TimedOut`]: crate::item::SourceStatus::TimedOut
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RunOutcome {
+    /// Ran to completion (exit 0) with this stdout.
+    Produced(String),
+    /// Exceeded its [`LatencyBudget`] cap and was killed — slow, not broken.
+    TimedOut(LatencyBudget),
+    /// Couldn't spawn, was rate-limited, or exited non-zero — broken / absent.
+    Failed,
+}
+
+impl RunOutcome {
+    /// The lossy projection to the legacy `Option<String>` (`Produced` → `Some`,
+    /// every non-producing mode → `None`). What [`Environment::run`] returns.
+    #[must_use]
+    pub fn output(self) -> Option<String> {
+        match self {
+            Self::Produced(s) => Some(s),
+            Self::TimedOut(_) | Self::Failed => None,
+        }
+    }
+    /// Whether the command timed out (vs failed / produced) — the distinction
+    /// the old `None` collapse erased.
+    #[must_use]
+    pub const fn timed_out(&self) -> bool {
+        matches!(self, Self::TimedOut(_))
+    }
+}
+
 /// A typed external command — program + argv (+ optional per-invocation env
 /// vars + a typed latency budget), never a shell string. The one sanctioned
 /// subprocess shape (per the NO SHELL law: a typed wrapper that constructs
@@ -200,6 +238,20 @@ impl HttpReq {
 pub trait Environment: Send + Sync {
     /// Run a typed command; `Some(stdout)` on exit-0, `None` otherwise.
     fn run(&self, cmd: &Cmd) -> Option<String>;
+    /// Run a typed command, distinguishing WHY it produced no output — a
+    /// slow-tool timeout ([`RunOutcome::TimedOut`]) vs a real failure
+    /// ([`RunOutcome::Failed`]). The default is the LOSSY legacy path (`run` →
+    /// `Produced`/`Failed`, never `TimedOut`); `RealEnvironment` overrides it so
+    /// a slow-but-working tool is a distinct typed state a source can report as
+    /// [`SourceStatus::TimedOut`] rather than a misleading `Error`.
+    ///
+    /// [`SourceStatus::TimedOut`]: crate::item::SourceStatus::TimedOut
+    fn run_outcome(&self, cmd: &Cmd) -> RunOutcome {
+        match self.run(cmd) {
+            Some(s) => RunOutcome::Produced(s),
+            None => RunOutcome::Failed,
+        }
+    }
     /// HTTP GET; `Some(body)` on 2xx, `None` otherwise.
     fn http_get(&self, req: &HttpReq) -> Option<String>;
     /// Read a file to a string, `None` if absent/unreadable.
@@ -351,8 +403,19 @@ fn kubeconfig_chain(entries: &[PathBuf]) -> Option<String> {
 
 impl Environment for RealEnvironment {
     fn run(&self, cmd: &Cmd) -> Option<String> {
+        // The lossy legacy projection: Produced → Some, timeout/failure → None.
+        self.run_outcome(cmd).output()
+    }
+
+    fn run_outcome(&self, cmd: &Cmd) -> RunOutcome {
         use std::io::Read;
         use std::process::Stdio;
+        // How the wait loop ended — the typed distinction the old `None` erased.
+        enum RunEnd {
+            Exited(std::process::ExitStatus),
+            TimedOut,
+            Killed,
+        }
         // Every `gh` invocation hits the GitHub API even though no URL is
         // visible here — bill it against the synthetic GH_HOST bucket so
         // the CLI sources and the raw-HTTP sources share one budget.
@@ -360,7 +423,7 @@ impl Environment for RealEnvironment {
             && self.pacer.admit(crate::pace::GH_HOST) == crate::pace::Admit::CoolingDown
         {
             tracing::debug!("skipping gh call — GitHub API cooling down");
-            return None;
+            return RunOutcome::Failed;
         }
         // Session env the child needs even under a GUI/Dock launch: the
         // augmented PATH (program resolution) and — when the process itself
@@ -371,47 +434,62 @@ impl Environment for RealEnvironment {
         if let Some(kc) = &self.kubeconfig {
             builder.env("KUBECONFIG", kc);
         }
-        let mut child = builder
+        let Ok(mut child) = builder
             .args(cmd.args_slice())
             .envs(cmd.envs_slice().iter().map(|(k, v)| (k.as_str(), v.as_str())))
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
             .spawn()
-            .ok()?;
+        else {
+            return RunOutcome::Failed;
+        };
         // Drain stdout on a thread so a full pipe buffer (a large `kubectl … -o
         // json`) can't deadlock the wait, and so the read finishes when the
         // child exits or is killed.
-        let mut out = child.stdout.take()?;
+        let Some(mut out) = child.stdout.take() else {
+            let _ = child.kill();
+            let _ = child.wait();
+            return RunOutcome::Failed;
+        };
         let reader = std::thread::spawn(move || {
             let mut buf = Vec::new();
             let _ = out.read_to_end(&mut buf);
             buf
         });
         let deadline = std::time::Instant::now() + cmd.budget().cap();
-        let status = loop {
+        let end = loop {
             match child.try_wait() {
-                Ok(Some(status)) => break Some(status),
+                Ok(Some(status)) => break RunEnd::Exited(status),
                 Ok(None) => {
                     if std::time::Instant::now() >= deadline {
                         let _ = child.kill();
                         let _ = child.wait();
-                        tracing::debug!(program = cmd.program(), "source command timed out");
-                        break None;
+                        tracing::debug!(
+                            program = cmd.program(),
+                            budget = ?cmd.budget(),
+                            "source command timed out"
+                        );
+                        break RunEnd::TimedOut;
                     }
                     std::thread::sleep(std::time::Duration::from_millis(40));
                 }
                 Err(_) => {
                     let _ = child.kill();
                     let _ = child.wait();
-                    break None;
+                    break RunEnd::Killed;
                 }
             }
         };
         let buf = reader.join().unwrap_or_default();
-        match status {
-            Some(s) if s.success() => Some(String::from_utf8_lossy(&buf).into_owned()),
-            _ => None,
+        match end {
+            RunEnd::Exited(s) if s.success() => {
+                RunOutcome::Produced(String::from_utf8_lossy(&buf).into_owned())
+            }
+            // Non-zero exit / abnormal kill = a broken/absent tool.
+            RunEnd::Exited(_) | RunEnd::Killed => RunOutcome::Failed,
+            // Slow-but-alive: killed for exceeding its budget, NOT broken.
+            RunEnd::TimedOut => RunOutcome::TimedOut(cmd.budget()),
         }
     }
 
@@ -514,6 +592,10 @@ impl Environment for RealEnvironment {
 #[derive(Default, Clone)]
 pub struct MockEnvironment {
     cmds: BTreeMap<String, String>,
+    /// Commands keyed by [`Cmd::key`] that report a [`RunOutcome::TimedOut`]
+    /// (a slow-but-alive tool) — so a test can drive the timeout path without a
+    /// real slow subprocess.
+    timeouts: std::collections::BTreeSet<String>,
     https: BTreeMap<String, String>,
     files: BTreeMap<PathBuf, String>,
     secrets: BTreeMap<String, String>,
@@ -538,6 +620,14 @@ impl MockEnvironment {
     #[must_use]
     pub fn cmd(mut self, key: impl Into<String>, out: impl Into<String>) -> Self {
         self.cmds.insert(key.into(), out.into());
+        self
+    }
+    /// Register a command (keyed by [`Cmd::key`]) that reports a timeout — its
+    /// `run_outcome` is [`RunOutcome::TimedOut`] (and `run` is `None`). Drives
+    /// the slow-tool path in tests without a real slow subprocess.
+    #[must_use]
+    pub fn cmd_timed_out(mut self, key: impl Into<String>) -> Self {
+        self.timeouts.insert(key.into());
         self
     }
     #[must_use]
@@ -577,6 +667,17 @@ impl MockEnvironment {
 impl Environment for MockEnvironment {
     fn run(&self, cmd: &Cmd) -> Option<String> {
         self.cmds.get(&cmd.key()).cloned()
+    }
+    fn run_outcome(&self, cmd: &Cmd) -> RunOutcome {
+        let key = cmd.key();
+        if self.timeouts.contains(&key) {
+            RunOutcome::TimedOut(cmd.budget())
+        } else {
+            match self.cmds.get(&key) {
+                Some(out) => RunOutcome::Produced(out.clone()),
+                None => RunOutcome::Failed,
+            }
+        }
     }
     fn http_get(&self, req: &HttpReq) -> Option<String> {
         self.https.get(req.url()).cloned()
@@ -627,6 +728,30 @@ mod tests {
         let tend_runtime = std::time::Duration::from_secs(27);
         assert!(tend_runtime > quick.budget().cap(), "27s tool times out under Quick");
         assert!(tend_runtime < slow.budget().cap(), "27s tool fits under Slow");
+    }
+
+    #[test]
+    fn run_outcome_distinguishes_timeout_from_failure_and_projects_lossily() {
+        // The seal: a timeout is a DISTINCT typed state, never the same value as
+        // a failure — so a slow-but-working tool can never masquerade as broken.
+        let slow_cmd = Cmd::new("tend").arg("status").slow();
+        let env = MockEnvironment::new().cmd_timed_out(slow_cmd.key());
+        let outcome = env.run_outcome(&slow_cmd);
+        assert!(outcome.timed_out(), "a timed-out command reports TimedOut");
+        assert_eq!(outcome, RunOutcome::TimedOut(LatencyBudget::Slow));
+        // The lossy projection still collapses to None (backward-compat `run`).
+        assert_eq!(env.run(&slow_cmd), None);
+        assert_eq!(RunOutcome::TimedOut(LatencyBudget::Slow).output(), None);
+
+        // A produced command is Produced + Some; an unknown one is Failed + None
+        // (and NOT timed_out — the distinction the old `None` collapse erased).
+        let ok_cmd = Cmd::new("gh").arg("pr").arg("list");
+        let env2 = MockEnvironment::new().cmd(ok_cmd.key(), "out");
+        assert_eq!(env2.run_outcome(&ok_cmd), RunOutcome::Produced("out".into()));
+        assert_eq!(env2.run(&ok_cmd), Some("out".to_owned()));
+        let missing = Cmd::new("nope");
+        assert_eq!(env2.run_outcome(&missing), RunOutcome::Failed);
+        assert!(!RunOutcome::Failed.timed_out());
     }
 
     #[test]
