@@ -78,9 +78,13 @@ const GH_ISSUES: &str = r#"[
     {"number":7,"title":"crash on startup","url":"https://y","repository":{"name":"tear","nameWithOwner":"pleme-io/tear"}}
 ]"#;
 
+/// Two currently-red workflow+branch pairs. `conclusion`/`status`/`createdAt`
+/// are load-bearing: `github-actions-failing` scans runs of EVERY status and
+/// reports a pair only when its NEWEST run is a completed failure, so a row
+/// without them reads as "not red" and the provider correctly yields nothing.
 const GH_RUNS: &str = r#"[
-    {"databaseId":98765,"displayTitle":"fix the parser","workflowName":"CI","headBranch":"main"},
-    {"databaseId":98766,"displayTitle":"bump deps","workflowName":"release","headBranch":"feat/x"}
+    {"databaseId":98765,"displayTitle":"fix the parser","workflowName":"CI","headBranch":"main","conclusion":"failure","status":"completed","createdAt":"2026-07-25T10:00:00Z"},
+    {"databaseId":98766,"displayTitle":"bump deps","workflowName":"release","headBranch":"feat/x","conclusion":"failure","status":"completed","createdAt":"2026-07-25T09:00:00Z"}
 ]"#;
 
 const TEND: &str = r#"[
@@ -341,7 +345,7 @@ fn matrix() -> Vec<MatrixRow> {
             source: |k| Arc::new(izumi_sources::GithubActionsFailing::new(k)),
             env: || {
                 MockEnvironment::new().roots("/code", "/home/op").cmd(
-                    "gh run list --status=failure --json databaseId,displayTitle,workflowName,headBranch --limit 5",
+                    "gh run list --json databaseId,displayTitle,workflowName,headBranch,conclusion,status,createdAt --limit 30",
                     GH_RUNS,
                 )
             },
