@@ -37,7 +37,8 @@ impl<K: Catalog> Source<K, SpawnSpec> for K8sUnhealthy<K> {
             .arg("pods")
             .arg("-A")
             .arg("-o")
-            .arg("json");
+            .arg("json")
+            .slow();
         // Optional `context` param scopes the poll to a named kubeconfig context.
         if let Some(ctx) = cfg.param("context") {
             cmd = cmd.arg("--context").arg(ctx);

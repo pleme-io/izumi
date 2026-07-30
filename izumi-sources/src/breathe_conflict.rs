@@ -36,7 +36,8 @@ impl<K: Catalog> Source<K, SpawnSpec> for BreatheConflict<K> {
             .arg("breathebands")
             .arg("-A")
             .arg("-o")
-            .arg("json");
+            .arg("json")
+            .slow();
         // Optional `context` param scopes the poll to a named kubeconfig context.
         if let Some(ctx) = cfg.param("context") {
             cmd = cmd.arg("--context").arg(ctx);

@@ -33,7 +33,8 @@ impl<K: Catalog> Source<K, SpawnSpec> for EngenhoNodes<K> {
             .arg("get")
             .arg("nodes")
             .arg("-o")
-            .arg("json");
+            .arg("json")
+            .slow();
         // Optional `context` param scopes the poll to a named kubeconfig context.
         if let Some(ctx) = cfg.param("context") {
             cmd = cmd.arg("--context").arg(ctx);
