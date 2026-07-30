@@ -1,7 +1,6 @@
 {
-  "version": 10,
+  "version": 12,
   "workspace": {
-    "root": "/Users/drzzln/code/github/pleme-io/izumi",
     "members": [
       {
         "name": "izumi",
@@ -1465,6 +1464,80 @@
         "preBuild": "export CARGO_CRATE_NAME=dirs_sys;"
       }
     },
+    "displaydoc-0.2.6": {
+      "name": "displaydoc",
+      "version": "0.2.6",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/displaydoc/displaydoc-0.2.6.crate",
+        "sha256": "1ac70aa55017e108007fbaf5aa0f54b021c98f92ff8af59d42eda9da96e3dd4f",
+        "name_with_ext": "displaydoc-0.2.6.tar.gz"
+      },
+      "features": [],
+      "proc_macro": true,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "proc_macro2",
+          "package_key": "proc-macro2-1.0.106",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "quote",
+          "package_key": "quote-1.0.46",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "syn",
+          "package_key": "syn-2.0.118",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {
+        "proc-macro2": [
+          {
+            "version": "1.0.106",
+            "rename": "proc_macro2"
+          }
+        ]
+      },
+      "build_rust_crate_args": {
+        "crateName": "displaydoc",
+        "version": "0.2.6",
+        "edition": "2021",
+        "crateRenames": {
+          "proc-macro2": [
+            {
+              "version": "1.0.106",
+              "rename": "proc_macro2"
+            }
+          ]
+        },
+        "release": true,
+        "procMacro": true,
+        "preBuild": "export CARGO_CRATE_NAME=displaydoc;"
+      }
+    },
     "equivalent-1.0.2": {
       "name": "equivalent",
       "version": "1.0.2",
@@ -1762,6 +1835,66 @@
         "libName": "fnv",
         "libPath": "lib.rs",
         "preBuild": "export CARGO_CRATE_NAME=fnv;"
+      }
+    },
+    "form_urlencoded-1.2.2": {
+      "name": "form_urlencoded",
+      "version": "1.2.2",
+      "edition": "2018",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/form_urlencoded/form_urlencoded-1.2.2.crate",
+        "sha256": "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf",
+        "name_with_ext": "form_urlencoded-1.2.2.tar.gz"
+      },
+      "features": [
+        "alloc",
+        "std"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "percent_encoding",
+          "package_key": "percent-encoding-2.3.2",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {
+        "percent-encoding": [
+          {
+            "version": "2.3.2",
+            "rename": "percent_encoding"
+          }
+        ]
+      },
+      "build_rust_crate_args": {
+        "crateName": "form_urlencoded",
+        "version": "1.2.2",
+        "edition": "2018",
+        "features": [
+          "alloc",
+          "std"
+        ],
+        "crateRenames": {
+          "percent-encoding": [
+            {
+              "version": "2.3.2",
+              "rename": "percent_encoding"
+            }
+          ]
+        },
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=form_urlencoded;"
       }
     },
     "gen-macros-0.1.17": {
@@ -2447,6 +2580,657 @@
         "preBuild": "export CARGO_CRATE_NAME=iana_time_zone;"
       }
     },
+    "icu_collections-2.2.0": {
+      "name": "icu_collections",
+      "version": "2.2.0",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/icu_collections/icu_collections-2.2.0.crate",
+        "sha256": "2984d1cd16c883d7935b9e07e44071dca8d917fd52ecc02c04d5fa0b5a3f191c",
+        "name_with_ext": "icu_collections-2.2.0.tar.gz"
+      },
+      "features": [],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "displaydoc",
+          "package_key": "displaydoc-0.2.6",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "host"
+        },
+        {
+          "name": "potential_utf",
+          "package_key": "potential_utf-0.1.5",
+          "kind": "normal",
+          "features": [
+            "zerovec"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "utf8_iter",
+          "package_key": "utf8_iter-1.0.4",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "yoke",
+          "package_key": "yoke-0.8.3",
+          "kind": "normal",
+          "features": [
+            "derive"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerofrom",
+          "package_key": "zerofrom-0.1.8",
+          "kind": "normal",
+          "features": [
+            "derive"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerovec",
+          "package_key": "zerovec-0.11.6",
+          "kind": "normal",
+          "features": [
+            "derive",
+            "yoke"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "icu_collections",
+        "version": "2.2.0",
+        "edition": "2021",
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=icu_collections;"
+      }
+    },
+    "icu_locale_core-2.2.0": {
+      "name": "icu_locale_core",
+      "version": "2.2.0",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/icu_locale_core/icu_locale_core-2.2.0.crate",
+        "sha256": "92219b62b3e2b4d88ac5119f8904c10f8f61bf7e95b640d25ba3075e6cac2c29",
+        "name_with_ext": "icu_locale_core-2.2.0.tar.gz"
+      },
+      "features": [
+        "zerovec"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "displaydoc",
+          "package_key": "displaydoc-0.2.6",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "host"
+        },
+        {
+          "name": "litemap",
+          "package_key": "litemap-0.8.2",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "tinystr",
+          "package_key": "tinystr-0.8.3",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "writeable",
+          "package_key": "writeable-0.6.3",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerovec",
+          "package_key": "zerovec-0.11.6",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "icu_locale_core",
+        "version": "2.2.0",
+        "edition": "2021",
+        "features": [
+          "zerovec"
+        ],
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=icu_locale_core;"
+      }
+    },
+    "icu_normalizer-2.2.0": {
+      "name": "icu_normalizer",
+      "version": "2.2.0",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/icu_normalizer/icu_normalizer-2.2.0.crate",
+        "sha256": "c56e5ee99d6e3d33bd91c5d85458b6005a22140021cc324cea84dd0e72cff3b4",
+        "name_with_ext": "icu_normalizer-2.2.0.tar.gz"
+      },
+      "features": [
+        "compiled_data"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "icu_collections",
+          "package_key": "icu_collections-2.2.0",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "icu_normalizer_data",
+          "package_key": "icu_normalizer_data-2.2.0",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "icu_provider",
+          "package_key": "icu_provider-2.2.0",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "smallvec",
+          "package_key": "smallvec-1.15.2",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerovec",
+          "package_key": "zerovec-0.11.6",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "icu_normalizer",
+        "version": "2.2.0",
+        "edition": "2021",
+        "features": [
+          "compiled_data"
+        ],
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=icu_normalizer;"
+      }
+    },
+    "icu_normalizer_data-2.2.0": {
+      "name": "icu_normalizer_data",
+      "version": "2.2.0",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/icu_normalizer_data/icu_normalizer_data-2.2.0.crate",
+        "sha256": "da3be0ae77ea334f4da67c12f149704f19f81d1adf7c51cf482943e84a2bad38",
+        "name_with_ext": "icu_normalizer_data-2.2.0.tar.gz"
+      },
+      "features": [],
+      "proc_macro": false,
+      "build_script": "build.rs",
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "icu_normalizer_data",
+        "version": "2.2.0",
+        "edition": "2021",
+        "release": true,
+        "build": "build.rs",
+        "preBuild": "export CARGO_CRATE_NAME=icu_normalizer_data;"
+      }
+    },
+    "icu_properties-2.2.0": {
+      "name": "icu_properties",
+      "version": "2.2.0",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/icu_properties/icu_properties-2.2.0.crate",
+        "sha256": "bee3b67d0ea5c2cca5003417989af8996f8604e34fb9ddf96208a033901e70de",
+        "name_with_ext": "icu_properties-2.2.0.tar.gz"
+      },
+      "features": [
+        "compiled_data"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "icu_collections",
+          "package_key": "icu_collections-2.2.0",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "icu_locale_core",
+          "package_key": "icu_locale_core-2.2.0",
+          "kind": "normal",
+          "features": [
+            "zerovec"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "icu_properties_data",
+          "package_key": "icu_properties_data-2.2.0",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "icu_provider",
+          "package_key": "icu_provider-2.2.0",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerotrie",
+          "package_key": "zerotrie-0.2.4",
+          "kind": "normal",
+          "features": [
+            "yoke",
+            "zerofrom"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerovec",
+          "package_key": "zerovec-0.11.6",
+          "kind": "normal",
+          "features": [
+            "derive",
+            "yoke"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "icu_properties",
+        "version": "2.2.0",
+        "edition": "2021",
+        "features": [
+          "compiled_data"
+        ],
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=icu_properties;"
+      }
+    },
+    "icu_properties_data-2.2.0": {
+      "name": "icu_properties_data",
+      "version": "2.2.0",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/icu_properties_data/icu_properties_data-2.2.0.crate",
+        "sha256": "8e2bbb201e0c04f7b4b3e14382af113e17ba4f63e2c9d2ee626b720cbce54a14",
+        "name_with_ext": "icu_properties_data-2.2.0.tar.gz"
+      },
+      "features": [],
+      "proc_macro": false,
+      "build_script": "build.rs",
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "icu_properties_data",
+        "version": "2.2.0",
+        "edition": "2021",
+        "release": true,
+        "build": "build.rs",
+        "preBuild": "export CARGO_CRATE_NAME=icu_properties_data;"
+      }
+    },
+    "icu_provider-2.2.0": {
+      "name": "icu_provider",
+      "version": "2.2.0",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/icu_provider/icu_provider-2.2.0.crate",
+        "sha256": "139c4cf31c8b5f33d7e199446eff9c1e02decfc2f0eec2c8d71f65befa45b421",
+        "name_with_ext": "icu_provider-2.2.0.tar.gz"
+      },
+      "features": [
+        "baked"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "displaydoc",
+          "package_key": "displaydoc-0.2.6",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "host"
+        },
+        {
+          "name": "icu_locale_core",
+          "package_key": "icu_locale_core-2.2.0",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "writeable",
+          "package_key": "writeable-0.6.3",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "yoke",
+          "package_key": "yoke-0.8.3",
+          "kind": "normal",
+          "features": [
+            "derive"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerofrom",
+          "package_key": "zerofrom-0.1.8",
+          "kind": "normal",
+          "features": [
+            "derive"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerotrie",
+          "package_key": "zerotrie-0.2.4",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerovec",
+          "package_key": "zerovec-0.11.6",
+          "kind": "normal",
+          "features": [
+            "derive"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "icu_provider",
+        "version": "2.2.0",
+        "edition": "2021",
+        "features": [
+          "baked"
+        ],
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=icu_provider;"
+      }
+    },
+    "idna-1.1.0": {
+      "name": "idna",
+      "version": "1.1.0",
+      "edition": "2018",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/idna/idna-1.1.0.crate",
+        "sha256": "3b0875f23caa03898994f6ddc501886a45c7d3d62d04d2d90788d47be1b1e4de",
+        "name_with_ext": "idna-1.1.0.tar.gz"
+      },
+      "features": [
+        "alloc",
+        "compiled_data",
+        "std"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "idna_adapter",
+          "package_key": "idna_adapter-1.2.2",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "smallvec",
+          "package_key": "smallvec-1.15.2",
+          "kind": "normal",
+          "features": [
+            "const_generics"
+          ],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "utf8_iter",
+          "package_key": "utf8_iter-1.0.4",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "idna",
+        "version": "1.1.0",
+        "edition": "2018",
+        "features": [
+          "alloc",
+          "compiled_data",
+          "std"
+        ],
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=idna;"
+      }
+    },
+    "idna_adapter-1.2.2": {
+      "name": "idna_adapter",
+      "version": "1.2.2",
+      "edition": "2024",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/idna_adapter/idna_adapter-1.2.2.crate",
+        "sha256": "cb68373c0d6620ef8105e855e7745e18b0d00d3bdb07fb532e434244cdb9a714",
+        "name_with_ext": "idna_adapter-1.2.2.tar.gz"
+      },
+      "features": [
+        "compiled_data"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "icu_normalizer",
+          "package_key": "icu_normalizer-2.2.0",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "icu_properties",
+          "package_key": "icu_properties-2.2.0",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "idna_adapter",
+        "version": "1.2.2",
+        "edition": "2024",
+        "features": [
+          "compiled_data"
+        ],
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=idna_adapter;"
+      }
+    },
     "indexmap-2.14.0": {
       "name": "indexmap",
       "version": "2.14.0",
@@ -2739,9 +3523,9 @@
         "preBuild": "export CARGO_CRATE_NAME=itoa;"
       }
     },
-    "izumi-0.1.1": {
+    "izumi-0.1.8": {
       "name": "izumi",
-      "version": "0.1.1",
+      "version": "0.1.8",
       "edition": "2024",
       "source": {
         "kind": "path",
@@ -2843,13 +3627,25 @@
           "optional": false,
           "target": null,
           "tree": "target"
+        },
+        {
+          "name": "url",
+          "package_key": "url-2.5.8",
+          "kind": "normal",
+          "features": [
+            "serde"
+          ],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
         }
       ],
       "build_dependencies": [],
       "crate_renames": {},
       "build_rust_crate_args": {
         "crateName": "izumi",
-        "version": "0.1.1",
+        "version": "0.1.8",
         "edition": "2024",
         "release": true,
         "libName": "izumi",
@@ -2857,9 +3653,9 @@
         "preBuild": "export CARGO_CRATE_NAME=izumi;"
       }
     },
-    "izumi-board-0.1.1": {
+    "izumi-board-0.1.8": {
       "name": "izumi-board",
-      "version": "0.1.1",
+      "version": "0.1.8",
       "edition": "2024",
       "source": {
         "kind": "path",
@@ -2901,7 +3697,7 @@
         },
         {
           "name": "izumi",
-          "package_key": "izumi-0.1.1",
+          "package_key": "izumi-0.1.8",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -2911,7 +3707,7 @@
         },
         {
           "name": "izumi_config",
-          "package_key": "izumi-config-0.1.1",
+          "package_key": "izumi-config-0.1.8",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -2921,7 +3717,7 @@
         },
         {
           "name": "izumi_sources",
-          "package_key": "izumi-sources-0.1.1",
+          "package_key": "izumi-sources-0.1.8",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -3004,13 +3800,13 @@
       "crate_renames": {
         "izumi-config": [
           {
-            "version": "0.1.1",
+            "version": "0.1.8",
             "rename": "izumi_config"
           }
         ],
         "izumi-sources": [
           {
-            "version": "0.1.1",
+            "version": "0.1.8",
             "rename": "izumi_sources"
           }
         ],
@@ -3023,18 +3819,18 @@
       },
       "build_rust_crate_args": {
         "crateName": "izumi-board",
-        "version": "0.1.1",
+        "version": "0.1.8",
         "edition": "2024",
         "crateRenames": {
           "izumi-config": [
             {
-              "version": "0.1.1",
+              "version": "0.1.8",
               "rename": "izumi_config"
             }
           ],
           "izumi-sources": [
             {
-              "version": "0.1.1",
+              "version": "0.1.8",
               "rename": "izumi_sources"
             }
           ],
@@ -3049,9 +3845,9 @@
         "preBuild": "export CARGO_CRATE_NAME=izumi_board;"
       }
     },
-    "izumi-config-0.1.1": {
+    "izumi-config-0.1.8": {
       "name": "izumi-config",
-      "version": "0.1.1",
+      "version": "0.1.8",
       "edition": "2024",
       "source": {
         "kind": "path",
@@ -3069,7 +3865,7 @@
       "runtime_dependencies": [
         {
           "name": "izumi",
-          "package_key": "izumi-0.1.1",
+          "package_key": "izumi-0.1.8",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -3104,7 +3900,7 @@
       "crate_renames": {},
       "build_rust_crate_args": {
         "crateName": "izumi-config",
-        "version": "0.1.1",
+        "version": "0.1.8",
         "edition": "2024",
         "release": true,
         "libName": "izumi_config",
@@ -3112,9 +3908,9 @@
         "preBuild": "export CARGO_CRATE_NAME=izumi_config;"
       }
     },
-    "izumi-lisp-0.1.1": {
+    "izumi-lisp-0.1.8": {
       "name": "izumi-lisp",
-      "version": "0.1.1",
+      "version": "0.1.8",
       "edition": "2024",
       "source": {
         "kind": "path",
@@ -3132,7 +3928,7 @@
       "runtime_dependencies": [
         {
           "name": "izumi_config",
-          "package_key": "izumi-config-0.1.1",
+          "package_key": "izumi-config-0.1.8",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -3164,67 +3960,45 @@
         },
         {
           "name": "tatara_lisp",
-          "package_key": "tatara-lisp-0.2.4",
+          "package_key": "tatara-lisp-0.3.4",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
           "optional": false,
           "target": null,
           "tree": "target"
-        },
-        {
-          "name": "tatara_lisp_derive",
-          "package_key": "tatara-lisp-derive-0.2.4",
-          "kind": "normal",
-          "features": [],
-          "uses_default_features": true,
-          "optional": false,
-          "target": null,
-          "tree": "host"
         }
       ],
       "build_dependencies": [],
       "crate_renames": {
         "izumi-config": [
           {
-            "version": "0.1.1",
+            "version": "0.1.8",
             "rename": "izumi_config"
           }
         ],
         "tatara-lisp": [
           {
-            "version": "0.2.4",
+            "version": "0.3.4",
             "rename": "tatara_lisp"
-          }
-        ],
-        "tatara-lisp-derive": [
-          {
-            "version": "0.2.4",
-            "rename": "tatara_lisp_derive"
           }
         ]
       },
       "build_rust_crate_args": {
         "crateName": "izumi-lisp",
-        "version": "0.1.1",
+        "version": "0.1.8",
         "edition": "2024",
         "crateRenames": {
           "izumi-config": [
             {
-              "version": "0.1.1",
+              "version": "0.1.8",
               "rename": "izumi_config"
             }
           ],
           "tatara-lisp": [
             {
-              "version": "0.2.4",
+              "version": "0.3.4",
               "rename": "tatara_lisp"
-            }
-          ],
-          "tatara-lisp-derive": [
-            {
-              "version": "0.2.4",
-              "rename": "tatara_lisp_derive"
             }
           ]
         },
@@ -3234,9 +4008,9 @@
         "preBuild": "export CARGO_CRATE_NAME=izumi_lisp;"
       }
     },
-    "izumi-sources-0.1.1": {
+    "izumi-sources-0.1.8": {
       "name": "izumi-sources",
-      "version": "0.1.1",
+      "version": "0.1.8",
       "edition": "2024",
       "source": {
         "kind": "path",
@@ -3254,7 +4028,7 @@
       "runtime_dependencies": [
         {
           "name": "izumi",
-          "package_key": "izumi-0.1.1",
+          "package_key": "izumi-0.1.8",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -3289,7 +4063,7 @@
       "crate_renames": {},
       "build_rust_crate_args": {
         "crateName": "izumi-sources",
-        "version": "0.1.1",
+        "version": "0.1.8",
         "edition": "2024",
         "release": true,
         "libName": "izumi_sources",
@@ -3510,6 +4284,33 @@
         ],
         "release": true,
         "preBuild": "export CARGO_CRATE_NAME=linux_raw_sys;"
+      }
+    },
+    "litemap-0.8.2": {
+      "name": "litemap",
+      "version": "0.8.2",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/litemap/litemap-0.8.2.crate",
+        "sha256": "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0",
+        "name_with_ext": "litemap-0.8.2.tar.gz"
+      },
+      "features": [],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "litemap",
+        "version": "0.8.2",
+        "edition": "2021",
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=litemap;"
       }
     },
     "lock_api-0.4.14": {
@@ -4374,6 +5175,40 @@
         "preBuild": "export CARGO_CRATE_NAME=pear_codegen;"
       }
     },
+    "percent-encoding-2.3.2": {
+      "name": "percent-encoding",
+      "version": "2.3.2",
+      "edition": "2018",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/percent-encoding/percent-encoding-2.3.2.crate",
+        "sha256": "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220",
+        "name_with_ext": "percent-encoding-2.3.2.tar.gz"
+      },
+      "features": [
+        "alloc",
+        "std"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "percent-encoding",
+        "version": "2.3.2",
+        "edition": "2018",
+        "features": [
+          "alloc",
+          "std"
+        ],
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=percent_encoding;"
+      }
+    },
     "pin-project-lite-0.2.17": {
       "name": "pin-project-lite",
       "version": "0.2.17",
@@ -4399,6 +5234,49 @@
         "edition": "2018",
         "release": true,
         "preBuild": "export CARGO_CRATE_NAME=pin_project_lite;"
+      }
+    },
+    "potential_utf-0.1.5": {
+      "name": "potential_utf",
+      "version": "0.1.5",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/potential_utf/potential_utf-0.1.5.crate",
+        "sha256": "0103b1cef7ec0cf76490e969665504990193874ea05c85ff9bab8b911d0a0564",
+        "name_with_ext": "potential_utf-0.1.5.tar.gz"
+      },
+      "features": [
+        "zerovec"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "zerovec",
+          "package_key": "zerovec-0.11.6",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "potential_utf",
+        "version": "0.1.5",
+        "edition": "2021",
+        "features": [
+          "zerovec"
+        ],
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=potential_utf;"
       }
     },
     "ppv-lite86-0.2.21": {
@@ -6438,7 +7316,9 @@
         "sha256": "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90",
         "name_with_ext": "smallvec-1.15.2.tar.gz"
       },
-      "features": [],
+      "features": [
+        "const_generics"
+      ],
       "proc_macro": false,
       "build_script": null,
       "links": null,
@@ -6451,6 +7331,9 @@
         "crateName": "smallvec",
         "version": "1.15.2",
         "edition": "2018",
+        "features": [
+          "const_generics"
+        ],
         "release": true,
         "preBuild": "export CARGO_CRATE_NAME=smallvec;"
       }
@@ -6498,6 +7381,33 @@
         "preBuild": "export CARGO_CRATE_NAME=socket2;"
       }
     },
+    "stable_deref_trait-1.2.1": {
+      "name": "stable_deref_trait",
+      "version": "1.2.1",
+      "edition": "2015",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/stable_deref_trait/stable_deref_trait-1.2.1.crate",
+        "sha256": "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596",
+        "name_with_ext": "stable_deref_trait-1.2.1.tar.gz"
+      },
+      "features": [],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "stable_deref_trait",
+        "version": "1.2.1",
+        "edition": "2015",
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=stable_deref_trait;"
+      }
+    },
     "strsim-0.11.1": {
       "name": "strsim",
       "version": "0.11.1",
@@ -6540,6 +7450,7 @@
         "default",
         "derive",
         "extra-traits",
+        "fold",
         "full",
         "parsing",
         "printing",
@@ -6608,6 +7519,7 @@
           "default",
           "derive",
           "extra-traits",
+          "fold",
           "full",
           "parsing",
           "printing",
@@ -6633,15 +7545,102 @@
         "preBuild": "export CARGO_CRATE_NAME=syn;"
       }
     },
-    "tatara-lisp-0.2.4": {
+    "synstructure-0.13.2": {
+      "name": "synstructure",
+      "version": "0.13.2",
+      "edition": "2018",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/synstructure/synstructure-0.13.2.crate",
+        "sha256": "728a70f3dbaf5bab7f0c4b1ac8d7ae5ea60a4b5549c8a5914361c99147a709d2",
+        "name_with_ext": "synstructure-0.13.2.tar.gz"
+      },
+      "features": [
+        "default",
+        "proc-macro"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "proc_macro2",
+          "package_key": "proc-macro2-1.0.106",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "quote",
+          "package_key": "quote-1.0.46",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "syn",
+          "package_key": "syn-2.0.118",
+          "kind": "normal",
+          "features": [
+            "clone-impls",
+            "derive",
+            "extra-traits",
+            "parsing",
+            "printing",
+            "visit"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {
+        "proc-macro2": [
+          {
+            "version": "1.0.106",
+            "rename": "proc_macro2"
+          }
+        ]
+      },
+      "build_rust_crate_args": {
+        "crateName": "synstructure",
+        "version": "0.13.2",
+        "edition": "2018",
+        "features": [
+          "default",
+          "proc-macro"
+        ],
+        "crateRenames": {
+          "proc-macro2": [
+            {
+              "version": "1.0.106",
+              "rename": "proc_macro2"
+            }
+          ]
+        },
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=synstructure;"
+      }
+    },
+    "tatara-lisp-0.3.4": {
       "name": "tatara-lisp",
-      "version": "0.2.4",
+      "version": "0.3.4",
       "edition": "2021",
       "source": {
         "kind": "registry",
-        "url": "https://static.crates.io/crates/tatara-lisp/tatara-lisp-0.2.4.crate",
-        "sha256": "8e5f8a9c5a4835544490d7276eaa5fa71bbc6b480e526232d0f63c1af667669d",
-        "name_with_ext": "tatara-lisp-0.2.4.tar.gz"
+        "url": "https://static.crates.io/crates/tatara-lisp/tatara-lisp-0.3.4.crate",
+        "sha256": "00a94c0c1d40aae6109b2450b8b2a15ccc79a01461836753351b4bfd3a50cec9",
+        "name_with_ext": "tatara-lisp-0.3.4.tar.gz"
       },
       "features": [
         "default"
@@ -6686,7 +7685,7 @@
         },
         {
           "name": "tatara_lisp_derive",
-          "package_key": "tatara-lisp-derive-0.2.4",
+          "package_key": "tatara-lisp-derive-0.3.4",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -6709,14 +7708,14 @@
       "crate_renames": {
         "tatara-lisp-derive": [
           {
-            "version": "0.2.4",
+            "version": "0.3.4",
             "rename": "tatara_lisp_derive"
           }
         ]
       },
       "build_rust_crate_args": {
         "crateName": "tatara-lisp",
-        "version": "0.2.4",
+        "version": "0.3.4",
         "edition": "2021",
         "features": [
           "default"
@@ -6724,7 +7723,7 @@
         "crateRenames": {
           "tatara-lisp-derive": [
             {
-              "version": "0.2.4",
+              "version": "0.3.4",
               "rename": "tatara_lisp_derive"
             }
           ]
@@ -6733,15 +7732,15 @@
         "preBuild": "export CARGO_CRATE_NAME=tatara_lisp;"
       }
     },
-    "tatara-lisp-derive-0.2.4": {
+    "tatara-lisp-derive-0.3.4": {
       "name": "tatara-lisp-derive",
-      "version": "0.2.4",
+      "version": "0.3.4",
       "edition": "2021",
       "source": {
         "kind": "registry",
-        "url": "https://static.crates.io/crates/tatara-lisp-derive/tatara-lisp-derive-0.2.4.crate",
-        "sha256": "8ba8ba8fb637c27909a109a996b36cb1c75f63c19a0dbcec26f19f86873e2213",
-        "name_with_ext": "tatara-lisp-derive-0.2.4.tar.gz"
+        "url": "https://static.crates.io/crates/tatara-lisp-derive/tatara-lisp-derive-0.3.4.crate",
+        "sha256": "bdb05368da33f122fde05fd3f67a827022ef65ac4efbca6e27e0ea6e4f8036a9",
+        "name_with_ext": "tatara-lisp-derive-0.3.4.tar.gz"
       },
       "features": [],
       "proc_macro": true,
@@ -6794,7 +7793,7 @@
       },
       "build_rust_crate_args": {
         "crateName": "tatara-lisp-derive",
-        "version": "0.2.4",
+        "version": "0.3.4",
         "edition": "2021",
         "crateRenames": {
           "proc-macro2": [
@@ -7074,6 +8073,59 @@
         },
         "release": true,
         "preBuild": "export CARGO_CRATE_NAME=thread_local;"
+      }
+    },
+    "tinystr-0.8.3": {
+      "name": "tinystr",
+      "version": "0.8.3",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/tinystr/tinystr-0.8.3.crate",
+        "sha256": "c8323304221c2a851516f22236c5722a72eaa19749016521d6dff0824447d96d",
+        "name_with_ext": "tinystr-0.8.3.tar.gz"
+      },
+      "features": [
+        "zerovec"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "displaydoc",
+          "package_key": "displaydoc-0.2.6",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "host"
+        },
+        {
+          "name": "zerovec",
+          "package_key": "zerovec-0.11.6",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "tinystr",
+        "version": "0.8.3",
+        "edition": "2021",
+        "features": [
+          "zerovec"
+        ],
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=tinystr;"
       }
     },
     "tokio-1.52.3": {
@@ -8306,6 +9358,142 @@
         "preBuild": "export CARGO_CRATE_NAME=unsafe_libyaml;"
       }
     },
+    "url-2.5.8": {
+      "name": "url",
+      "version": "2.5.8",
+      "edition": "2018",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/url/url-2.5.8.crate",
+        "sha256": "ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed",
+        "name_with_ext": "url-2.5.8.tar.gz"
+      },
+      "features": [
+        "default",
+        "serde",
+        "std"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "form_urlencoded",
+          "package_key": "form_urlencoded-1.2.2",
+          "kind": "normal",
+          "features": [
+            "alloc"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "idna",
+          "package_key": "idna-1.1.0",
+          "kind": "normal",
+          "features": [
+            "alloc",
+            "compiled_data"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "percent_encoding",
+          "package_key": "percent-encoding-2.3.2",
+          "kind": "normal",
+          "features": [
+            "alloc"
+          ],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "serde",
+          "package_key": "serde-1.0.228",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "serde_derive",
+          "package_key": "serde_derive-1.0.228",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "host"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {
+        "percent-encoding": [
+          {
+            "version": "2.3.2",
+            "rename": "percent_encoding"
+          }
+        ]
+      },
+      "build_rust_crate_args": {
+        "crateName": "url",
+        "version": "2.5.8",
+        "edition": "2018",
+        "features": [
+          "default",
+          "serde",
+          "std"
+        ],
+        "crateRenames": {
+          "percent-encoding": [
+            {
+              "version": "2.3.2",
+              "rename": "percent_encoding"
+            }
+          ]
+        },
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=url;"
+      }
+    },
+    "utf8_iter-1.0.4": {
+      "name": "utf8_iter",
+      "version": "1.0.4",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/utf8_iter/utf8_iter-1.0.4.crate",
+        "sha256": "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be",
+        "name_with_ext": "utf8_iter-1.0.4.tar.gz"
+      },
+      "features": [],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "utf8_iter",
+        "version": "1.0.4",
+        "edition": "2021",
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=utf8_iter;"
+      }
+    },
     "utf8parse-0.2.2": {
       "name": "utf8parse",
       "version": "0.2.2",
@@ -8505,6 +9693,33 @@
         "preBuild": "export CARGO_CRATE_NAME=winnow;"
       }
     },
+    "writeable-0.6.3": {
+      "name": "writeable",
+      "version": "0.6.3",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/writeable/writeable-0.6.3.crate",
+        "sha256": "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4",
+        "name_with_ext": "writeable-0.6.3.tar.gz"
+      },
+      "features": [],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "writeable",
+        "version": "0.6.3",
+        "edition": "2021",
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=writeable;"
+      }
+    },
     "yansi-1.0.1": {
       "name": "yansi",
       "version": "1.0.1",
@@ -8541,6 +9756,172 @@
         "preBuild": "export CARGO_CRATE_NAME=yansi;"
       }
     },
+    "yoke-0.8.3": {
+      "name": "yoke",
+      "version": "0.8.3",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/yoke/yoke-0.8.3.crate",
+        "sha256": "709fe23a0424b6a435d82152b1bd3fdfb0833487d5fa90d05d42762a9891fef5",
+        "name_with_ext": "yoke-0.8.3.tar.gz"
+      },
+      "features": [
+        "derive",
+        "zerofrom"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "stable_deref_trait",
+          "package_key": "stable_deref_trait-1.2.1",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "yoke_derive",
+          "package_key": "yoke-derive-0.8.2",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "host"
+        },
+        {
+          "name": "zerofrom",
+          "package_key": "zerofrom-0.1.8",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {
+        "yoke-derive": [
+          {
+            "version": "0.8.2",
+            "rename": "yoke_derive"
+          }
+        ]
+      },
+      "build_rust_crate_args": {
+        "crateName": "yoke",
+        "version": "0.8.3",
+        "edition": "2021",
+        "features": [
+          "derive",
+          "zerofrom"
+        ],
+        "crateRenames": {
+          "yoke-derive": [
+            {
+              "version": "0.8.2",
+              "rename": "yoke_derive"
+            }
+          ]
+        },
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=yoke;"
+      }
+    },
+    "yoke-derive-0.8.2": {
+      "name": "yoke-derive",
+      "version": "0.8.2",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/yoke-derive/yoke-derive-0.8.2.crate",
+        "sha256": "de844c262c8848816172cef550288e7dc6c7b7814b4ee56b3e1553f275f1858e",
+        "name_with_ext": "yoke-derive-0.8.2.tar.gz"
+      },
+      "features": [],
+      "proc_macro": true,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "proc_macro2",
+          "package_key": "proc-macro2-1.0.106",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "quote",
+          "package_key": "quote-1.0.46",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "syn",
+          "package_key": "syn-2.0.118",
+          "kind": "normal",
+          "features": [
+            "fold"
+          ],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "synstructure",
+          "package_key": "synstructure-0.13.2",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {
+        "proc-macro2": [
+          {
+            "version": "1.0.106",
+            "rename": "proc_macro2"
+          }
+        ]
+      },
+      "build_rust_crate_args": {
+        "crateName": "yoke-derive",
+        "version": "0.8.2",
+        "edition": "2021",
+        "crateRenames": {
+          "proc-macro2": [
+            {
+              "version": "1.0.106",
+              "rename": "proc_macro2"
+            }
+          ]
+        },
+        "release": true,
+        "procMacro": true,
+        "preBuild": "export CARGO_CRATE_NAME=yoke_derive;"
+      }
+    },
     "zerocopy-0.8.52": {
       "name": "zerocopy",
       "version": "0.8.52",
@@ -8574,6 +9955,373 @@
         "preBuild": "export CARGO_CRATE_NAME=zerocopy;"
       }
     },
+    "zerofrom-0.1.8": {
+      "name": "zerofrom",
+      "version": "0.1.8",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/zerofrom/zerofrom-0.1.8.crate",
+        "sha256": "0ec05a11813ea801ff6d75110ad09cd0824ddba17dfe17128ea0d5f68e6c5272",
+        "name_with_ext": "zerofrom-0.1.8.tar.gz"
+      },
+      "features": [
+        "derive"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "zerofrom_derive",
+          "package_key": "zerofrom-derive-0.1.7",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "host"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {
+        "zerofrom-derive": [
+          {
+            "version": "0.1.7",
+            "rename": "zerofrom_derive"
+          }
+        ]
+      },
+      "build_rust_crate_args": {
+        "crateName": "zerofrom",
+        "version": "0.1.8",
+        "edition": "2021",
+        "features": [
+          "derive"
+        ],
+        "crateRenames": {
+          "zerofrom-derive": [
+            {
+              "version": "0.1.7",
+              "rename": "zerofrom_derive"
+            }
+          ]
+        },
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=zerofrom;"
+      }
+    },
+    "zerofrom-derive-0.1.7": {
+      "name": "zerofrom-derive",
+      "version": "0.1.7",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/zerofrom-derive/zerofrom-derive-0.1.7.crate",
+        "sha256": "11532158c46691caf0f2593ea8358fed6bbf68a0315e80aae9bd41fbade684a1",
+        "name_with_ext": "zerofrom-derive-0.1.7.tar.gz"
+      },
+      "features": [],
+      "proc_macro": true,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "proc_macro2",
+          "package_key": "proc-macro2-1.0.106",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "quote",
+          "package_key": "quote-1.0.46",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "syn",
+          "package_key": "syn-2.0.118",
+          "kind": "normal",
+          "features": [
+            "fold"
+          ],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "synstructure",
+          "package_key": "synstructure-0.13.2",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {
+        "proc-macro2": [
+          {
+            "version": "1.0.106",
+            "rename": "proc_macro2"
+          }
+        ]
+      },
+      "build_rust_crate_args": {
+        "crateName": "zerofrom-derive",
+        "version": "0.1.7",
+        "edition": "2021",
+        "crateRenames": {
+          "proc-macro2": [
+            {
+              "version": "1.0.106",
+              "rename": "proc_macro2"
+            }
+          ]
+        },
+        "release": true,
+        "procMacro": true,
+        "preBuild": "export CARGO_CRATE_NAME=zerofrom_derive;"
+      }
+    },
+    "zerotrie-0.2.4": {
+      "name": "zerotrie",
+      "version": "0.2.4",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/zerotrie/zerotrie-0.2.4.crate",
+        "sha256": "0f9152d31db0792fa83f70fb2f83148effb5c1f5b8c7686c3459e361d9bc20bf",
+        "name_with_ext": "zerotrie-0.2.4.tar.gz"
+      },
+      "features": [
+        "yoke",
+        "zerofrom"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "displaydoc",
+          "package_key": "displaydoc-0.2.6",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "host"
+        },
+        {
+          "name": "yoke",
+          "package_key": "yoke-0.8.3",
+          "kind": "normal",
+          "features": [
+            "derive"
+          ],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerofrom",
+          "package_key": "zerofrom-0.1.8",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {},
+      "build_rust_crate_args": {
+        "crateName": "zerotrie",
+        "version": "0.2.4",
+        "edition": "2021",
+        "features": [
+          "yoke",
+          "zerofrom"
+        ],
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=zerotrie;"
+      }
+    },
+    "zerovec-0.11.6": {
+      "name": "zerovec",
+      "version": "0.11.6",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/zerovec/zerovec-0.11.6.crate",
+        "sha256": "90f911cbc359ab6af17377d242225f4d75119aec87ea711a880987b18cd7b239",
+        "name_with_ext": "zerovec-0.11.6.tar.gz"
+      },
+      "features": [
+        "derive",
+        "yoke"
+      ],
+      "proc_macro": false,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "yoke",
+          "package_key": "yoke-0.8.3",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerofrom",
+          "package_key": "zerofrom-0.1.8",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "zerovec_derive",
+          "package_key": "zerovec-derive-0.11.3",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": false,
+          "optional": true,
+          "target": null,
+          "tree": "host"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {
+        "zerovec-derive": [
+          {
+            "version": "0.11.3",
+            "rename": "zerovec_derive"
+          }
+        ]
+      },
+      "build_rust_crate_args": {
+        "crateName": "zerovec",
+        "version": "0.11.6",
+        "edition": "2021",
+        "features": [
+          "derive",
+          "yoke"
+        ],
+        "crateRenames": {
+          "zerovec-derive": [
+            {
+              "version": "0.11.3",
+              "rename": "zerovec_derive"
+            }
+          ]
+        },
+        "release": true,
+        "preBuild": "export CARGO_CRATE_NAME=zerovec;"
+      }
+    },
+    "zerovec-derive-0.11.3": {
+      "name": "zerovec-derive",
+      "version": "0.11.3",
+      "edition": "2021",
+      "source": {
+        "kind": "registry",
+        "url": "https://static.crates.io/crates/zerovec-derive/zerovec-derive-0.11.3.crate",
+        "sha256": "625dc425cab0dca6dc3c3319506e6593dcb08a9f387ea3b284dbd52a92c40555",
+        "name_with_ext": "zerovec-derive-0.11.3.tar.gz"
+      },
+      "features": [],
+      "proc_macro": true,
+      "build_script": null,
+      "links": null,
+      "binaries": [],
+      "lib_target": null,
+      "runtime_dependencies": [
+        {
+          "name": "proc_macro2",
+          "package_key": "proc-macro2-1.0.106",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "quote",
+          "package_key": "quote-1.0.46",
+          "kind": "normal",
+          "features": [],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        },
+        {
+          "name": "syn",
+          "package_key": "syn-2.0.118",
+          "kind": "normal",
+          "features": [
+            "extra-traits"
+          ],
+          "uses_default_features": true,
+          "optional": false,
+          "target": null,
+          "tree": "target"
+        }
+      ],
+      "build_dependencies": [],
+      "crate_renames": {
+        "proc-macro2": [
+          {
+            "version": "1.0.106",
+            "rename": "proc_macro2"
+          }
+        ]
+      },
+      "build_rust_crate_args": {
+        "crateName": "zerovec-derive",
+        "version": "0.11.3",
+        "edition": "2021",
+        "crateRenames": {
+          "proc-macro2": [
+            {
+              "version": "1.0.106",
+              "rename": "proc_macro2"
+            }
+          ]
+        },
+        "release": true,
+        "procMacro": true,
+        "preBuild": "export CARGO_CRATE_NAME=zerovec_derive;"
+      }
+    },
     "zmij-1.0.21": {
       "name": "zmij",
       "version": "1.0.21",
@@ -8603,13 +10351,13 @@
       }
     }
   },
-  "root_crate": "izumi-0.1.1",
+  "root_crate": "izumi-0.1.8",
   "workspace_members": [
-    "izumi-0.1.1",
-    "izumi-sources-0.1.1",
-    "izumi-config-0.1.1",
-    "izumi-lisp-0.1.1",
-    "izumi-board-0.1.1"
+    "izumi-0.1.8",
+    "izumi-sources-0.1.8",
+    "izumi-config-0.1.8",
+    "izumi-lisp-0.1.8",
+    "izumi-board-0.1.8"
   ],
   "flake_metadata": {
     "izumi": {
@@ -9140,6 +10888,42 @@
         "build_dependencies": [],
         "features": []
       },
+      "displaydoc-0.2.6": {
+        "runtime_dependencies": [
+          {
+            "name": "proc_macro2",
+            "package_key": "proc-macro2-1.0.106",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "quote",
+            "package_key": "quote-1.0.46",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "syn",
+            "package_key": "syn-2.0.118",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": []
+      },
       "equivalent-1.0.2": {
         "runtime_dependencies": [],
         "build_dependencies": [],
@@ -9277,6 +11061,25 @@
         "build_dependencies": [],
         "features": [
           "default",
+          "std"
+        ]
+      },
+      "form_urlencoded-1.2.2": {
+        "runtime_dependencies": [
+          {
+            "name": "percent_encoding",
+            "package_key": "percent-encoding-2.3.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
           "std"
         ]
       },
@@ -9673,6 +11476,437 @@
         "build_dependencies": [],
         "features": []
       },
+      "icu_collections-2.2.0": {
+        "runtime_dependencies": [
+          {
+            "name": "displaydoc",
+            "package_key": "displaydoc-0.2.6",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "host"
+          },
+          {
+            "name": "potential_utf",
+            "package_key": "potential_utf-0.1.5",
+            "kind": "normal",
+            "features": [
+              "zerovec"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "utf8_iter",
+            "package_key": "utf8_iter-1.0.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "yoke",
+            "package_key": "yoke-0.8.3",
+            "kind": "normal",
+            "features": [
+              "derive"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerofrom",
+            "package_key": "zerofrom-0.1.8",
+            "kind": "normal",
+            "features": [
+              "derive"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerovec",
+            "package_key": "zerovec-0.11.6",
+            "kind": "normal",
+            "features": [
+              "derive",
+              "yoke"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": []
+      },
+      "icu_locale_core-2.2.0": {
+        "runtime_dependencies": [
+          {
+            "name": "displaydoc",
+            "package_key": "displaydoc-0.2.6",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "host"
+          },
+          {
+            "name": "litemap",
+            "package_key": "litemap-0.8.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tinystr",
+            "package_key": "tinystr-0.8.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "writeable",
+            "package_key": "writeable-0.6.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerovec",
+            "package_key": "zerovec-0.11.6",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "zerovec"
+        ]
+      },
+      "icu_normalizer-2.2.0": {
+        "runtime_dependencies": [
+          {
+            "name": "icu_collections",
+            "package_key": "icu_collections-2.2.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "icu_normalizer_data",
+            "package_key": "icu_normalizer_data-2.2.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "icu_provider",
+            "package_key": "icu_provider-2.2.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "smallvec",
+            "package_key": "smallvec-1.15.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerovec",
+            "package_key": "zerovec-0.11.6",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "compiled_data"
+        ]
+      },
+      "icu_normalizer_data-2.2.0": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "icu_properties-2.2.0": {
+        "runtime_dependencies": [
+          {
+            "name": "icu_collections",
+            "package_key": "icu_collections-2.2.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "icu_locale_core",
+            "package_key": "icu_locale_core-2.2.0",
+            "kind": "normal",
+            "features": [
+              "zerovec"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "icu_properties_data",
+            "package_key": "icu_properties_data-2.2.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "icu_provider",
+            "package_key": "icu_provider-2.2.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerotrie",
+            "package_key": "zerotrie-0.2.4",
+            "kind": "normal",
+            "features": [
+              "yoke",
+              "zerofrom"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerovec",
+            "package_key": "zerovec-0.11.6",
+            "kind": "normal",
+            "features": [
+              "derive",
+              "yoke"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "compiled_data"
+        ]
+      },
+      "icu_properties_data-2.2.0": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "icu_provider-2.2.0": {
+        "runtime_dependencies": [
+          {
+            "name": "displaydoc",
+            "package_key": "displaydoc-0.2.6",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "host"
+          },
+          {
+            "name": "icu_locale_core",
+            "package_key": "icu_locale_core-2.2.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "writeable",
+            "package_key": "writeable-0.6.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "yoke",
+            "package_key": "yoke-0.8.3",
+            "kind": "normal",
+            "features": [
+              "derive"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerofrom",
+            "package_key": "zerofrom-0.1.8",
+            "kind": "normal",
+            "features": [
+              "derive"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerotrie",
+            "package_key": "zerotrie-0.2.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerovec",
+            "package_key": "zerovec-0.11.6",
+            "kind": "normal",
+            "features": [
+              "derive"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "baked"
+        ]
+      },
+      "idna-1.1.0": {
+        "runtime_dependencies": [
+          {
+            "name": "idna_adapter",
+            "package_key": "idna_adapter-1.2.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "smallvec",
+            "package_key": "smallvec-1.15.2",
+            "kind": "normal",
+            "features": [
+              "const_generics"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "utf8_iter",
+            "package_key": "utf8_iter-1.0.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "compiled_data",
+          "std"
+        ]
+      },
+      "idna_adapter-1.2.2": {
+        "runtime_dependencies": [
+          {
+            "name": "icu_normalizer",
+            "package_key": "icu_normalizer-2.2.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "icu_properties",
+            "package_key": "icu_properties-2.2.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "compiled_data"
+        ]
+      },
       "indexmap-2.14.0": {
         "runtime_dependencies": [
           {
@@ -9735,7 +11969,7 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-0.1.1": {
+      "izumi-0.1.8": {
         "runtime_dependencies": [
           {
             "name": "blake3",
@@ -9823,12 +12057,24 @@
             "optional": false,
             "target": null,
             "tree": "target"
+          },
+          {
+            "name": "url",
+            "package_key": "url-2.5.8",
+            "kind": "normal",
+            "features": [
+              "serde"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
           }
         ],
         "build_dependencies": [],
         "features": []
       },
-      "izumi-board-0.1.1": {
+      "izumi-board-0.1.8": {
         "runtime_dependencies": [
           {
             "name": "clap",
@@ -9854,7 +12100,7 @@
           },
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.1",
+            "package_key": "izumi-0.1.8",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -9864,7 +12110,7 @@
           },
           {
             "name": "izumi_config",
-            "package_key": "izumi-config-0.1.1",
+            "package_key": "izumi-config-0.1.8",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -9874,7 +12120,7 @@
           },
           {
             "name": "izumi_sources",
-            "package_key": "izumi-sources-0.1.1",
+            "package_key": "izumi-sources-0.1.8",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -9956,11 +12202,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-config-0.1.1": {
+      "izumi-config-0.1.8": {
         "runtime_dependencies": [
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.1",
+            "package_key": "izumi-0.1.8",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -9994,11 +12240,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-lisp-0.1.1": {
+      "izumi-lisp-0.1.8": {
         "runtime_dependencies": [
           {
             "name": "izumi_config",
-            "package_key": "izumi-config-0.1.1",
+            "package_key": "izumi-config-0.1.8",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -10030,33 +12276,23 @@
           },
           {
             "name": "tatara_lisp",
-            "package_key": "tatara-lisp-0.2.4",
+            "package_key": "tatara-lisp-0.3.4",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
             "optional": false,
             "target": null,
             "tree": "target"
-          },
-          {
-            "name": "tatara_lisp_derive",
-            "package_key": "tatara-lisp-derive-0.2.4",
-            "kind": "normal",
-            "features": [],
-            "uses_default_features": true,
-            "optional": false,
-            "target": null,
-            "tree": "host"
           }
         ],
         "build_dependencies": [],
         "features": []
       },
-      "izumi-sources-0.1.1": {
+      "izumi-sources-0.1.8": {
         "runtime_dependencies": [
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.1",
+            "package_key": "izumi-0.1.8",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -10102,6 +12338,11 @@
           "default",
           "std"
         ]
+      },
+      "litemap-0.8.2": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
       },
       "lock_api-0.4.14": {
         "runtime_dependencies": [
@@ -10400,10 +12641,36 @@
         "build_dependencies": [],
         "features": []
       },
+      "percent-encoding-2.3.2": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "std"
+        ]
+      },
       "pin-project-lite-0.2.17": {
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": []
+      },
+      "potential_utf-0.1.5": {
+        "runtime_dependencies": [
+          {
+            "name": "zerovec",
+            "package_key": "zerovec-0.11.6",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "zerovec"
+        ]
       },
       "ppv-lite86-0.2.21": {
         "runtime_dependencies": [
@@ -11327,7 +13594,9 @@
       "smallvec-1.15.2": {
         "runtime_dependencies": [],
         "build_dependencies": [],
-        "features": []
+        "features": [
+          "const_generics"
+        ]
       },
       "socket2-0.6.4": {
         "runtime_dependencies": [
@@ -11346,6 +13615,11 @@
         "features": [
           "all"
         ]
+      },
+      "stable_deref_trait-1.2.1": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
       },
       "strsim-0.11.1": {
         "runtime_dependencies": [],
@@ -11391,6 +13665,7 @@
           "default",
           "derive",
           "extra-traits",
+          "fold",
           "full",
           "parsing",
           "printing",
@@ -11399,7 +13674,53 @@
           "visit-mut"
         ]
       },
-      "tatara-lisp-0.2.4": {
+      "synstructure-0.13.2": {
+        "runtime_dependencies": [
+          {
+            "name": "proc_macro2",
+            "package_key": "proc-macro2-1.0.106",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "quote",
+            "package_key": "quote-1.0.46",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "syn",
+            "package_key": "syn-2.0.118",
+            "kind": "normal",
+            "features": [
+              "clone-impls",
+              "derive",
+              "extra-traits",
+              "parsing",
+              "printing",
+              "visit"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "default",
+          "proc-macro"
+        ]
+      },
+      "tatara-lisp-0.3.4": {
         "runtime_dependencies": [
           {
             "name": "blake3",
@@ -11435,7 +13756,7 @@
           },
           {
             "name": "tatara_lisp_derive",
-            "package_key": "tatara-lisp-derive-0.2.4",
+            "package_key": "tatara-lisp-derive-0.3.4",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -11459,7 +13780,7 @@
           "default"
         ]
       },
-      "tatara-lisp-derive-0.2.4": {
+      "tatara-lisp-derive-0.3.4": {
         "runtime_dependencies": [
           {
             "name": "proc_macro2",
@@ -11620,6 +13941,34 @@
         ],
         "build_dependencies": [],
         "features": []
+      },
+      "tinystr-0.8.3": {
+        "runtime_dependencies": [
+          {
+            "name": "displaydoc",
+            "package_key": "displaydoc-0.2.6",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "host"
+          },
+          {
+            "name": "zerovec",
+            "package_key": "zerovec-0.11.6",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "zerovec"
+        ]
       },
       "tokio-1.52.3": {
         "runtime_dependencies": [
@@ -12250,6 +14599,78 @@
         "build_dependencies": [],
         "features": []
       },
+      "url-2.5.8": {
+        "runtime_dependencies": [
+          {
+            "name": "form_urlencoded",
+            "package_key": "form_urlencoded-1.2.2",
+            "kind": "normal",
+            "features": [
+              "alloc"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "idna",
+            "package_key": "idna-1.1.0",
+            "kind": "normal",
+            "features": [
+              "alloc",
+              "compiled_data"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "percent_encoding",
+            "package_key": "percent-encoding-2.3.2",
+            "kind": "normal",
+            "features": [
+              "alloc"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "serde",
+            "package_key": "serde-1.0.228",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "serde_derive",
+            "package_key": "serde_derive-1.0.228",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "host"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "default",
+          "serde",
+          "std"
+        ]
+      },
+      "utf8_iter-1.0.4": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
       "utf8parse-0.2.2": {
         "runtime_dependencies": [],
         "build_dependencies": [],
@@ -12303,6 +14724,11 @@
           "std"
         ]
       },
+      "writeable-0.6.3": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
       "yansi-1.0.1": {
         "runtime_dependencies": [],
         "build_dependencies": [],
@@ -12312,12 +14738,283 @@
           "std"
         ]
       },
+      "yoke-0.8.3": {
+        "runtime_dependencies": [
+          {
+            "name": "stable_deref_trait",
+            "package_key": "stable_deref_trait-1.2.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "yoke_derive",
+            "package_key": "yoke-derive-0.8.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "host"
+          },
+          {
+            "name": "zerofrom",
+            "package_key": "zerofrom-0.1.8",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "derive",
+          "zerofrom"
+        ]
+      },
+      "yoke-derive-0.8.2": {
+        "runtime_dependencies": [
+          {
+            "name": "proc_macro2",
+            "package_key": "proc-macro2-1.0.106",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "quote",
+            "package_key": "quote-1.0.46",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "syn",
+            "package_key": "syn-2.0.118",
+            "kind": "normal",
+            "features": [
+              "fold"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "synstructure",
+            "package_key": "synstructure-0.13.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": []
+      },
       "zerocopy-0.8.52": {
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": [
           "simd"
         ]
+      },
+      "zerofrom-0.1.8": {
+        "runtime_dependencies": [
+          {
+            "name": "zerofrom_derive",
+            "package_key": "zerofrom-derive-0.1.7",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "host"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "derive"
+        ]
+      },
+      "zerofrom-derive-0.1.7": {
+        "runtime_dependencies": [
+          {
+            "name": "proc_macro2",
+            "package_key": "proc-macro2-1.0.106",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "quote",
+            "package_key": "quote-1.0.46",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "syn",
+            "package_key": "syn-2.0.118",
+            "kind": "normal",
+            "features": [
+              "fold"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "synstructure",
+            "package_key": "synstructure-0.13.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": []
+      },
+      "zerotrie-0.2.4": {
+        "runtime_dependencies": [
+          {
+            "name": "displaydoc",
+            "package_key": "displaydoc-0.2.6",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "host"
+          },
+          {
+            "name": "yoke",
+            "package_key": "yoke-0.8.3",
+            "kind": "normal",
+            "features": [
+              "derive"
+            ],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerofrom",
+            "package_key": "zerofrom-0.1.8",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "yoke",
+          "zerofrom"
+        ]
+      },
+      "zerovec-0.11.6": {
+        "runtime_dependencies": [
+          {
+            "name": "yoke",
+            "package_key": "yoke-0.8.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerofrom",
+            "package_key": "zerofrom-0.1.8",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zerovec_derive",
+            "package_key": "zerovec-derive-0.11.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "host"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "derive",
+          "yoke"
+        ]
+      },
+      "zerovec-derive-0.11.3": {
+        "runtime_dependencies": [
+          {
+            "name": "proc_macro2",
+            "package_key": "proc-macro2-1.0.106",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "quote",
+            "package_key": "quote-1.0.46",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "syn",
+            "package_key": "syn-2.0.118",
+            "kind": "normal",
+            "features": [
+              "extra-traits"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": []
       },
       "zmij-1.0.21": {
         "runtime_dependencies": [],
@@ -14363,5 +17060,13 @@
       }
     }
   },
-  "cargo_lock_sha256": "2d29d91aa1039d4a298eeaf47f7f5cb1c0c9f9028aa374815ba0663dfecd3e39"
+  "cargo_lock_sha256": "123c6a7cedd4df7357fca4f336a8c388720c532cbd4b56eee3d4ad154d7c3a9c",
+  "manifest_sha256": {
+    "Cargo.toml": "4965c685284c7d13140dcb31c77d0eb6d746a3fa8676ca3cee64360ceac2bc02",
+    "izumi-board/Cargo.toml": "12072dd08c732e50557ac2bb397bc334fd5b089633b8072db66413164f53e047",
+    "izumi-config/Cargo.toml": "72a2c84d8613d3c252b77effe64e7b0bbe5005c3a9821ebb62fe001a97cea28f",
+    "izumi-lisp/Cargo.toml": "841b03be57744c68e46fcfaed08261ce981009fe263cb791f8d97ccd1b43b21b",
+    "izumi-sources/Cargo.toml": "32e469901c475e27492bb9276b02afbcda0666baa7b4eda3ed351fa1ab53c6f6",
+    "izumi/Cargo.toml": "532e34a0bb041fbc53460393833e375fa5c3cb689fee6c05be6a5ebac0079dbd"
+  }
 }

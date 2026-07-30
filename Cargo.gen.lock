@@ -1,6 +1,14 @@
 {
-  "schema_version": 1,
-  "cargo_lock_sha256": "2811f959ee63c5ada0de1fc2d62396ced6bf087b9acefb2460a809fedbc321ef",
+  "schema_version": 2,
+  "cargo_lock_sha256": "123c6a7cedd4df7357fca4f336a8c388720c532cbd4b56eee3d4ad154d7c3a9c",
+  "manifest_sha256": {
+    "Cargo.toml": "4965c685284c7d13140dcb31c77d0eb6d746a3fa8676ca3cee64360ceac2bc02",
+    "izumi-board/Cargo.toml": "12072dd08c732e50557ac2bb397bc334fd5b089633b8072db66413164f53e047",
+    "izumi-config/Cargo.toml": "72a2c84d8613d3c252b77effe64e7b0bbe5005c3a9821ebb62fe001a97cea28f",
+    "izumi-lisp/Cargo.toml": "841b03be57744c68e46fcfaed08261ce981009fe263cb791f8d97ccd1b43b21b",
+    "izumi-sources/Cargo.toml": "32e469901c475e27492bb9276b02afbcda0666baa7b4eda3ed351fa1ab53c6f6",
+    "izumi/Cargo.toml": "532e34a0bb041fbc53460393833e375fa5c3cb689fee6c05be6a5ebac0079dbd"
+  },
   "target_resolves": {
     "base": {
       "aho-corasick-1.1.4": {
@@ -1896,23 +1904,13 @@
           },
           {
             "name": "tatara_lisp",
-            "package_key": "tatara-lisp-0.2.4",
+            "package_key": "tatara-lisp-0.3.4",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
             "optional": false,
             "target": null,
             "tree": "target"
-          },
-          {
-            "name": "tatara_lisp_derive",
-            "package_key": "tatara-lisp-derive-0.2.4",
-            "kind": "normal",
-            "features": [],
-            "uses_default_features": true,
-            "optional": false,
-            "target": null,
-            "tree": "host"
           }
         ],
         "build_dependencies": [],
@@ -3350,7 +3348,7 @@
           "proc-macro"
         ]
       },
-      "tatara-lisp-0.2.4": {
+      "tatara-lisp-0.3.4": {
         "runtime_dependencies": [
           {
             "name": "blake3",
@@ -3386,7 +3384,7 @@
           },
           {
             "name": "tatara_lisp_derive",
-            "package_key": "tatara-lisp-derive-0.2.4",
+            "package_key": "tatara-lisp-derive-0.3.4",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -3410,7 +3408,7 @@
           "default"
         ]
       },
-      "tatara-lisp-derive-0.2.4": {
+      "tatara-lisp-derive-0.3.4": {
         "runtime_dependencies": [
           {
             "name": "proc_macro2",
@@ -7120,10 +7118,10 @@
     "synstructure-0.13.2": {
       "edition": "2018"
     },
-    "tatara-lisp-0.2.4": {
+    "tatara-lisp-0.3.4": {
       "edition": "2021"
     },
-    "tatara-lisp-derive-0.2.4": {
+    "tatara-lisp-derive-0.3.4": {
       "edition": "2021",
       "proc_macro": true
     },

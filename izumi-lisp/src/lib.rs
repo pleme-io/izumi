@@ -31,11 +31,13 @@
 //! Field names map snake\_case ↔ kebab-case (`interval_secs` ↔
 //! `:interval-secs`); booleans are `#t` / `#f`.
 //!
-//! ## Named gaps (pinned by tests, tied to the derive pin in `Cargo.toml`)
+//! ## Named gaps (pinned by tests)
 //!
-//! The crate builds against the *published* tatara-lisp 0.2.4 (crates.io)
-//! with the derive pinned to `=0.2.4` — see the `Cargo.toml` comment for
-//! the resolution story. Three behaviors of that revision are gaps an
+//! The crate builds against the *published* canonical tatara-lisp 0.3.3
+//! (crates.io), whose lib re-exports the derive macros itself — so the lib
+//! and derive versions can no longer drift apart, and no separate
+//! `tatara-lisp-derive` dependency (nor the old `=0.2.4` pin that welded
+//! them by hand) exists here. Three behaviors of that revision are gaps an
 //! author must know about:
 //!
 //! 1. **`params` map keys are camelized by the bridge.** The Tier-1 serde
@@ -49,12 +51,11 @@
 //!    the empty list (a JSON array, not an object) and fails the map
 //!    deserialize — omit `:params` entirely; the conversion supplies the
 //!    empty map.
-//! 3. **Unknown keywords are silently ignored.** The 0.2.4 derive parses
-//!    kwargs non-strictly (`parse_kwargs`, no allowed-set gate), so a
-//!    typo'd `:ttl-sec` is dropped rather than rejected — unlike the
-//!    `deny_unknown_fields` YAML path in `izumi-config`. The strict gate
-//!    (`parse_kwargs_strict`) exists only in the unpublished tatara git
-//!    HEAD; adopt it when the pin lifts.
+//! 3. **Unknown keywords are silently ignored.** The 0.3.3 derive still
+//!    parses kwargs non-strictly (`parse_kwargs`, no allowed-set gate), so
+//!    a typo'd `:ttl-sec` is dropped rather than rejected — unlike the
+//!    `deny_unknown_fields` YAML path in `izumi-config`. Adopt a strict
+//!    gate here the day the canonical derive grows one.
 //!
 //! ## Numeric conversions
 //!
