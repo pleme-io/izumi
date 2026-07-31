@@ -157,6 +157,45 @@ pub struct SourceHealth {
     pub last_ok_ms: u64,
 }
 
+impl SourceHealth {
+    /// Has this source EVER observed its upstream successfully?
+    ///
+    /// The distinction this answers is the one a status code cannot: a source
+    /// that has **never once worked** and a source that worked yesterday and
+    /// broke this morning both report `SourceStatus::Error`. Only the history
+    /// tells them apart, and only the first is a wiring bug — the second is an
+    /// outage. Conflating them means nobody investigates the wiring bug,
+    /// because it looks like a known-pending outage.
+    ///
+    /// Previously hand-derived as `h.last_ok_ms > 0` at three separate call
+    /// sites (izumi-board `protocol.rs`, mado `suggest/mod.rs` twice), so a
+    /// fourth consumer had to rediscover the convention or go without. The
+    /// predicate belongs to the type.
+    ///
+    /// SCOPE, and it is a real limit: this is **process-scoped**.
+    /// `StoreSnapshot` does not persist health, so after a restart a source
+    /// that has worked for months reports `ever_ok() == false` until its first
+    /// successful poll. Read it as *"not since this process started"*, which is
+    /// strictly weaker than *"never"*. Widening it to true never-ness means
+    /// carrying health through the snapshot.
+    #[must_use]
+    pub fn ever_ok(&self) -> bool {
+        self.last_ok_ms > 0
+    }
+
+    /// Has this source completed any poll attempt at all this process lifetime?
+    ///
+    /// Distinct from [`Self::ever_ok`]: a source can have polled many times and
+    /// never succeeded. `false` here means the instrument has not run yet, so
+    /// **no verdict about the upstream is available** — neither healthy nor
+    /// broken. Callers that judge a source should skip it rather than condemn
+    /// it (mado's janitor already does exactly this).
+    #[must_use]
+    pub fn ever_polled(&self) -> bool {
+        self.last_poll_ms > 0
+    }
+}
+
 /// Everything behind the ONE mutex — entries + recurrence tombstones +
 /// per-source health share a lock so no two-lock ordering can deadlock.
 struct StoreInner<K, A> {
@@ -1590,5 +1629,51 @@ mod tests {
         for w in ranked.windows(2) {
             assert!(effective_rank_key(&w[0], 2000) >= effective_rank_key(&w[1], 2000));
         }
+    }
+}
+
+#[cfg(test)]
+mod ever_ok_tests {
+    use super::*;
+
+    fn health(status: SourceStatus, last_poll_ms: u64, last_ok_ms: u64) -> SourceHealth {
+        SourceHealth { status, last_poll_ms, last_ok_ms }
+    }
+
+    /// The distinction the whole predicate exists for: these two sources report
+    /// the SAME status and are not the same problem. One is a wiring bug that
+    /// nobody has ever investigated; the other is an outage in something that
+    /// demonstrably works.
+    #[test]
+    fn never_worked_and_worked_then_broke_are_distinguishable_despite_equal_status() {
+        let never = health(SourceStatus::Error, 9_000, 0);
+        let broke = health(SourceStatus::Error, 9_000, 5_000);
+
+        assert_eq!(never.status, broke.status, "precondition: status cannot tell them apart");
+        assert!(!never.ever_ok());
+        assert!(broke.ever_ok());
+    }
+
+    /// `ever_polled` is a DIFFERENT question from `ever_ok`, and the gap between
+    /// them is the honest "no verdict available" state: the instrument has run
+    /// and never succeeded, versus the instrument has not run at all.
+    #[test]
+    fn polled_without_success_is_not_the_same_as_never_polled() {
+        let unrun = health(SourceStatus::Unconfigured, 0, 0);
+        let tried = health(SourceStatus::Error, 9_000, 0);
+
+        assert!(!unrun.ever_polled(), "no poll completed — no verdict is available");
+        assert!(tried.ever_polled(), "a poll completed; it just never succeeded");
+        assert!(!unrun.ever_ok());
+        assert!(!tried.ever_ok());
+    }
+
+    /// A success at epoch-zero is not representable as a success, and that is
+    /// accepted: 0 is the sentinel. Pinned so a future change to a signed or
+    /// Option-typed clock has to confront it rather than silently shift it.
+    #[test]
+    fn zero_is_the_never_sentinel() {
+        assert!(!health(SourceStatus::Ok, 1, 0).ever_ok());
+        assert!(health(SourceStatus::Ok, 1, 1).ever_ok());
     }
 }

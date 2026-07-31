@@ -235,7 +235,7 @@ impl HealthView {
             source: kind.slug().to_owned(),
             status: h.status.label().to_owned(),
             last_poll_secs_ago: now_ms.saturating_sub(h.last_poll_ms) / 1000,
-            ever_ok: h.last_ok_ms > 0,
+            ever_ok: h.ever_ok(),
         }
     }
 
