@@ -3522,9 +3522,9 @@
         "preBuild": "export CARGO_CRATE_NAME=itoa;"
       }
     },
-    "izumi-0.1.10": {
+    "izumi-0.1.11": {
       "name": "izumi",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "edition": "2024",
       "source": {
         "kind": "path",
@@ -3644,7 +3644,7 @@
       "crate_renames": {},
       "build_rust_crate_args": {
         "crateName": "izumi",
-        "version": "0.1.10",
+        "version": "0.1.11",
         "edition": "2024",
         "release": true,
         "libName": "izumi",
@@ -3652,9 +3652,9 @@
         "preBuild": "export CARGO_CRATE_NAME=izumi;"
       }
     },
-    "izumi-board-0.1.10": {
+    "izumi-board-0.1.11": {
       "name": "izumi-board",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "edition": "2024",
       "source": {
         "kind": "path",
@@ -3696,7 +3696,7 @@
         },
         {
           "name": "izumi",
-          "package_key": "izumi-0.1.10",
+          "package_key": "izumi-0.1.11",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -3706,7 +3706,7 @@
         },
         {
           "name": "izumi_config",
-          "package_key": "izumi-config-0.1.10",
+          "package_key": "izumi-config-0.1.11",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -3716,7 +3716,7 @@
         },
         {
           "name": "izumi_sources",
-          "package_key": "izumi-sources-0.1.10",
+          "package_key": "izumi-sources-0.1.11",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -3799,13 +3799,13 @@
       "crate_renames": {
         "izumi-config": [
           {
-            "version": "0.1.10",
+            "version": "0.1.11",
             "rename": "izumi_config"
           }
         ],
         "izumi-sources": [
           {
-            "version": "0.1.10",
+            "version": "0.1.11",
             "rename": "izumi_sources"
           }
         ],
@@ -3818,18 +3818,18 @@
       },
       "build_rust_crate_args": {
         "crateName": "izumi-board",
-        "version": "0.1.10",
+        "version": "0.1.11",
         "edition": "2024",
         "crateRenames": {
           "izumi-config": [
             {
-              "version": "0.1.10",
+              "version": "0.1.11",
               "rename": "izumi_config"
             }
           ],
           "izumi-sources": [
             {
-              "version": "0.1.10",
+              "version": "0.1.11",
               "rename": "izumi_sources"
             }
           ],
@@ -3844,9 +3844,9 @@
         "preBuild": "export CARGO_CRATE_NAME=izumi_board;"
       }
     },
-    "izumi-config-0.1.10": {
+    "izumi-config-0.1.11": {
       "name": "izumi-config",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "edition": "2024",
       "source": {
         "kind": "path",
@@ -3864,7 +3864,7 @@
       "runtime_dependencies": [
         {
           "name": "izumi",
-          "package_key": "izumi-0.1.10",
+          "package_key": "izumi-0.1.11",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -3899,7 +3899,7 @@
       "crate_renames": {},
       "build_rust_crate_args": {
         "crateName": "izumi-config",
-        "version": "0.1.10",
+        "version": "0.1.11",
         "edition": "2024",
         "release": true,
         "libName": "izumi_config",
@@ -3907,9 +3907,9 @@
         "preBuild": "export CARGO_CRATE_NAME=izumi_config;"
       }
     },
-    "izumi-lisp-0.1.10": {
+    "izumi-lisp-0.1.11": {
       "name": "izumi-lisp",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "edition": "2024",
       "source": {
         "kind": "path",
@@ -3927,7 +3927,7 @@
       "runtime_dependencies": [
         {
           "name": "izumi_config",
-          "package_key": "izumi-config-0.1.10",
+          "package_key": "izumi-config-0.1.11",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -3972,7 +3972,7 @@
       "crate_renames": {
         "izumi-config": [
           {
-            "version": "0.1.10",
+            "version": "0.1.11",
             "rename": "izumi_config"
           }
         ],
@@ -3985,12 +3985,12 @@
       },
       "build_rust_crate_args": {
         "crateName": "izumi-lisp",
-        "version": "0.1.10",
+        "version": "0.1.11",
         "edition": "2024",
         "crateRenames": {
           "izumi-config": [
             {
-              "version": "0.1.10",
+              "version": "0.1.11",
               "rename": "izumi_config"
             }
           ],
@@ -4007,9 +4007,9 @@
         "preBuild": "export CARGO_CRATE_NAME=izumi_lisp;"
       }
     },
-    "izumi-sources-0.1.10": {
+    "izumi-sources-0.1.11": {
       "name": "izumi-sources",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "edition": "2024",
       "source": {
         "kind": "path",
@@ -4027,7 +4027,7 @@
       "runtime_dependencies": [
         {
           "name": "izumi",
-          "package_key": "izumi-0.1.10",
+          "package_key": "izumi-0.1.11",
           "kind": "normal",
           "features": [],
           "uses_default_features": true,
@@ -4062,7 +4062,7 @@
       "crate_renames": {},
       "build_rust_crate_args": {
         "crateName": "izumi-sources",
-        "version": "0.1.10",
+        "version": "0.1.11",
         "edition": "2024",
         "release": true,
         "libName": "izumi_sources",
@@ -10369,13 +10369,13 @@
       }
     }
   },
-  "root_crate": "izumi-0.1.10",
+  "root_crate": "izumi-0.1.11",
   "workspace_members": [
-    "izumi-0.1.10",
-    "izumi-sources-0.1.10",
-    "izumi-config-0.1.10",
-    "izumi-lisp-0.1.10",
-    "izumi-board-0.1.10"
+    "izumi-0.1.11",
+    "izumi-sources-0.1.11",
+    "izumi-config-0.1.11",
+    "izumi-lisp-0.1.11",
+    "izumi-board-0.1.11"
   ],
   "flake_metadata": {
     "izumi": {
@@ -11987,7 +11987,7 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-0.1.10": {
+      "izumi-0.1.11": {
         "runtime_dependencies": [
           {
             "name": "blake3",
@@ -12092,7 +12092,7 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-board-0.1.10": {
+      "izumi-board-0.1.11": {
         "runtime_dependencies": [
           {
             "name": "clap",
@@ -12118,7 +12118,7 @@
           },
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.10",
+            "package_key": "izumi-0.1.11",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -12128,7 +12128,7 @@
           },
           {
             "name": "izumi_config",
-            "package_key": "izumi-config-0.1.10",
+            "package_key": "izumi-config-0.1.11",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -12138,7 +12138,7 @@
           },
           {
             "name": "izumi_sources",
-            "package_key": "izumi-sources-0.1.10",
+            "package_key": "izumi-sources-0.1.11",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -12220,11 +12220,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-config-0.1.10": {
+      "izumi-config-0.1.11": {
         "runtime_dependencies": [
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.10",
+            "package_key": "izumi-0.1.11",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -12258,11 +12258,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-lisp-0.1.10": {
+      "izumi-lisp-0.1.11": {
         "runtime_dependencies": [
           {
             "name": "izumi_config",
-            "package_key": "izumi-config-0.1.10",
+            "package_key": "izumi-config-0.1.11",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -12306,11 +12306,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-sources-0.1.10": {
+      "izumi-sources-0.1.11": {
         "runtime_dependencies": [
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.10",
+            "package_key": "izumi-0.1.11",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -17078,9 +17078,9 @@
       }
     }
   },
-  "cargo_lock_sha256": "a789f2700236879078424ed26da5893ed1c32d2c9663fbb849b9388bcceaa702",
+  "cargo_lock_sha256": "6216bb61c1ca5cebae813d7b1d4a5ded8dcbc51ea25f77050a9bf7fb357766bf",
   "manifest_sha256": {
-    "Cargo.toml": "9c3f5a1c5a665999d2b14f73706740db20ccd0ff974eb30a7a0ca3adee88d573",
+    "Cargo.toml": "24eac82fa1f691a158ef7983bb278a04d0f2b71393fa0e707d06fedfe503bb4a",
     "izumi-board/Cargo.toml": "12072dd08c732e50557ac2bb397bc334fd5b089633b8072db66413164f53e047",
     "izumi-config/Cargo.toml": "72a2c84d8613d3c252b77effe64e7b0bbe5005c3a9821ebb62fe001a97cea28f",
     "izumi-lisp/Cargo.toml": "841b03be57744c68e46fcfaed08261ce981009fe263cb791f8d97ccd1b43b21b",
