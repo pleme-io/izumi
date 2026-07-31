@@ -238,6 +238,163 @@ impl HealthView {
             ever_ok: h.last_ok_ms > 0,
         }
     }
+
+    /// The operator-facing verdict, which is NOT the same question as
+    /// `status`.
+    ///
+    /// `status` answers "is this source erroring *right now*". That is the
+    /// question that hid seven dead sources for 118+ consecutive polls: a
+    /// lane misconfigured since the day it was wired reads `erroring`,
+    /// which is exactly what a healthy lane reads during a transient
+    /// upstream blip. Same word, opposite meaning — one is weather, the
+    /// other is a build defect.
+    ///
+    /// [`HealthVerdict::Blind`] separates them by asking the question the
+    /// data could always answer and nothing ever rendered: has this source
+    /// EVER observed its upstream?
+    #[must_use]
+    pub fn verdict(&self) -> HealthVerdict {
+        if self.status == "ok" {
+            HealthVerdict::Ok
+        } else if self.ever_ok {
+            HealthVerdict::Degraded
+        } else {
+            HealthVerdict::Blind
+        }
+    }
+}
+
+/// Whether a source is working, broken, or has never worked at all.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum HealthVerdict {
+    /// Reporting normally.
+    Ok,
+    /// Has observed its upstream before and is failing now — weather.
+    /// Usually resolves itself; worth watching, not worth waking up for.
+    Degraded,
+    /// Has NEVER observed its upstream. Not weather: a wrong context, a
+    /// dead URL, a malformed credential — something that was never right,
+    /// and that no amount of waiting will fix.
+    Blind,
+}
+
+impl HealthVerdict {
+    /// A fixed-width label so a column of these scans preattentively — the
+    /// operator's eye should catch BLIND without reading the line.
+    #[must_use]
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Ok => "ok      ",
+            Self::Degraded => "DEGRADED",
+            Self::Blind => "BLIND   ",
+        }
+    }
+
+    /// Whether this verdict means someone must go fix a declaration.
+    #[must_use]
+    pub fn needs_intervention(self) -> bool {
+        matches!(self, Self::Blind)
+    }
+}
+
+impl core::fmt::Display for HealthView {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let verdict = self.verdict();
+        write!(
+            f,
+            "{}  {:<26}  {:<12}  polled {}s ago",
+            verdict.label(),
+            self.source,
+            self.status,
+            self.last_poll_secs_ago
+        )?;
+        if verdict == HealthVerdict::Blind {
+            // The whole point of the verb. Say it in words, on the line,
+            // not as a flag the reader has to decode.
+            f.write_str("  — never once succeeded")?;
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod health_verdict_tests {
+    use super::*;
+
+    fn view(status: &str, ever_ok: bool) -> HealthView {
+        HealthView {
+            source: "grafana-alerts".to_owned(),
+            status: status.to_owned(),
+            last_poll_secs_ago: 12,
+            ever_ok,
+        }
+    }
+
+    /// THE REGRESSION. These two are byte-identical in `status` — the only
+    /// field anything rendered before this verb existed — and mean opposite
+    /// things. The first is a broken declaration nobody will ever fix by
+    /// waiting; the second is weather. Collapsing them is what let seven
+    /// sources sit dead for 118+ consecutive polls.
+    #[test]
+    fn erroring_forever_is_not_the_same_as_erroring_now() {
+        let never = view("erroring", false);
+        let was_fine = view("erroring", true);
+
+        assert_eq!(never.status, was_fine.status, "the premise: status cannot tell them apart");
+
+        assert_eq!(never.verdict(), HealthVerdict::Blind);
+        assert_eq!(was_fine.verdict(), HealthVerdict::Degraded);
+        assert!(never.verdict().needs_intervention());
+        assert!(!was_fine.verdict().needs_intervention());
+    }
+
+    /// ALL-VARIANTS. Every (status × ever_ok) cell is asserted, so a new
+    /// status label cannot land without a decision about which verdict it
+    /// carries.
+    #[test]
+    fn verdict_matrix_is_exhaustive() {
+        for status in ["ok", "erroring", "needs auth", "needs config"] {
+            for ever_ok in [true, false] {
+                let v = view(status, ever_ok).verdict();
+                let expected = match (status, ever_ok) {
+                    ("ok", _) => HealthVerdict::Ok,
+                    (_, true) => HealthVerdict::Degraded,
+                    (_, false) => HealthVerdict::Blind,
+                };
+                assert_eq!(v, expected, "status={status} ever_ok={ever_ok}");
+            }
+        }
+    }
+
+    /// The words must reach the line. A verdict the renderer knows and the
+    /// operator cannot read is the same failure one layer up.
+    #[test]
+    fn blind_says_so_in_words() {
+        let rendered = view("erroring", false).to_string();
+        assert!(rendered.contains("BLIND"), "{rendered}");
+        assert!(rendered.contains("never once succeeded"), "{rendered}");
+
+        let degraded = view("erroring", true).to_string();
+        assert!(degraded.contains("DEGRADED"), "{degraded}");
+        assert!(
+            !degraded.contains("never once succeeded"),
+            "a source that worked before must not be labelled never-succeeded: {degraded}"
+        );
+    }
+
+    /// Labels are fixed-width so a column scans preattentively — an agent
+    /// reads the field, but a human catches the shape.
+    #[test]
+    fn labels_are_column_aligned() {
+        let widths: Vec<usize> = [HealthVerdict::Ok, HealthVerdict::Degraded, HealthVerdict::Blind]
+            .iter()
+            .map(|v| v.label().len())
+            .collect();
+        assert!(
+            widths.windows(2).all(|w| w[0] == w[1]),
+            "labels must share one width, got {widths:?}"
+        );
+    }
 }
 
 #[cfg(test)]

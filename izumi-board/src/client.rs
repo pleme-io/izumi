@@ -104,6 +104,62 @@ pub fn json(max: usize) -> Result<(), CliError> {
     writeln!(out).map_err(CliError::Io)
 }
 
+/// `izumi-board health` — per-source poll health, worst first, with
+/// "never once succeeded" called out in words.
+///
+/// Returns the number of BLIND sources so the caller can exit non-zero.
+/// That return value is the point of the verb: a source misconfigured on
+/// the day it was wired reads `erroring`, which is exactly what a healthy
+/// source reads during a transient blip — so the data that distinguishes
+/// them (`ever_ok`) existed, was carried in the protocol, was answered by
+/// the daemon, and was never rendered anywhere a human looks. Seven
+/// sources stayed dead for 118+ consecutive polls behind that gap.
+///
+/// Live-daemon only, deliberately: there is no health plane in the
+/// persisted snapshot (`json`'s degraded path emits `"health": []`), and
+/// reporting "0 blind" from a file that cannot know would rebuild the exact
+/// blindness this verb exists to remove.
+///
+/// # Errors
+///
+/// [`CliError::NoDaemon`] without a live daemon; [`CliError::Io`] on a
+/// broken output stream; [`CliError::UnexpectedResponse`] on a protocol
+/// violation.
+pub fn health() -> Result<usize, CliError> {
+    use std::io::Write as _;
+    let mut views = match request(&Request::Health) {
+        Some(Response::Health(views)) => views,
+        Some(_) => return Err(CliError::UnexpectedResponse),
+        None => return Err(CliError::NoDaemon(crate::state::socket_path())),
+    };
+
+    // Worst first — what needs a human goes at the top, where a scrolling
+    // operator actually sees it.
+    views.sort_by_key(|v| match v.verdict() {
+        crate::protocol::HealthVerdict::Blind => 0,
+        crate::protocol::HealthVerdict::Degraded => 1,
+        crate::protocol::HealthVerdict::Ok => 2,
+    });
+
+    let blind = views
+        .iter()
+        .filter(|v| v.verdict().needs_intervention())
+        .count();
+
+    let mut out = std::io::stdout().lock();
+    for v in &views {
+        writeln!(out, "{v}").map_err(CliError::Io)?;
+    }
+    if blind > 0 {
+        writeln!(
+            out,
+            "\n{blind} source(s) have NEVER succeeded — these are declarations to fix, not outages to wait out."
+        )
+        .map_err(CliError::Io)?;
+    }
+    Ok(blind)
+}
+
 /// `izumi-board dismiss <id> [--snooze <secs>]` — socket-only lifecycle
 /// mutation (dismiss forever, or snooze for `secs`).
 ///

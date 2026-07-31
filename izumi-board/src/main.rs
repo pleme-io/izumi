@@ -88,6 +88,9 @@ enum Command {
     /// Ask every watcher to re-poll right now (paced per-watcher — a nudge
     /// storm cannot hammer an API).
     Nudge,
+    /// Per-source poll health, worst first. Exits 2 when any source has
+    /// NEVER succeeded, so it can gate rather than merely inform.
+    Health,
 }
 
 /// Route tracing to stderr (stdout stays machine-parseable for `list`/`json`)
@@ -111,6 +114,18 @@ fn main() -> std::process::ExitCode {
         Command::Dismiss { id, snooze } => client::dismiss(&id, snooze).map_err(Into::into),
         Command::Accept { id, session } => client::accept(&id, &session).map_err(Into::into),
         Command::Nudge => client::nudge().map_err(Into::into),
+        // `health` is the one verb whose *success* can still mean "go fix
+        // something". A source that has never once succeeded is a broken
+        // declaration, not an outage, so it gets a distinct exit code and
+        // can gate a rebuild or a CI step instead of scrolling past.
+        Command::Health => match client::health() {
+            Ok(0) => Ok(()),
+            Ok(blind) => {
+                tracing::warn!(blind, "sources have never succeeded");
+                return std::process::ExitCode::from(2);
+            }
+            Err(e) => Err(e.into()),
+        },
     };
     match outcome {
         Ok(()) => std::process::ExitCode::SUCCESS,
