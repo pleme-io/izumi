@@ -82,8 +82,16 @@ pub fn list(max: usize) -> Result<(), CliError> {
 }
 
 /// `izumi-board json [--max N]` — the mado-shaped board JSON
-/// (`{"suggestions": […], "health": […]}`) on stdout. The degraded path has
-/// no live health plane, so `health` is empty there.
+/// (`{"suggestions": […], "health": […]}`) on stdout.
+///
+/// The degraded (no-daemon) path emits an EMPTY `health`. Note what that
+/// does and does not mean now that the snapshot carries a health plane: the
+/// plane is on disk, but the degraded path reads through the catalog-erased
+/// [`izumi::raw`] reader, which parses rows only. Empty here means *this
+/// reader did not look*, and the consumer must read it that way — the same
+/// unknown-is-not-ok rule the typed border enforces. Reporting a verdict
+/// from a file also means reporting one from a stale record, which is why
+/// `health` stays live-daemon-only.
 ///
 /// # Errors
 ///
@@ -115,10 +123,19 @@ pub fn json(max: usize) -> Result<(), CliError> {
 /// the daemon, and was never rendered anywhere a human looks. Seven
 /// sources stayed dead for 118+ consecutive polls behind that gap.
 ///
-/// Live-daemon only, deliberately: there is no health plane in the
-/// persisted snapshot (`json`'s degraded path emits `"health": []`), and
-/// reporting "0 blind" from a file that cannot know would rebuild the exact
-/// blindness this verb exists to remove.
+/// Live-daemon only, deliberately: the degraded (`json`) path reads the
+/// persisted snapshot through the catalog-erased reader, which carries rows
+/// and not health, and reporting "0 blind" from a source that cannot know
+/// would rebuild the exact blindness this verb exists to remove.
+///
+/// WHAT EXIT 2 MEANS, and why it is narrower than it was: BLIND is a
+/// *finding* — polled, and never once observed to succeed, over a window the
+/// persisted health plane keeps across restarts. A source whose instrument
+/// never ran is [`HealthVerdict::Unknown`](izumi::HealthVerdict::Unknown): it
+/// is reported, in words, and it does NOT gate. Before the health plane was
+/// persisted the two were indistinguishable, so a restart could turn a
+/// merely-degraded source into a BLIND one and fail a CI step on a healthy
+/// fleet. The count returned is the blind count only.
 ///
 /// # Errors
 ///
@@ -134,16 +151,23 @@ pub fn health() -> Result<usize, CliError> {
     };
 
     // Worst first — what needs a human goes at the top, where a scrolling
-    // operator actually sees it.
+    // operator actually sees it. Unknown sorts above Ok (it is a hole in the
+    // instrument, worth a look) but below Degraded (which is at least a
+    // measurement).
     views.sort_by_key(|v| match v.verdict() {
         crate::protocol::HealthVerdict::Blind => 0,
         crate::protocol::HealthVerdict::Degraded => 1,
-        crate::protocol::HealthVerdict::Ok => 2,
+        crate::protocol::HealthVerdict::Unknown => 2,
+        crate::protocol::HealthVerdict::Ok => 3,
     });
 
     let blind = views
         .iter()
         .filter(|v| v.verdict().needs_intervention())
+        .count();
+    let unknown = views
+        .iter()
+        .filter(|v| v.verdict() == crate::protocol::HealthVerdict::Unknown)
         .count();
 
     let mut out = std::io::stdout().lock();
@@ -154,6 +178,13 @@ pub fn health() -> Result<usize, CliError> {
         writeln!(
             out,
             "\n{blind} source(s) have NEVER succeeded — these are declarations to fix, not outages to wait out."
+        )
+        .map_err(CliError::Io)?;
+    }
+    if unknown > 0 {
+        writeln!(
+            out,
+            "\n{unknown} source(s) have never been polled — no verdict is available for them, so they do not gate."
         )
         .map_err(CliError::Io)?;
     }

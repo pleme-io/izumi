@@ -41,14 +41,45 @@ carries a valid-by-construction action payload.
   a cwd/env/args-bearing backend spawn op) — see mado
   `docs/SUGGESTION-STREAM.md`.
 
+## Source health — ONE definition, in `izumi`
+
+`izumi::HealthVerdict` (`Ok` / `Degraded` / `Blind` / `Unknown`) and its rule
+`HealthVerdict::of(status, evidence)` live in the core crate, beside
+`SourceHealth::verdict()`. **Do not re-derive the rule at a border.** It had
+grown three copies (izumi-board's `protocol.rs`, mado's suggest plane twice),
+each with a comment naming the others as a known hazard — izumi-board now
+re-exports the type and delegates, and mado's copy is the last one to retire.
+
+Two things the type carries that a boolean could not:
+
+- `OkEvidence` is a THREE-way — `Succeeded{at_ms}` / `NeverSucceeded{since_ms}`
+  / `Unobserved`. "Never worked" and "never looked" are different findings and
+  only the first may gate. `ever_ok()` is a projection of it, fine for display,
+  wrong for a decision.
+- The health plane is **persisted** in `StoreSnapshot`, so the success latch
+  and the observation window are facts about the SOURCE, not about the current
+  process. Health stamps are absolute and are deliberately NOT rebased on load
+  the way an entry's `last_seen_ms` is.
+
+`izumi-board health` exits 2 on `Blind` only — a finding. `Unknown` is
+reported in words and does not gate.
+
 ## Wire-compat contracts (do not break)
 
 - `StoredItem` serializes its item under the field name `"suggestion"`
   (serde rename); `ItemState` keeps `tag = "kind"`, kebab-case, variant
   fields `Accepted{session}` / `Snoozed{until_ms}`; `ItemId` is a
   transparent `u64` newtype (JSON number); `StoreSnapshot` keeps
-  `entries`/`saved_at_ms`. Golden fixtures under `izumi/tests/fixtures/`
-  are byte-frozen from mado's pre-extraction build — they must always load.
+  `entries`/`saved_at_ms` and adds `health` (slug-keyed, `#[serde(default)]`,
+  additive — a body without it still loads). Golden fixtures under
+  `izumi/tests/fixtures/` are byte-frozen from mado's pre-extraction build —
+  they must always load.
+- **Absence is not evidence.** Every additive field on a health-bearing wire
+  form defaults to the UNKNOWN reading, never to a healthy one: an absent
+  `health` map, an absent `evidence`, an absent `first_poll_ms` all decode to
+  "we have no record", which `HealthVerdict` renders `Unknown` and which
+  never gates. A default that decoded as success would silently re-create the
+  restart-resets-the-latch defect that this schema exists to close.
 - `Item<K, A>` serializes its payload under the wire name `"spawn"` for ANY
   payload (v1-codec legacy field, forced by mado snapshot continuity).
 - The snapshot frame is `MAGIC || blake3-hex || '\n' || json`; magic is a

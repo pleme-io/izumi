@@ -26,12 +26,17 @@
 //! * **Source health** — the typed `PollOutcome` border records whether a
 //!   source was actually observed (`Ok`) or could not be
 //!   (`Unconfigured`/`AuthMissing`/`Error`), so "the board is calm" and "the
-//!   board is blind" are distinguishable at a glance.
+//!   board is blind" are distinguishable at a glance. The success history is
+//!   PERSISTED and read through one shared rule ([`OkEvidence`] →
+//!   [`HealthVerdict`]), so "has never once worked" is a property of the
+//!   source rather than of the current process.
 //!
 //! A best-effort JSON snapshot lets a warm restart re-surface the last-known
 //! set instantly while the watchers re-poll; a torn/absent snapshot simply
 //! starts empty. The snapshot stamps its save time so ages rebase on load —
-//! rows fresh at save stay fresh, rows stale at save still decay.
+//! rows fresh at save stay fresh, rows stale at save still decay — and it
+//! carries the health plane, so a restart cannot make a merely-degraded
+//! source read as one that never worked.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -145,19 +150,209 @@ struct Tombstone {
     vanished_ms: u64,
 }
 
+/// What is KNOWN about a source's success history — the three-way a boolean
+/// cannot hold.
+///
+/// The bug this type exists to make unrepresentable: a boolean `ever_ok`
+/// folds *"we looked and it has never worked"* together with *"we have no
+/// record"*, and a restart silently moved sources from the first bucket into
+/// the second while every reader kept treating the answer as the first. Two
+/// consumers then gated on it. With three variants the reader must SAY which
+/// of the two it means, and the compiler makes it say so.
+///
+/// Note which direction the missing case falls: absence of a record is
+/// [`Unobserved`](Self::Unobserved), never [`Succeeded`](Self::Succeeded).
+/// A latch is only ever set by an actual `SourceStatus::Ok` observation —
+/// nothing defaults into it, so no load path can fabricate a success.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "kebab-case", tag = "kind")]
+pub enum OkEvidence {
+    /// Observed succeeding at `at_ms`. The latch, and it survives a restart
+    /// because [`StoreSnapshot`] carries the health plane.
+    Succeeded { at_ms: u64 },
+    /// Under observation since `since_ms` and never once seen to succeed in
+    /// that window. The window IS the strength of the claim, and it spans
+    /// restarts — which is exactly what a per-process latch could not say.
+    NeverSucceeded { since_ms: u64 },
+    /// The instrument has not run. **No evidence in either direction** — a
+    /// caller that condemns on this is condemning on nothing, and a caller
+    /// that clears on it is clearing on nothing.
+    Unobserved,
+}
+
+/// Whether a source is working, broken, has never worked at all, or has not
+/// been looked at.
+///
+/// **This is the ONE definition of the rule.** It used to exist twice — once
+/// in `izumi-board`'s `protocol.rs` (derived from the JSON wire view) and
+/// once at mado's typed border — with a comment at each site naming the other
+/// and calling the duplication a known hazard. Both now derive from
+/// [`HealthVerdict::of`]; neither re-decides.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum HealthVerdict {
+    /// Reporting normally.
+    Ok,
+    /// Has observed its upstream before and is failing now — weather.
+    /// Usually resolves itself; worth watching, not worth waking up for.
+    Degraded,
+    /// Has NEVER observed its upstream, across every process that ever
+    /// watched it. Not weather: a wrong context, a dead URL, a malformed
+    /// credential — something that was never right, and that no amount of
+    /// waiting will fix.
+    Blind,
+    /// No poll has ever completed, so there is nothing to judge. Distinct
+    /// from [`Blind`](Self::Blind) on purpose: blind is a finding, unknown is
+    /// the absence of one, and only a finding may gate.
+    Unknown,
+}
+
+impl HealthVerdict {
+    /// THE rule, stated once. Every border calls this instead of re-deriving.
+    ///
+    /// Exhaustive over both axes, so adding a [`SourceStatus`] or an
+    /// [`OkEvidence`] variant is a compile error at this one site rather than
+    /// a silent default at N sites.
+    #[must_use]
+    pub fn of(status: SourceStatus, evidence: OkEvidence) -> Self {
+        match (status, evidence) {
+            (SourceStatus::Ok, _) => Self::Ok,
+            (_, OkEvidence::Succeeded { .. }) => Self::Degraded,
+            (_, OkEvidence::NeverSucceeded { .. }) => Self::Blind,
+            (_, OkEvidence::Unobserved) => Self::Unknown,
+        }
+    }
+
+    /// A fixed-width label so a column of these scans preattentively — the
+    /// operator's eye should catch BLIND without reading the line.
+    #[must_use]
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Ok => "ok      ",
+            Self::Degraded => "DEGRADED",
+            Self::Blind => "BLIND   ",
+            Self::Unknown => "unknown ",
+        }
+    }
+
+    /// The compact machine token (JSON / MCP / log field).
+    #[must_use]
+    pub fn slug(self) -> &'static str {
+        match self {
+            Self::Ok => "ok",
+            Self::Degraded => "degraded",
+            Self::Blind => "blind",
+            Self::Unknown => "unknown",
+        }
+    }
+
+    /// Whether this verdict means someone must go fix a declaration.
+    ///
+    /// True for [`Blind`](Self::Blind) and nothing else. In particular
+    /// [`Unknown`](Self::Unknown) is false: a gate that fires on "we have not
+    /// looked" is a gate that fires on noise, and a red gate nobody trusts is
+    /// worse than no gate.
+    #[must_use]
+    pub fn needs_intervention(self) -> bool {
+        matches!(self, Self::Blind)
+    }
+}
+
 /// A source's last observed poll health — fed by the typed `PollOutcome`
 /// border so an unobservable upstream is visible instead of silently empty.
+///
+/// PERSISTED: [`StoreSnapshot`] carries this plane, so the success latch and
+/// the observation window are facts about the SOURCE, not about the current
+/// process. The stamps are absolute wall-clock ms and are deliberately NOT
+/// rebased on load (unlike an entry's `last_seen_ms`, which is relative
+/// freshness) — "last succeeded at T" is true or it is not.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct SourceHealth {
     pub status: SourceStatus,
     /// When the source last completed a poll attempt (ms).
     pub last_poll_ms: u64,
     /// When the source last observed its upstream successfully (ms). 0 =
-    /// never this process lifetime.
+    /// never observed to succeed by anything that ever watched it.
     pub last_ok_ms: u64,
+    /// When the FIRST poll attempt against this source was recorded (ms).
+    /// 0 = never polled. Persisted, so the window backing a never-succeeded
+    /// claim accumulates across restarts instead of resetting to zero — the
+    /// claim gets stronger with time rather than being reborn weak.
+    #[serde(default)]
+    pub first_poll_ms: u64,
 }
 
 impl SourceHealth {
+    /// A fresh record for a source's first recorded poll at `now_ms`.
+    #[must_use]
+    pub fn first_seen_at(status: SourceStatus, now_ms: u64) -> Self {
+        Self {
+            status,
+            last_poll_ms: now_ms,
+            last_ok_ms: if status == SourceStatus::Ok { now_ms } else { 0 },
+            first_poll_ms: now_ms,
+        }
+    }
+
+    /// What is known about this source's success history — the typed
+    /// three-way [`ever_ok`](Self::ever_ok) collapses into a boolean.
+    ///
+    /// Prefer this at any border that DECIDES something. `ever_ok` is fine
+    /// for display; it cannot distinguish "never worked" from "never looked",
+    /// and a gate that cannot tell those apart fires on the wrong one.
+    #[must_use]
+    pub fn ok_evidence(&self) -> OkEvidence {
+        if self.last_ok_ms > 0 {
+            OkEvidence::Succeeded {
+                at_ms: self.last_ok_ms,
+            }
+        } else if self.last_poll_ms > 0 {
+            // Round DOWN, never up. With no first-poll stamp (a hand-built
+            // record, or one from a producer that predates the field) the
+            // only window we can actually point at is the single poll we
+            // have — claiming an epoch-wide one would overstate the evidence
+            // in exactly the direction this whole type exists to prevent.
+            OkEvidence::NeverSucceeded {
+                since_ms: if self.first_poll_ms > 0 {
+                    self.first_poll_ms
+                } else {
+                    self.last_poll_ms
+                },
+            }
+        } else {
+            OkEvidence::Unobserved
+        }
+    }
+
+    /// This source's [`HealthVerdict`] — status + history in one answer.
+    ///
+    /// The single home of the blind/degraded/ok rule. Both borders that
+    /// render or gate on it (izumi-board's `HealthView`, mado's suggest
+    /// plane) delegate here rather than re-deriving from their own view of
+    /// the same two fields.
+    #[must_use]
+    pub fn verdict(&self) -> HealthVerdict {
+        HealthVerdict::of(self.status, self.ok_evidence())
+    }
+
+    /// How long this source has been under observation at `now_ms` (ms since
+    /// its first recorded poll). 0 when never polled. This is the quantity a
+    /// never-succeeded claim rests on, so a renderer can state the evidence
+    /// instead of asserting the conclusion.
+    #[must_use]
+    pub fn observed_for_ms(&self, now_ms: u64) -> u64 {
+        match self.ok_evidence() {
+            OkEvidence::Unobserved => 0,
+            OkEvidence::Succeeded { .. } | OkEvidence::NeverSucceeded { .. } => {
+                let start = if self.first_poll_ms > 0 {
+                    self.first_poll_ms
+                } else {
+                    self.last_poll_ms
+                };
+                now_ms.saturating_sub(start)
+            }
+        }
+    }
+
     /// Has this source EVER observed its upstream successfully?
     ///
     /// The distinction this answers is the one a status code cannot: a source
@@ -172,27 +367,29 @@ impl SourceHealth {
     /// fourth consumer had to rediscover the convention or go without. The
     /// predicate belongs to the type.
     ///
-    /// SCOPE, and it is a real limit: this is **process-scoped**.
-    /// `StoreSnapshot` does not persist health, so after a restart a source
-    /// that has worked for months reports `ever_ok() == false` until its first
-    /// successful poll. Read it as *"not since this process started"*, which is
-    /// strictly weaker than *"never"*. Widening it to true never-ness means
-    /// carrying health through the snapshot.
+    /// SCOPE — corrected: this was **process-scoped** until the health plane
+    /// was persisted. `StoreSnapshot` now carries `health`, so a source that
+    /// worked last week still reads `ever_ok() == true` after a restart, and
+    /// the reading is *"never, as far as anything that watched it knows"*.
+    /// The residue is honest and named: a snapshot written before the health
+    /// plane existed carries none, so the first process after that upgrade
+    /// starts from no record. That state is [`OkEvidence::Unobserved`], NOT
+    /// a false `false` — see [`Self::ok_evidence`].
     #[must_use]
     pub fn ever_ok(&self) -> bool {
-        self.last_ok_ms > 0
+        matches!(self.ok_evidence(), OkEvidence::Succeeded { .. })
     }
 
-    /// Has this source completed any poll attempt at all this process lifetime?
+    /// Has this source completed any poll attempt at all?
     ///
     /// Distinct from [`Self::ever_ok`]: a source can have polled many times and
-    /// never succeeded. `false` here means the instrument has not run yet, so
+    /// never succeeded. `false` here means the instrument has not run, so
     /// **no verdict about the upstream is available** — neither healthy nor
     /// broken. Callers that judge a source should skip it rather than condemn
     /// it (mado's janitor already does exactly this).
     #[must_use]
     pub fn ever_polled(&self) -> bool {
-        self.last_poll_ms > 0
+        !matches!(self.ok_evidence(), OkEvidence::Unobserved)
     }
 }
 
@@ -253,6 +450,20 @@ pub struct StoreSnapshot<K, A> {
     /// hours later. 0 (legacy snapshots) = no rebase.
     #[serde(default)]
     pub saved_at_ms: u64,
+    /// Per-source poll health, keyed by catalog SLUG.
+    ///
+    /// Keyed by slug rather than by `K` on purpose: a `K`-keyed map makes an
+    /// unrecognised slug a hard deserialize error that rejects the ENTIRE
+    /// snapshot — every row lost because one retired source left a health
+    /// record. The slug key lets [`Store::load_snapshot`] drop exactly the
+    /// unknown record (the `raw` module's row-lenient rule, applied to the
+    /// health plane).
+    ///
+    /// `#[serde(default)]`: a snapshot written before this field existed
+    /// simply has none, and an empty map means **unknown** — no record is
+    /// invented for any source, so nothing can load as "it succeeded once".
+    #[serde(default)]
+    pub health: BTreeMap<String, SourceHealth>,
 }
 
 impl<K, A> Default for StoreSnapshot<K, A> {
@@ -260,6 +471,7 @@ impl<K, A> Default for StoreSnapshot<K, A> {
         Self {
             entries: Vec::new(),
             saved_at_ms: 0,
+            health: BTreeMap::new(),
         }
     }
 }
@@ -452,9 +664,16 @@ impl<K: Catalog, A: Payload> Store<K, A> {
                 status,
                 last_poll_ms: 0,
                 last_ok_ms: 0,
+                first_poll_ms: 0,
             });
             let transitioned = entry.status != status || entry.last_poll_ms == 0;
             entry.status = status;
+            // The window opens ONCE and never re-opens — a restart that
+            // reloaded a persisted record keeps that record's start, so the
+            // observation window accumulates instead of restarting.
+            if entry.first_poll_ms == 0 {
+                entry.first_poll_ms = now_ms;
+            }
             entry.last_poll_ms = now_ms;
             if status == SourceStatus::Ok {
                 entry.last_ok_ms = now_ms;
@@ -699,12 +918,15 @@ impl<K: Catalog, A: Payload> Store<K, A> {
     }
 
     /// Snapshot the current set for a warm restart, stamped with the save time
-    /// so ages rebase on load.
+    /// so ages rebase on load. Carries the health plane too — the success
+    /// latch is a fact about the source, not about this process.
     #[must_use]
     pub fn to_snapshot(&self, now_ms: u64) -> StoreSnapshot<K, A> {
+        let g = self.lock();
         StoreSnapshot {
-            entries: self.lock().entries.values().cloned().collect(),
+            entries: g.entries.values().cloned().collect(),
             saved_at_ms: now_ms,
+            health: g.health.iter().map(|(k, h)| (k.slug().to_owned(), *h)).collect(),
         }
     }
 
@@ -714,6 +936,18 @@ impl<K: Catalog, A: Payload> Store<K, A> {
     /// already stale at save still decays. Birth times stay absolute — aging
     /// keeps counting from the true first sighting. Legacy snapshots
     /// (`saved_at_ms == 0`, or an implausible future stamp) load unrebased.
+    ///
+    /// The health plane is RESTORED, not rebased and not invented:
+    ///
+    /// * health stamps are absolute facts ("succeeded at T"), so the entry
+    ///   rebase deliberately does not touch them;
+    /// * a slug this catalog no longer knows is dropped, never fatal;
+    /// * a snapshot carrying NO health leaves the plane empty, which reads as
+    ///   [`OkEvidence::Unobserved`] — unknown, not "never worked" and
+    ///   certainly not "worked". Nothing here can manufacture a latch;
+    /// * merging is monotone: `last_ok_ms`/`last_poll_ms` take the later
+    ///   stamp and `first_poll_ms` the earlier, so a reload can only widen
+    ///   what is known and can never walk a latch backwards.
     pub fn load_snapshot(&self, snap: StoreSnapshot<K, A>, now_ms: u64) {
         let shift = if snap.saved_at_ms > 0 && now_ms >= snap.saved_at_ms {
             now_ms - snap.saved_at_ms
@@ -726,6 +960,18 @@ impl<K: Catalog, A: Payload> Store<K, A> {
             for mut st in snap.entries {
                 st.last_seen_ms = st.last_seen_ms.saturating_add(shift);
                 g.entries.insert(st.item.id, st);
+            }
+            for (slug, saved) in snap.health {
+                let Some(kind) = K::from_slug(&slug) else {
+                    continue; // a retired/renamed source — drop the row, keep the load
+                };
+                let live = g.health.entry(kind).or_insert(saved);
+                live.last_ok_ms = live.last_ok_ms.max(saved.last_ok_ms);
+                live.last_poll_ms = live.last_poll_ms.max(saved.last_poll_ms);
+                live.first_poll_ms = match (live.first_poll_ms, saved.first_poll_ms) {
+                    (0, other) | (other, 0) => other,
+                    (a, b) => a.min(b),
+                };
             }
         }
         self.bump();
@@ -1189,6 +1435,7 @@ mod tests {
                 state: ItemState::Offered,
             }],
             saved_at_ms: 0,
+            health: BTreeMap::new(),
         };
         let old = Store::new();
         old.load_snapshot(legacy, now);
@@ -1637,7 +1884,12 @@ mod ever_ok_tests {
     use super::*;
 
     fn health(status: SourceStatus, last_poll_ms: u64, last_ok_ms: u64) -> SourceHealth {
-        SourceHealth { status, last_poll_ms, last_ok_ms }
+        SourceHealth {
+            status,
+            last_poll_ms,
+            last_ok_ms,
+            first_poll_ms: last_poll_ms,
+        }
     }
 
     /// The distinction the whole predicate exists for: these two sources report
@@ -1675,5 +1927,329 @@ mod ever_ok_tests {
     fn zero_is_the_never_sentinel() {
         assert!(!health(SourceStatus::Ok, 1, 0).ever_ok());
         assert!(health(SourceStatus::Ok, 1, 1).ever_ok());
+    }
+
+    /// The three-way the boolean could not hold. "Never worked" and "never
+    /// looked" are DIFFERENT findings, and only the first may gate.
+    #[test]
+    fn evidence_separates_never_worked_from_never_looked() {
+        let never = health(SourceStatus::Error, 9_000, 0);
+        let unrun = health(SourceStatus::Unconfigured, 0, 0);
+        let worked = health(SourceStatus::Error, 9_000, 5_000);
+
+        assert_eq!(
+            never.ok_evidence(),
+            OkEvidence::NeverSucceeded { since_ms: 9_000 }
+        );
+        assert_eq!(unrun.ok_evidence(), OkEvidence::Unobserved);
+        assert_eq!(worked.ok_evidence(), OkEvidence::Succeeded { at_ms: 5_000 });
+
+        assert_eq!(never.verdict(), HealthVerdict::Blind);
+        assert_eq!(unrun.verdict(), HealthVerdict::Unknown);
+        assert_eq!(worked.verdict(), HealthVerdict::Degraded);
+
+        // The gate direction, stated: only a FINDING gates.
+        assert!(never.verdict().needs_intervention());
+        assert!(!unrun.verdict().needs_intervention());
+        // …and unknown must never round up to healthy either.
+        assert_ne!(unrun.verdict(), HealthVerdict::Ok);
+    }
+
+    /// A record with no first-poll stamp claims the WEAKEST honest window
+    /// (the one poll it can point at), never an epoch-wide one. Round-down.
+    #[test]
+    fn a_missing_window_start_rounds_the_claim_down_not_up() {
+        let stampless = SourceHealth {
+            status: SourceStatus::Error,
+            last_poll_ms: 9_000,
+            last_ok_ms: 0,
+            first_poll_ms: 0,
+        };
+        assert_eq!(
+            stampless.ok_evidence(),
+            OkEvidence::NeverSucceeded { since_ms: 9_000 },
+            "the window starts at the only observation we have, not at the epoch"
+        );
+        assert_eq!(stampless.observed_for_ms(10_000), 1_000);
+    }
+
+    /// The rule is total over both axes and lives in exactly one place.
+    #[test]
+    fn verdict_matrix_is_exhaustive_over_status_and_evidence() {
+        let statuses = [
+            SourceStatus::Ok,
+            SourceStatus::Unconfigured,
+            SourceStatus::AuthMissing,
+            SourceStatus::TimedOut,
+            SourceStatus::Error,
+        ];
+        let evidences = [
+            OkEvidence::Succeeded { at_ms: 1 },
+            OkEvidence::NeverSucceeded { since_ms: 1 },
+            OkEvidence::Unobserved,
+        ];
+        for status in statuses {
+            for evidence in evidences {
+                let expected = match (status, evidence) {
+                    (SourceStatus::Ok, _) => HealthVerdict::Ok,
+                    (_, OkEvidence::Succeeded { .. }) => HealthVerdict::Degraded,
+                    (_, OkEvidence::NeverSucceeded { .. }) => HealthVerdict::Blind,
+                    (_, OkEvidence::Unobserved) => HealthVerdict::Unknown,
+                };
+                assert_eq!(HealthVerdict::of(status, evidence), expected);
+            }
+        }
+        // Labels stay one width so a column of them scans preattentively.
+        let widths: Vec<usize> = [
+            HealthVerdict::Ok,
+            HealthVerdict::Degraded,
+            HealthVerdict::Blind,
+            HealthVerdict::Unknown,
+        ]
+        .iter()
+        .map(|v| v.label().len())
+        .collect();
+        assert!(widths.windows(2).all(|w| w[0] == w[1]), "{widths:?}");
+    }
+}
+
+/// THE REGRESSION SUITE for the restart-resets-the-latch defect.
+///
+/// Before this landed, `StoreSnapshot` persisted `entries` + `saved_at_ms`
+/// and dropped `health` on the floor. So `last_ok_ms` — the field `ever_ok`
+/// derives from, which two consumers gate on — went back to 0 on every
+/// process restart, and a source that had worked for months read as one that
+/// had NEVER worked until its next successful poll. `izumi-board health`
+/// exits 2 on that reading, so a restart could fail a CI step or a rebuild on
+/// a perfectly healthy fleet.
+#[cfg(test)]
+mod health_persistence_tests {
+    use super::*;
+    use crate::spawn::SpawnSpec;
+    use crate::testkit::TestKind;
+
+    const MAGIC: &[u8] = b"izumi-health-test v1\n";
+
+    /// The source's health as a consumer sees it — `None` when no record
+    /// exists at all (which is itself a distinct, typed reading: unknown).
+    fn health_of<K: Catalog, A: Payload>(store: &Store<K, A>, kind: K) -> Option<SourceHealth> {
+        store
+            .health()
+            .into_iter()
+            .find(|(k, _)| *k == kind)
+            .map(|(_, h)| h)
+    }
+
+    /// The verdict a consumer would render, with "no record at all" folded to
+    /// its honest reading rather than to a panic — so a broken persist shows
+    /// up as the WRONG VERDICT (what actually burns an operator), not as a
+    /// missing-key crash in the test harness.
+    fn verdict_of<K: Catalog, A: Payload>(store: &Store<K, A>, kind: K) -> HealthVerdict {
+        health_of(store, kind).map_or(HealthVerdict::Unknown, |h| h.verdict())
+    }
+
+    /// FAIL-ONCE ANCHOR. Persist a source that HAS succeeded, restart into a
+    /// fresh store, let the restarted process poll once (still failing —
+    /// exactly the sustained-outage-across-a-restart case), and assert it
+    /// does NOT read as Blind. Break `StoreSnapshot`'s health plane and this
+    /// goes red on the verdict itself.
+    #[test]
+    fn a_restart_preserves_the_success_latch_so_degraded_never_reads_blind() {
+        let store: Store<TestKind, SpawnSpec> = Store::new();
+        // Worked, then broke — weather.
+        store.record_poll(TestKind::GrafanaAlerts, SourceStatus::Ok, 1_000);
+        store.record_poll(TestKind::GrafanaAlerts, SourceStatus::Error, 2_000);
+        // Never once worked — a broken declaration.
+        store.record_poll(TestKind::JiraAssigned, SourceStatus::Error, 1_500);
+        assert_eq!(
+            verdict_of(&store, TestKind::GrafanaAlerts),
+            HealthVerdict::Degraded,
+            "precondition: it reads Degraded before the restart"
+        );
+
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("snap.json");
+        store.persist_file(&path, MAGIC, 3_000);
+
+        // A COLD process: brand-new store, same file, much later — and it
+        // polls, because that is what a restarted daemon does. The upstream
+        // is still down, so the poll fails again.
+        let restarted: Store<TestKind, SpawnSpec> = Store::new();
+        restarted.load_file(&path, MAGIC, 900_000);
+        restarted.record_poll(TestKind::GrafanaAlerts, SourceStatus::Error, 900_000);
+        restarted.record_poll(TestKind::JiraAssigned, SourceStatus::Error, 900_000);
+
+        assert_eq!(
+            verdict_of(&restarted, TestKind::GrafanaAlerts),
+            HealthVerdict::Degraded,
+            "THE DEFECT: without a persisted health plane the latch resets, a \
+             merely-degraded source reads Blind, and `izumi-board health` exits 2 \
+             on a healthy fleet"
+        );
+
+        let broke = health_of(&restarted, TestKind::GrafanaAlerts).expect("a record exists");
+        assert!(broke.ever_ok(), "the latch survived the restart");
+        assert_eq!(
+            broke.ok_evidence(),
+            OkEvidence::Succeeded { at_ms: 1_000 },
+            "the stamp is an absolute fact and is NOT rebased like an entry's age"
+        );
+        assert_eq!(
+            broke.verdict(),
+            HealthVerdict::Degraded,
+            "a restart must not turn weather into a broken declaration"
+        );
+        assert!(
+            !broke.verdict().needs_intervention(),
+            "and must not make `izumi-board health` exit 2 on a healthy fleet"
+        );
+
+        // The other direction still works: never-succeeded stays provable,
+        // and its observation window now SPANS the restart.
+        let never = health_of(&restarted, TestKind::JiraAssigned).expect("a record exists");
+        assert_eq!(never.verdict(), HealthVerdict::Blind);
+        assert!(never.verdict().needs_intervention());
+        assert_eq!(
+            never.ok_evidence(),
+            OkEvidence::NeverSucceeded { since_ms: 1_500 },
+            "the window starts at the FIRST ever poll, not at this process's boot"
+        );
+        assert_eq!(never.observed_for_ms(900_000), 898_500);
+    }
+
+    /// Absent-on-load means UNKNOWN. It must not fabricate a latch (that
+    /// would invert the very bug being fixed) and must not read as ok.
+    #[test]
+    fn a_snapshot_without_a_health_plane_loads_unknown_not_ok_and_not_blind() {
+        let legacy: StoreSnapshot<TestKind, SpawnSpec> = StoreSnapshot {
+            entries: Vec::new(),
+            saved_at_ms: 1_000,
+            health: BTreeMap::new(),
+        };
+        let store: Store<TestKind, SpawnSpec> = Store::new();
+        store.load_snapshot(legacy, 5_000);
+        assert!(
+            store.health().is_empty(),
+            "no record is invented for any source"
+        );
+
+        // And the typed reading of "no record" is Unobserved → Unknown.
+        let no_record = SourceHealth {
+            status: SourceStatus::Error,
+            last_poll_ms: 0,
+            last_ok_ms: 0,
+            first_poll_ms: 0,
+        };
+        assert_eq!(no_record.ok_evidence(), OkEvidence::Unobserved);
+        assert_eq!(no_record.verdict(), HealthVerdict::Unknown);
+        assert!(!no_record.ever_ok(), "unknown never reads as a success");
+        assert_ne!(no_record.verdict(), HealthVerdict::Ok);
+        assert!(
+            !no_record.verdict().needs_intervention(),
+            "unknown does not gate — a gate that fires on 'we have not looked' is noise"
+        );
+    }
+
+    /// Legacy JSON — a body with no `health` key at all — still parses, and
+    /// parses to unknown. The schema-evolution direction that matters.
+    #[test]
+    fn a_legacy_json_body_without_the_health_key_deserializes_to_unknown() {
+        let body = br#"{"entries":[],"saved_at_ms":42}"#;
+        let snap: StoreSnapshot<TestKind, SpawnSpec> =
+            serde_json::from_slice(body).expect("a pre-health snapshot body still loads");
+        assert_eq!(snap.saved_at_ms, 42);
+        assert!(snap.health.is_empty(), "absent health is empty, never seeded");
+    }
+
+    /// A health record for a slug this catalog no longer knows drops that ROW
+    /// and keeps the load. A retired source must not cost a board its rows.
+    #[test]
+    fn an_unknown_health_slug_is_dropped_never_fatal() {
+        let mut health = BTreeMap::new();
+        health.insert(
+            String::from("a-source-this-catalog-retired"),
+            SourceHealth::first_seen_at(SourceStatus::Error, 100),
+        );
+        health.insert(
+            String::from("jira-assigned"),
+            SourceHealth::first_seen_at(SourceStatus::Ok, 200),
+        );
+        let snap: StoreSnapshot<TestKind, SpawnSpec> = StoreSnapshot {
+            entries: Vec::new(),
+            saved_at_ms: 300,
+            health,
+        };
+        let store: Store<TestKind, SpawnSpec> = Store::new();
+        store.load_snapshot(snap, 400);
+        let restored = store.health();
+        assert_eq!(restored.len(), 1, "the unknown slug is dropped");
+        assert_eq!(restored[0].0, TestKind::JiraAssigned);
+        assert!(restored[0].1.ever_ok(), "the known record loaded intact");
+    }
+
+    /// The merge is monotone: a reload can only ever WIDEN what is known.
+    /// An older persisted record must never walk a live latch backwards.
+    #[test]
+    fn reloading_an_older_record_never_regresses_a_live_latch() {
+        let store: Store<TestKind, SpawnSpec> = Store::new();
+        store.record_poll(TestKind::JiraAssigned, SourceStatus::Ok, 9_000);
+
+        let mut stale = BTreeMap::new();
+        stale.insert(
+            String::from("jira-assigned"),
+            SourceHealth {
+                status: SourceStatus::Error,
+                last_poll_ms: 1_000,
+                last_ok_ms: 0,
+                first_poll_ms: 500,
+            },
+        );
+        store.load_snapshot(
+            StoreSnapshot {
+                entries: Vec::new(),
+                saved_at_ms: 1_000,
+                health: stale,
+            },
+            10_000,
+        );
+
+        let h = health_of(&store, TestKind::JiraAssigned).expect("a record exists");
+        assert_eq!(h.last_ok_ms, 9_000, "the live latch is not walked back");
+        assert_eq!(h.last_poll_ms, 9_000, "nor the last poll");
+        assert_eq!(
+            h.first_poll_ms, 500,
+            "but the window WIDENS to the earliest known first poll"
+        );
+        assert_eq!(h.verdict(), HealthVerdict::Ok);
+    }
+
+    /// The full file round-trip, including the frame: health survives the
+    /// BLAKE3-framed persist/load, not just the in-memory snapshot value.
+    #[test]
+    fn the_health_plane_survives_the_framed_file_round_trip() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("snap.json");
+        let store: Store<TestKind, SpawnSpec> = Store::new();
+        store.record_poll(TestKind::TendRepos, SourceStatus::Ok, 1_000);
+        store.persist_file(&path, MAGIC, 1_000);
+
+        let json = crate::persist::unframe_snapshot(
+            MAGIC,
+            &std::fs::read(&path).expect("snapshot written"),
+        )
+        .expect("frame verifies");
+        let value: serde_json::Value = serde_json::from_slice(&json).expect("body is json");
+        assert_eq!(
+            value["health"]["tend-repos"]["last_ok_ms"], 1_000,
+            "the wire carries the latch, slug-keyed: {value}"
+        );
+
+        let reloaded: Store<TestKind, SpawnSpec> = Store::new();
+        reloaded.load_file(&path, MAGIC, 50_000);
+        assert_eq!(
+            verdict_of(&reloaded, TestKind::TendRepos),
+            HealthVerdict::Ok,
+            "the latch crossed the frame, not just the in-memory snapshot value"
+        );
     }
 }

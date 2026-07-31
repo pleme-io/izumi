@@ -67,6 +67,27 @@ impl SourceStatus {
             SourceStatus::Error => "erroring",
         }
     }
+
+    /// The inverse of [`Self::label`] — recover the typed status from an
+    /// operator-facing label.
+    ///
+    /// Exists so a border that carries the label on the wire (izumi-board's
+    /// `HealthView.status`, mado's `board_json`) can get back to the TYPE
+    /// before deciding anything, instead of re-deciding on a string compare.
+    /// A `status == "ok"` test in a consumer is one copy of the rule; a
+    /// round-trip through here is none.
+    #[must_use]
+    pub fn from_label(s: &str) -> Option<Self> {
+        [
+            Self::Ok,
+            Self::Unconfigured,
+            Self::AuthMissing,
+            Self::TimedOut,
+            Self::Error,
+        ]
+        .into_iter()
+        .find(|st| st.label() == s)
+    }
 }
 
 /// How urgently an item wants attention — the dominant ranking axis.

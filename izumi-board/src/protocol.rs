@@ -206,6 +206,17 @@ impl core::fmt::Display for RowView {
     }
 }
 
+/// Whether a source is working, broken, has never worked at all, or has not
+/// been looked at.
+///
+/// **Re-exported, not redefined.** This type and its blind/degraded/ok rule
+/// live in `izumi` next to the record they describe
+/// ([`izumi::SourceHealth::verdict`]), because the rule had grown a second
+/// copy here and a third at mado's typed border. Two copies of one rule
+/// drift; three is a promise to drift. Everything below renders the verdict —
+/// nothing decides it.
+pub use izumi::HealthVerdict;
+
 /// One source's poll health as the agent/CLI surface renders it — the typed
 /// twin of a mado `board_json` health row.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -217,25 +228,42 @@ pub struct HealthView {
     pub status: String,
     /// Seconds since the source last completed a poll attempt.
     pub last_poll_secs_ago: u64,
-    /// Whether the source has EVER observed its upstream this process
-    /// lifetime — distinguishes "calm" from "blind since boot".
+    /// Whether the source has EVER observed its upstream — now across every
+    /// process that watched it, since the health plane is persisted. Kept on
+    /// the wire for compatibility; it is a projection of `evidence`, and a
+    /// DECISION must read `evidence` instead (a bool cannot tell "never
+    /// worked" from "never looked").
     pub ever_ok: bool,
+    /// The typed success history this row's verdict derives from.
+    /// `#[serde(default)]` → a peer that predates the field sends none, and
+    /// none reads as [`izumi::OkEvidence::Unobserved`] (unknown), never as a
+    /// success.
+    #[serde(default = "unobserved")]
+    pub evidence: izumi::OkEvidence,
+    /// How long this source has been under observation, in seconds — the
+    /// evidence behind a BLIND verdict, so the line can state its grounds
+    /// rather than assert its conclusion. 0 when never polled.
+    #[serde(default)]
+    pub observed_secs: u64,
+}
+
+fn unobserved() -> izumi::OkEvidence {
+    izumi::OkEvidence::Unobserved
 }
 
 impl HealthView {
     /// Build from the store's typed health record (field mapping verbatim
-    /// from mado's `board_json` health block).
+    /// from mado's `board_json` health block, plus the typed evidence the
+    /// verdict is derived from).
     #[must_use]
-    pub fn from_health<K: izumi::Catalog>(
-        kind: K,
-        h: &izumi::SourceHealth,
-        now_ms: u64,
-    ) -> Self {
+    pub fn from_health<K: izumi::Catalog>(kind: K, h: &izumi::SourceHealth, now_ms: u64) -> Self {
         Self {
             source: kind.slug().to_owned(),
             status: h.status.label().to_owned(),
             last_poll_secs_ago: now_ms.saturating_sub(h.last_poll_ms) / 1000,
             ever_ok: h.ever_ok(),
+            evidence: h.ok_evidence(),
+            observed_secs: h.observed_for_ms(now_ms) / 1000,
         }
     }
 
@@ -252,49 +280,33 @@ impl HealthView {
     /// [`HealthVerdict::Blind`] separates them by asking the question the
     /// data could always answer and nothing ever rendered: has this source
     /// EVER observed its upstream?
+    ///
+    /// DELEGATES. The wire form carries a label and a typed evidence; this
+    /// recovers the typed status and hands both to [`HealthVerdict::of`],
+    /// the one place the rule is written. An unparseable label falls to
+    /// `Error` — the safe direction, since nothing may invent an `Ok`.
     #[must_use]
     pub fn verdict(&self) -> HealthVerdict {
-        if self.status == "ok" {
-            HealthVerdict::Ok
-        } else if self.ever_ok {
-            HealthVerdict::Degraded
-        } else {
-            HealthVerdict::Blind
-        }
+        let status = izumi::SourceStatus::from_label(&self.status)
+            .unwrap_or(izumi::SourceStatus::Error);
+        HealthVerdict::of(status, self.evidence)
     }
 }
 
-/// Whether a source is working, broken, or has never worked at all.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum HealthVerdict {
-    /// Reporting normally.
-    Ok,
-    /// Has observed its upstream before and is failing now — weather.
-    /// Usually resolves itself; worth watching, not worth waking up for.
-    Degraded,
-    /// Has NEVER observed its upstream. Not weather: a wrong context, a
-    /// dead URL, a malformed credential — something that was never right,
-    /// and that no amount of waiting will fix.
-    Blind,
-}
-
-impl HealthVerdict {
-    /// A fixed-width label so a column of these scans preattentively — the
-    /// operator's eye should catch BLIND without reading the line.
-    #[must_use]
-    pub fn label(self) -> &'static str {
-        match self {
-            Self::Ok => "ok      ",
-            Self::Degraded => "DEGRADED",
-            Self::Blind => "BLIND   ",
-        }
-    }
-
-    /// Whether this verdict means someone must go fix a declaration.
-    #[must_use]
-    pub fn needs_intervention(self) -> bool {
-        matches!(self, Self::Blind)
-    }
+/// Render a duration in the coarsest unit that still reads honestly — the
+/// grounds of a BLIND verdict belong on the line, in words a human parses at
+/// a glance.
+fn humanize_secs(secs: u64) -> String {
+    use core::fmt::Write as _;
+    let mut out = String::new();
+    let (n, unit) = match secs {
+        s if s >= 86_400 => (s / 86_400, "d"),
+        s if s >= 3_600 => (s / 3_600, "h"),
+        s if s >= 60 => (s / 60, "m"),
+        s => (s, "s"),
+    };
+    let _ = write!(out, "{n}{unit}");
+    out
 }
 
 impl core::fmt::Display for HealthView {
@@ -308,12 +320,20 @@ impl core::fmt::Display for HealthView {
             self.status,
             self.last_poll_secs_ago
         )?;
-        if verdict == HealthVerdict::Blind {
+        match verdict {
             // The whole point of the verb. Say it in words, on the line,
-            // not as a flag the reader has to decode.
-            f.write_str("  — never once succeeded")?;
+            // not as a flag the reader has to decode — and say how long we
+            // watched, so the claim carries its own evidence.
+            HealthVerdict::Blind => write!(
+                f,
+                "  — never once succeeded in {}",
+                humanize_secs(self.observed_secs)
+            ),
+            // The state that used to masquerade as Blind. Naming it stops a
+            // gate from firing on an instrument that never ran.
+            HealthVerdict::Unknown => f.write_str("  — never polled; no verdict available"),
+            HealthVerdict::Ok | HealthVerdict::Degraded => Ok(()),
         }
-        Ok(())
     }
 }
 
@@ -327,6 +347,15 @@ mod health_verdict_tests {
             status: status.to_owned(),
             last_poll_secs_ago: 12,
             ever_ok,
+            // A polled source, either with the latch set or without it —
+            // the two cells these tests are about. `Unobserved` (never
+            // polled) is a third state, covered separately.
+            evidence: if ever_ok {
+                izumi::OkEvidence::Succeeded { at_ms: 1 }
+            } else {
+                izumi::OkEvidence::NeverSucceeded { since_ms: 1 }
+            },
+            observed_secs: 3_600,
         }
     }
 
@@ -395,6 +424,93 @@ mod health_verdict_tests {
             "labels must share one width, got {widths:?}"
         );
     }
+
+    /// ONE DEFINITION. This border must AGREE with the store record it was
+    /// built from for every cell — not because two implementations were
+    /// written to match, but because there is only one implementation. This
+    /// test is what stops a future edit here from quietly forking the rule
+    /// again, which is exactly how it came to exist in three places.
+    #[test]
+    fn the_view_verdict_is_the_store_verdict_for_every_cell() {
+        let now = 100_000;
+        let statuses = [
+            izumi::SourceStatus::Ok,
+            izumi::SourceStatus::Unconfigured,
+            izumi::SourceStatus::AuthMissing,
+            izumi::SourceStatus::TimedOut,
+            izumi::SourceStatus::Error,
+        ];
+        // (never polled, polled-never-succeeded, succeeded-then-broke).
+        let histories = [(0, 0), (10_000, 0), (10_000, 20_000)];
+        for status in statuses {
+            for (first_poll_ms, last_ok_ms) in histories {
+                let h = izumi::SourceHealth {
+                    status,
+                    last_poll_ms: first_poll_ms,
+                    last_ok_ms,
+                    first_poll_ms,
+                };
+                let v = HealthView::from_health(crate::catalog::BoardKind::TendRepos, &h, now);
+                assert_eq!(
+                    v.verdict(),
+                    h.verdict(),
+                    "the wire border and the typed record must never disagree: {h:?}"
+                );
+                assert_eq!(v.ever_ok, h.ever_ok());
+            }
+        }
+    }
+
+    /// The state the old boolean could not name. A source whose instrument
+    /// has never run is UNKNOWN, and unknown does not gate — that is what
+    /// keeps `izumi-board health`'s exit 2 meaning "go fix a declaration".
+    #[test]
+    fn never_polled_is_unknown_and_does_not_gate() {
+        let unrun = HealthView {
+            source: "grafana-alerts".to_owned(),
+            status: "needs config".to_owned(),
+            last_poll_secs_ago: 0,
+            ever_ok: false,
+            evidence: izumi::OkEvidence::Unobserved,
+            observed_secs: 0,
+        };
+        assert_eq!(unrun.verdict(), HealthVerdict::Unknown);
+        assert!(
+            !unrun.verdict().needs_intervention(),
+            "an instrument that never ran is not a broken declaration"
+        );
+        assert_ne!(unrun.verdict(), HealthVerdict::Ok, "nor is it healthy");
+        let rendered = unrun.to_string();
+        assert!(rendered.contains("never polled"), "{rendered}");
+        assert!(
+            !rendered.contains("never once succeeded"),
+            "a source never polled must not be accused of never succeeding: {rendered}"
+        );
+    }
+
+    /// A BLIND line carries its grounds: how long we watched. A verdict that
+    /// states its conclusion without its evidence is the shape of claim this
+    /// whole change exists to stop.
+    #[test]
+    fn blind_states_how_long_it_watched() {
+        let mut v = view("erroring", false);
+        v.observed_secs = 4 * 86_400;
+        let rendered = v.to_string();
+        assert!(rendered.contains("never once succeeded in 4d"), "{rendered}");
+    }
+
+    /// A peer that predates the `evidence` field sends none — and none must
+    /// decode to unknown, never to a success. Absence is not evidence.
+    #[test]
+    fn a_wire_row_without_evidence_decodes_to_unknown() {
+        let row: HealthView = serde_json::from_str(
+            r#"{"source":"grafana-alerts","status":"erroring","last_poll_secs_ago":9,"ever_ok":true}"#,
+        )
+        .expect("a pre-evidence row still decodes");
+        assert_eq!(row.evidence, izumi::OkEvidence::Unobserved);
+        assert_eq!(row.verdict(), HealthVerdict::Unknown);
+        assert_ne!(row.verdict(), HealthVerdict::Ok, "absence never reads as ok");
+    }
 }
 
 #[cfg(test)]
@@ -459,6 +575,8 @@ mod tests {
                 status: String::from("ok"),
                 last_poll_secs_ago: 3,
                 ever_ok: true,
+                evidence: izumi::OkEvidence::Succeeded { at_ms: 1_000 },
+                observed_secs: 60,
             }]),
         ];
         for resp in &resps {

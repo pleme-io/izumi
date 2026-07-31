@@ -60,7 +60,8 @@ pub use prewarm::{reject_injection, PrewarmSpec, PrewarmStep};
 pub use source::{apply_poll, refresh_once, EngineConfig, PollOutcome, Source, SourceConfig};
 pub use spawn::SpawnSpec;
 pub use store::{
-    effective_rank_key, shade_ramp, ItemState, SourceHealth, Store, StoreSnapshot, StoredItem,
+    effective_rank_key, shade_ramp, HealthVerdict, ItemState, OkEvidence, SourceHealth, Store,
+    StoreSnapshot, StoredItem,
 };
 
 /// The in-crate test catalog — slugs / urgencies / cadences MATCH the mado
