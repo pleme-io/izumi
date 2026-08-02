@@ -49,8 +49,8 @@ impl<K: Catalog> Source<K, SpawnSpec> for GrafanaAlerts<K> {
         let Some(out) = env.http_get(&req) else {
             return PollOutcome::error();
         };
-        let origin = crate::util::origin_of("grafana", cfg, Some(base));
-        PollOutcome::Fetched(parse(self.kind, &out, env, cfg.max_items.max(1), &origin))
+        PollOutcome::Fetched(parse(self.kind, &out, env, cfg.max_items.max(1)))
+            .tagged(crate::util::origin_of("grafana", cfg, Some(base)))
     }
 }
 
@@ -61,7 +61,6 @@ fn parse<K: Catalog>(
     json: &str,
     env: &dyn Environment,
     max: usize,
-    origin: &izumi::Origin,
 ) -> Vec<Item<K, SpawnSpec>> {
     let Ok(payload) = serde_json::from_str::<AlertsPayload>(json) else {
         return Vec::new();
@@ -99,12 +98,12 @@ fn parse<K: Catalog>(
             // firing `warning` is real but not as urgent as a `critical`. A
             // missing label keeps it Critical (firing-but-unlabeled).
             let severity = a.labels.get("severity").map_or("", String::as_str);
-            // The service (and WHICH grafana) is the typed `origin` now;
-            // `detail` carries only what is specific to this alert.
-            let detail = severity.to_string();
+            // No `detail` at all. The severity label maps 1:1 onto the
+            // Urgency this row is ranked by, and the board renders that as
+            // a tier glyph — so repeating the word here would be a third
+            // encoding of one variable (colour, glyph, text).
             Some(
                 Item::new(kind, &key, title, spawn)
-                    .origin(origin.clone())
                     // Per-RULE correlation, only when the alertname label was
                     // actually present (never the placeholder): N firing
                     // instances of one rule fold into one board row.
@@ -113,7 +112,6 @@ fn parse<K: Catalog>(
                     } else {
                         None
                     })
-                    .detail(detail)
                     .ranked(IncidentSeverity::rank_of(severity)),
             )
         })
@@ -190,7 +188,7 @@ mod tests {
         let cpu = out.iter().find(|s| s.title.contains("HighCPU")).unwrap();
         assert!(cpu.title.contains("firing"));
         // Detail now carries the severity; a critical alert stays Critical.
-        assert_eq!(cpu.detail.as_deref(), Some("critical"));
+        assert_eq!(cpu.detail.as_deref(), None, "severity is the glyph, not a word");
         assert_eq!(cpu.origin.as_ref().map(ToString::to_string).as_deref(), Some("grafana"));
         assert_eq!(cpu.urgency, Urgency::Critical);
         assert_eq!(cpu.spawn.cwd().to_str().unwrap(), "/code");
@@ -231,6 +229,6 @@ mod tests {
 
     #[test]
     fn garbage_json_is_safe() {
-        assert!(parse(TestKind::GrafanaAlerts, "not json", &MockEnvironment::new(), 5, &izumi::Origin::service("grafana")).is_empty());
+        assert!(parse(TestKind::GrafanaAlerts, "not json", &MockEnvironment::new(), 5).is_empty());
     }
 }

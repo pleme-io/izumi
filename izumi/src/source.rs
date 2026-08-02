@@ -83,6 +83,49 @@ impl<K, A> PollOutcome<K, A> {
     pub const fn error() -> Self {
         Self::Unavailable(SourceStatus::Error)
     }
+
+    /// Stamp every fetched item with the source's [`Origin`].
+    ///
+    /// Tenancy is a property of the SOURCE and its config — which Datadog
+    /// org, which cluster context — not of parsing an individual row. The
+    /// first cut threaded an `&Origin` down into each provider's `parse`,
+    /// which meant a signature change, a call-site change and a test-fixture
+    /// change per provider, ~20 times, to express one fact that `poll`
+    /// already knew. This combinator is the same fact applied once, at the
+    /// boundary where the config is in scope:
+    ///
+    /// ```ignore
+    /// PollOutcome::Fetched(parse(self.kind, &out, env, max))
+    ///     .tagged(origin_of("datadog", cfg, Some(base)))
+    /// ```
+    ///
+    /// `Unavailable` passes through untouched: an outcome with no items has
+    /// no rows to attribute, and inventing an origin for one would be a
+    /// claim about a fetch that never happened.
+    #[must_use]
+    pub fn tagged(self, origin: crate::Origin) -> Self
+    where
+        K: Copy,
+    {
+        match self {
+            Self::Fetched(items) => Self::Fetched(
+                items
+                    .into_iter()
+                    .map(|mut i| {
+                        // Never overwrite: a provider that knows a
+                        // finer-grained origin per row (a multi-account
+                        // fan-out) has already said so, and the source-wide
+                        // default must not clobber it.
+                        if i.origin.is_none() {
+                            i.origin = Some(origin.clone());
+                        }
+                        i
+                    })
+                    .collect(),
+            ),
+            other => other,
+        }
+    }
 }
 
 /// A typed item provider. One impl per catalog kind.
@@ -360,5 +403,54 @@ mod tests {
         assert!(!cfg.config_for(TestKind::TendRepos).enabled);
         // An unconfigured source falls back to enabled defaults.
         assert!(cfg.config_for(TestKind::GitBranchPr).enabled);
+    }
+
+    /// `tagged` stamps every fetched row, leaves an `Unavailable` outcome
+    /// alone, and never overwrites an origin a provider already set.
+    ///
+    /// The pass-through matters: an outcome with no items has no rows to
+    /// attribute, and stamping one would be a claim about a fetch that
+    /// never happened — the same "no evidence is not a finding" rule the
+    /// health footer follows.
+    #[test]
+    fn tagged_stamps_fetched_rows_only() {
+        use crate::spawn::SpawnSpec;
+        use crate::testkit::TestKind;
+        use crate::{Item, Origin};
+
+        let spawn = SpawnSpec::new("/code", "n").unwrap();
+        let plain = Item::new(TestKind::JiraSprint, "a", "t", spawn.clone());
+        let preset = Item::new(TestKind::JiraSprint, "b", "t", spawn)
+            .origin(Origin::service("datadog").account("other"));
+
+        let out = PollOutcome::Fetched(vec![plain, preset])
+            .tagged(Origin::service("jira").account("akeyless"));
+        let PollOutcome::Fetched(items) = out else {
+            panic!("still fetched");
+        };
+        assert_eq!(
+            items[0].origin.as_ref().map(ToString::to_string).as_deref(),
+            Some("jira:akeyless"),
+            "an unattributed row takes the source's origin"
+        );
+        assert_eq!(
+            items[1].origin.as_ref().map(ToString::to_string).as_deref(),
+            Some("datadog:other"),
+            "a row that already named its origin is NOT clobbered"
+        );
+
+        // Every Unavailable tier passes through untouched.
+        for u in [
+            PollOutcome::<TestKind, SpawnSpec>::auth_missing(),
+            PollOutcome::unconfigured(),
+            PollOutcome::timed_out(),
+            PollOutcome::error(),
+        ] {
+            let after = u.tagged(Origin::service("jira"));
+            assert!(
+                matches!(after, PollOutcome::Unavailable(_)),
+                "an unavailable outcome must stay unavailable"
+            );
+        }
     }
 }

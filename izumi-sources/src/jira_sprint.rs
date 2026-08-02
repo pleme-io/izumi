@@ -58,6 +58,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for JiraSprint<K> {
             return PollOutcome::error();
         };
         PollOutcome::Fetched(parse(self.kind, &out, env, base, max))
+            .tagged(crate::util::origin_of("jira", cfg, Some(base)))
     }
 }
 

@@ -53,6 +53,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for CloudflareDeployments<K> {
             return PollOutcome::error();
         };
         PollOutcome::Fetched(parse(self.kind, &out, project, env, max))
+            .tagged(crate::util::origin_of("cloudflare", cfg, None))
     }
 }
 

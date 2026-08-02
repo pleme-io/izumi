@@ -46,6 +46,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for AwsHealth<K> {
         let mut items = parse(self.kind, &out, env);
         items.truncate(cfg.max_items.max(1));
         PollOutcome::Fetched(items)
+            .tagged(crate::util::origin_of("aws", cfg, None))
     }
 }
 

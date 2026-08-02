@@ -64,6 +64,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for JiraAssigned<K> {
             return PollOutcome::error();
         };
         PollOutcome::Fetched(parse(self.kind, &body, env, site, cfg.max_items))
+            .tagged(crate::util::origin_of("jira", cfg, Some(site)))
     }
 }
 

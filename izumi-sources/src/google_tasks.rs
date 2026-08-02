@@ -44,6 +44,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for GoogleTasks<K> {
         let mut items = parse(self.kind, &out, env);
         items.truncate(max);
         PollOutcome::Fetched(items)
+            .tagged(crate::util::origin_of("google", cfg, None))
     }
 }
 

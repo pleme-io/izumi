@@ -49,8 +49,8 @@ impl<K: Catalog> Source<K, SpawnSpec> for GrafanaIncidents<K> {
         let Some(out) = env.http_get(&req) else {
             return PollOutcome::error();
         };
-        let origin = crate::util::origin_of("grafana", cfg, Some(base));
-        PollOutcome::Fetched(parse(self.kind, &out, env, max, &origin))
+        PollOutcome::Fetched(parse(self.kind, &out, env, max))
+            .tagged(crate::util::origin_of("grafana", cfg, Some(base)))
     }
 }
 
@@ -61,7 +61,6 @@ fn parse<K: Catalog>(
     json: &str,
     env: &dyn Environment,
     max: usize,
-    origin: &izumi::Origin,
 ) -> Vec<Item<K, SpawnSpec>> {
     let Ok(rows) = serde_json::from_str::<Vec<AnnotationRow>>(json) else {
         return Vec::new();
@@ -76,7 +75,6 @@ fn parse<K: Catalog>(
             let key = row.id.to_string();
             Some(
                 Item::new(kind, &key, title, spawn)
-                    .origin(origin.clone())
                     .urgent(Urgency::Critical),
             )
         })
@@ -162,7 +160,7 @@ mod tests {
     #[test]
     fn garbage_json_is_safe() {
         assert!(
-            parse(TestKind::GrafanaIncidents, "not json", &MockEnvironment::new(), 5, &izumi::Origin::service("grafana")).is_empty()
+            parse(TestKind::GrafanaIncidents, "not json", &MockEnvironment::new(), 5).is_empty()
         );
     }
 }

@@ -59,7 +59,8 @@ impl<K: Catalog> Source<K, SpawnSpec> for GithubActionsFailing<K> {
             let Some(out) = env.run(&run_list_cmd(env, &limit, None)) else {
                 return PollOutcome::error();
             };
-            return PollOutcome::Fetched(parse(self.kind, &out, env, cfg));
+            return PollOutcome::Fetched(parse(self.kind, &out, env, cfg))
+                .tagged(crate::util::origin_of("github", cfg, None));
         };
         // Fleet mode: poll each named repo and merge. ALL-OR-NOTHING: ingest
         // replaces this source's whole store slice, so a partial merge would
@@ -84,7 +85,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for GithubActionsFailing<K> {
             };
             merged.extend(parse(self.kind, &out, env, cfg));
         }
-        PollOutcome::Fetched(merged)
+        PollOutcome::Fetched(merged).tagged(crate::util::origin_of("github", cfg, None))
     }
 }
 

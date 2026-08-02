@@ -42,7 +42,9 @@ impl<K: Catalog> Source<K, SpawnSpec> for EngenhoNodes<K> {
         let Some(out) = env.run(&cmd) else {
             return PollOutcome::error();
         };
-        PollOutcome::Fetched(parse(self.kind, &out, env, cfg))
+        PollOutcome::Fetched(parse(self.kind, &out, env, cfg)).tagged(
+            crate::util::origin_of("kubernetes", cfg, None).maybe_account(cfg.param("context")),
+        )
     }
 }
 
@@ -75,8 +77,6 @@ fn parse<K: Catalog>(
             title.push_str(" not Ready");
             Some(
                 Item::new(kind, &node_name, title, spawn)
-                    .origin(crate::util::origin_of("kubernetes", cfg, None)
-                        .maybe_account(cfg.param("context")))
                     .urgent(Urgency::Normal),
             )
         })

@@ -54,6 +54,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for OpsgenieAlerts<K> {
             return PollOutcome::error();
         };
         PollOutcome::Fetched(parse(self.kind, &out, env, max))
+            .tagged(crate::util::origin_of("opsgenie", cfg, Some(base)))
     }
 }
 

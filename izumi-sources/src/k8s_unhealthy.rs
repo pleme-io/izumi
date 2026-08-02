@@ -47,6 +47,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for K8sUnhealthy<K> {
             return PollOutcome::error();
         };
         PollOutcome::Fetched(parse(self.kind, &out, env, cfg.max_items.max(1)))
+            .tagged(crate::util::origin_of("kubernetes", cfg, None).maybe_account(cfg.param("context")))
     }
 }
 

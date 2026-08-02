@@ -53,21 +53,16 @@ impl<K: Catalog> Source<K, SpawnSpec> for ConfluenceMentions<K> {
         let Some(body) = env.http_get(&req) else {
             return PollOutcome::error();
         };
-        let origin = crate::util::origin_of("confluence", cfg, Some(base));
-        let mut items = parse(self.kind, &body, env, &origin);
+        let mut items = parse(self.kind, &body, env);
         items.truncate(cfg.max_items.max(1));
         PollOutcome::Fetched(items)
+            .tagged(crate::util::origin_of("confluence", cfg, Some(base)))
     }
 }
 
 /// Parse `/wiki/rest/api/search` output into items. Pure — the unit the
 /// source is tested through.
-fn parse<K: Catalog>(
-    kind: K,
-    json: &str,
-    env: &dyn Environment,
-    origin: &izumi::Origin,
-) -> Vec<Item<K, SpawnSpec>> {
+fn parse<K: Catalog>(kind: K, json: &str, env: &dyn Environment) -> Vec<Item<K, SpawnSpec>> {
     let Ok(resp) = serde_json::from_str::<SearchResponse>(json) else {
         return Vec::new();
     };
@@ -84,7 +79,6 @@ fn parse<K: Catalog>(
             let spawn = SpawnSpec::new(cwd, name)?;
             Some(
                 Item::new(kind, &id, title.trim(), spawn)
-                    .origin(origin.clone())
                     .urgent(Urgency::Low),
             )
         })
@@ -192,6 +186,6 @@ mod tests {
 
     #[test]
     fn garbage_json_is_safe() {
-        assert!(parse(TestKind::ConfluenceMentions, "not json", &MockEnvironment::new(), &izumi::Origin::service("confluence")).is_empty());
+        assert!(parse(TestKind::ConfluenceMentions, "not json", &MockEnvironment::new()).is_empty());
     }
 }

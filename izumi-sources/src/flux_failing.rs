@@ -47,6 +47,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for FluxFailing<K> {
         let mut items = parse(self.kind, &out, env);
         items.truncate(cfg.max_items.max(1));
         PollOutcome::Fetched(items)
+            .tagged(crate::util::origin_of("flux", cfg, None).maybe_account(cfg.param("context")))
     }
 }
 

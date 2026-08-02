@@ -48,6 +48,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for BreatheConflict<K> {
         let mut items = parse(self.kind, &json, env);
         items.truncate(cfg.max_items.max(1));
         PollOutcome::Fetched(items)
+            .tagged(crate::util::origin_of("breathe", cfg, None).maybe_account(cfg.param("context")))
     }
 }
 

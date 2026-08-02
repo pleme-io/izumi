@@ -41,6 +41,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for KurageAgents<K> {
         let mut out = parse(self.kind, &out, env);
         out.truncate(cfg.max_items.max(1));
         PollOutcome::Fetched(out)
+            .tagged(crate::util::origin_of("cursor", cfg, None))
     }
 }
 

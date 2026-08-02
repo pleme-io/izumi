@@ -49,6 +49,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for GoogleCalendar<K> {
             return PollOutcome::error();
         };
         PollOutcome::Fetched(parse(self.kind, &out, env, max))
+            .tagged(crate::util::origin_of("google", cfg, None))
     }
 }
 

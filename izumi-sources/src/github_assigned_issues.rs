@@ -48,6 +48,7 @@ impl<K: Catalog> Source<K, SpawnSpec> for GithubAssignedIssues<K> {
             return PollOutcome::error();
         };
         PollOutcome::Fetched(parse(self.kind, &out, env))
+            .tagged(crate::util::origin_of("github", cfg, None))
     }
 }
 
