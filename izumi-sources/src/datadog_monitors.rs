@@ -51,7 +51,8 @@ impl<K: Catalog> Source<K, SpawnSpec> for DatadogMonitors<K> {
         let Some(out) = env.http_get(&req) else {
             return PollOutcome::error();
         };
-        PollOutcome::Fetched(parse(self.kind, &out, env, max))
+        let origin = crate::util::origin_of("datadog", cfg, Some(base));
+        PollOutcome::Fetched(parse(self.kind, &out, env, max, &origin))
     }
 }
 
@@ -62,6 +63,7 @@ fn parse<K: Catalog>(
     json: &str,
     env: &dyn Environment,
     max: usize,
+    origin: &izumi::Origin,
 ) -> Vec<Item<K, SpawnSpec>> {
     let Ok(rows) = serde_json::from_str::<Vec<MonitorRow>>(json) else {
         return Vec::new();
@@ -92,12 +94,17 @@ fn parse<K: Catalog>(
                 _ => "",
             };
             let rank = IncidentSeverity::rank_of(level);
-            let mut detail = String::from("datadog");
+            // The service no longer lives in `detail` — it is the typed
+            // `origin`, which also carries WHICH Datadog org this is.
+            let mut item = Item::new(kind, &key, title, spawn)
+                .origin(origin.clone())
+                .ranked(rank);
             if let Some(p) = m.priority {
-                detail.push_str(" \u{00B7} P"); // ·
+                let mut detail = String::from("P");
                 detail.push_str(&p.to_string());
+                item = item.detail(detail);
             }
-            Some(Item::new(kind, &key, title, spawn).detail(detail).ranked(rank))
+            Some(item)
         })
         .collect();
     // Rank BEFORE the cap: the monitors API returns arbitrary order, so a
@@ -160,7 +167,10 @@ mod tests {
         let api = out.iter().find(|s| s.title.contains("api latency")).unwrap();
         assert!(api.title.contains("alerting"));
         // P1 → Critical, detail carries the priority.
-        assert_eq!(api.detail.as_deref(), Some("datadog \u{00B7} P1"));
+        // The service moved out of the free-text detail into the typed
+        // origin; detail now carries ONLY this monitor's own priority.
+        assert_eq!(api.detail.as_deref(), Some("P1"));
+        assert_eq!(api.origin.as_ref().map(ToString::to_string).as_deref(), Some("datadog"));
         assert_eq!(api.urgency, Urgency::Critical);
         assert_eq!(api.spawn.cwd().to_str().unwrap(), "/code");
         // A P3 monitor ranks below the P1 (High, not Critical).
@@ -195,6 +205,6 @@ mod tests {
 
     #[test]
     fn garbage_json_is_safe() {
-        assert!(parse(TestKind::DatadogMonitors, "not json", &MockEnvironment::new(), 5).is_empty());
+        assert!(parse(TestKind::DatadogMonitors, "not json", &MockEnvironment::new(), 5, &izumi::Origin::service("datadog")).is_empty());
     }
 }

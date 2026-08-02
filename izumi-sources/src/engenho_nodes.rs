@@ -75,7 +75,8 @@ fn parse<K: Catalog>(
             title.push_str(" not Ready");
             Some(
                 Item::new(kind, &node_name, title, spawn)
-                    .detail("kubernetes")
+                    .origin(crate::util::origin_of("kubernetes", cfg, None)
+                        .maybe_account(cfg.param("context")))
                     .urgent(Urgency::Normal),
             )
         })
@@ -157,7 +158,8 @@ mod tests {
         assert_eq!(out.len(), 1, "Ready node excluded");
         let zek = &out[0];
         assert!(zek.title.contains("zek") && zek.title.contains("not Ready"));
-        assert_eq!(zek.detail.as_deref(), Some("kubernetes"));
+        assert_eq!(zek.detail.as_deref(), None);
+        assert_eq!(zek.origin.as_ref().map(ToString::to_string).as_deref(), Some("kubernetes"));
         assert_eq!(zek.urgency, Urgency::Normal);
         // Not-Ready nodes spawn into the code root.
         assert_eq!(zek.spawn.cwd().to_str().unwrap(), "/code");

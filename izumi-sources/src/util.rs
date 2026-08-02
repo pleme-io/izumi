@@ -10,6 +10,8 @@ use std::path::PathBuf;
 
 use serde::de::DeserializeOwned;
 
+use izumi::{Origin, SourceConfig};
+
 use izumi::{Cmd, Environment, HttpReq, Rank};
 
 /// A source's priority/severity vocabulary, normalized to a [`Rank`] on the one
@@ -490,5 +492,124 @@ mod tests {
                 prop_assert_eq!(a.as_str(), "now");
             }
         }
+    }
+}
+
+/// Resolve the [`Origin`] of an external source: its service name plus WHICH
+/// TENANT of that service the rows came from.
+///
+/// The tenant is taken from the explicit `account` param when set. Absent
+/// that, it is derived from the endpoint host's first label — which is the
+/// right answer exactly when the vendor gives each customer their own
+/// hostname (`akeyless.atlassian.net` → `akeyless`) and the wrong answer on a
+/// shared API host, where the first label is a generic service word. So those
+/// are refused rather than rendered: a shared host yields NO tenant, which
+/// prints as a bare `datadog` instead of the confidently-wrong `datadog:api`.
+///
+/// Guessing wrong here is worse than not guessing. The badge exists to answer
+/// "is this row mine to act on"; a plausible-looking wrong tenant answers it
+/// falsely, while a missing one just leaves the operator where they already
+/// were.
+#[must_use]
+pub fn origin_of(service: &str, cfg: &SourceConfig, base_url: Option<&str>) -> Origin {
+    Origin::service(service).maybe_account(tenant(cfg, base_url))
+}
+
+/// The tenant half of [`origin_of`] — explicit param, else host-derived.
+#[must_use]
+pub fn tenant(cfg: &SourceConfig, base_url: Option<&str>) -> Option<String> {
+    if let Some(a) = cfg.param("account") {
+        let a = a.trim();
+        if !a.is_empty() {
+            return Some(a.to_string());
+        }
+    }
+    // Host first-label, when it actually identifies a customer.
+    let url = base_url?;
+    let after_scheme = url.split_once("://").map_or(url, |(_, rest)| rest);
+    let authority = after_scheme.split('/').next()?;
+    // `rsplit(..).next()` = the part AFTER the last separator, without
+    // needing a DoubleEndedIterator (a &str pattern is not one).
+    let host_port = authority.rsplit('@').next()?;
+    let host = host_port.split(':').next()?;
+    let first = host.split('.').next()?.trim();
+    // Generic service words name the VENDOR, never the customer.
+    const GENERIC: [&str; 9] = [
+        "api", "www", "app", "grafana", "oncall", "localhost", "monitor", "eu", "us",
+    ];
+    if first.is_empty() || GENERIC.contains(&first) || first.parse::<u8>().is_ok() {
+        return None;
+    }
+    Some(first.to_string())
+}
+
+#[cfg(test)]
+mod origin_tests {
+    use super::*;
+    use crate::testkit::TestKind;
+    use std::collections::BTreeMap;
+
+    fn cfg_with(params: &[(&str, &str)]) -> SourceConfig {
+        let mut c = SourceConfig::for_kind(TestKind::GrafanaAlerts);
+        let mut m = BTreeMap::new();
+        for (k, v) in params {
+            m.insert((*k).to_string(), (*v).to_string());
+        }
+        c.params = m;
+        c
+    }
+
+    #[test]
+    fn explicit_account_param_always_wins() {
+        let c = cfg_with(&[("account", "akeyless")]);
+        assert_eq!(
+            origin_of("datadog", &c, Some("https://api.datadoghq.com")).to_string(),
+            "datadog:akeyless"
+        );
+        // …even over a host that would have derived something else.
+        assert_eq!(
+            origin_of("confluence", &c, Some("https://other.atlassian.net")).to_string(),
+            "confluence:akeyless"
+        );
+    }
+
+    #[test]
+    fn per_tenant_host_derives_the_customer() {
+        let c = cfg_with(&[]);
+        assert_eq!(
+            origin_of("confluence", &c, Some("https://akeyless.atlassian.net/wiki")).to_string(),
+            "confluence:akeyless"
+        );
+    }
+
+    /// The load-bearing refusal: a SHARED api host must not be read as a
+    /// tenant. `datadog:api` would be confidently wrong, and a wrong badge is
+    /// worse than none — it answers "is this mine?" falsely.
+    #[test]
+    fn shared_api_hosts_yield_no_tenant() {
+        let c = cfg_with(&[]);
+        for url in [
+            "https://api.datadoghq.com",
+            "https://app.datadoghq.eu",
+            "https://www.example.com",
+            "http://localhost:3000",
+            "https://grafana.example.com",
+            "https://oncall.example",
+            "https://10.0.0.5:9090",
+        ] {
+            assert_eq!(
+                tenant(&c, Some(url)),
+                None,
+                "{url} must not yield a tenant"
+            );
+        }
+        assert_eq!(origin_of("datadog", &c, Some("https://api.datadoghq.com")).to_string(), "datadog");
+    }
+
+    #[test]
+    fn a_blank_account_param_is_absent_not_empty() {
+        let c = cfg_with(&[("account", "   ")]);
+        assert_eq!(origin_of("datadog", &c, None).to_string(), "datadog");
+        assert_eq!(tenant(&cfg_with(&[]), None), None);
     }
 }

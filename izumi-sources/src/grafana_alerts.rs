@@ -49,7 +49,8 @@ impl<K: Catalog> Source<K, SpawnSpec> for GrafanaAlerts<K> {
         let Some(out) = env.http_get(&req) else {
             return PollOutcome::error();
         };
-        PollOutcome::Fetched(parse(self.kind, &out, env, cfg.max_items.max(1)))
+        let origin = crate::util::origin_of("grafana", cfg, Some(base));
+        PollOutcome::Fetched(parse(self.kind, &out, env, cfg.max_items.max(1), &origin))
     }
 }
 
@@ -60,6 +61,7 @@ fn parse<K: Catalog>(
     json: &str,
     env: &dyn Environment,
     max: usize,
+    origin: &izumi::Origin,
 ) -> Vec<Item<K, SpawnSpec>> {
     let Ok(payload) = serde_json::from_str::<AlertsPayload>(json) else {
         return Vec::new();
@@ -97,13 +99,12 @@ fn parse<K: Catalog>(
             // firing `warning` is real but not as urgent as a `critical`. A
             // missing label keeps it Critical (firing-but-unlabeled).
             let severity = a.labels.get("severity").map_or("", String::as_str);
-            let mut detail = String::from("grafana");
-            if !severity.is_empty() {
-                detail.push_str(" \u{00B7} "); // ·
-                detail.push_str(severity);
-            }
+            // The service (and WHICH grafana) is the typed `origin` now;
+            // `detail` carries only what is specific to this alert.
+            let detail = severity.to_string();
             Some(
                 Item::new(kind, &key, title, spawn)
+                    .origin(origin.clone())
                     // Per-RULE correlation, only when the alertname label was
                     // actually present (never the placeholder): N firing
                     // instances of one rule fold into one board row.
@@ -189,7 +190,8 @@ mod tests {
         let cpu = out.iter().find(|s| s.title.contains("HighCPU")).unwrap();
         assert!(cpu.title.contains("firing"));
         // Detail now carries the severity; a critical alert stays Critical.
-        assert_eq!(cpu.detail.as_deref(), Some("grafana \u{00B7} critical"));
+        assert_eq!(cpu.detail.as_deref(), Some("critical"));
+        assert_eq!(cpu.origin.as_ref().map(ToString::to_string).as_deref(), Some("grafana"));
         assert_eq!(cpu.urgency, Urgency::Critical);
         assert_eq!(cpu.spawn.cwd().to_str().unwrap(), "/code");
         // A firing WARNING is real but ranks below a critical (High, not Critical).
@@ -199,7 +201,10 @@ mod tests {
         // An alert with NO severity label stays Critical (firing-but-unlabeled).
         let disk = out.iter().find(|s| s.title.contains("DiskFull")).unwrap();
         assert_eq!(disk.urgency, Urgency::Critical);
-        assert_eq!(disk.detail.as_deref(), Some("grafana"));
+        // No severity label → no detail at all (the service is the origin,
+        // and an empty detail collapses to None rather than a stray gap).
+        assert_eq!(disk.detail.as_deref(), None);
+        assert_eq!(disk.origin.as_ref().map(ToString::to_string).as_deref(), Some("grafana"));
     }
 
     #[test]
@@ -226,6 +231,6 @@ mod tests {
 
     #[test]
     fn garbage_json_is_safe() {
-        assert!(parse(TestKind::GrafanaAlerts, "not json", &MockEnvironment::new(), 5).is_empty());
+        assert!(parse(TestKind::GrafanaAlerts, "not json", &MockEnvironment::new(), 5, &izumi::Origin::service("grafana")).is_empty());
     }
 }

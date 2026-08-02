@@ -46,7 +46,8 @@ impl<K: Catalog> Source<K, SpawnSpec> for GrafanaOncall<K> {
         let Some(out) = env.http_get(&req) else {
             return PollOutcome::error();
         };
-        PollOutcome::Fetched(parse(self.kind, &out, env, max))
+        let origin = crate::util::origin_of("grafana", cfg, Some(base));
+        PollOutcome::Fetched(parse(self.kind, &out, env, max, &origin))
     }
 }
 
@@ -57,6 +58,7 @@ fn parse<K: Catalog>(
     json: &str,
     env: &dyn Environment,
     max: usize,
+    origin: &izumi::Origin,
 ) -> Vec<Item<K, SpawnSpec>> {
     let Ok(result) = serde_json::from_str::<ShiftResult>(json) else {
         return Vec::new();
@@ -73,7 +75,7 @@ fn parse<K: Catalog>(
             let spawn = SpawnSpec::new(cwd, name)?;
             Some(
                 Item::new(kind, &shift.id, title, spawn)
-                    .detail("oncall")
+                    .origin(origin.clone())
                     .urgent(Urgency::Normal),
             )
         })
@@ -131,7 +133,8 @@ mod tests {
             .iter()
             .find(|s| s.title.contains("primary rotation"))
             .unwrap();
-        assert_eq!(one.detail.as_deref(), Some("oncall"));
+        assert_eq!(one.detail.as_deref(), None);
+        assert_eq!(one.origin.as_ref().map(ToString::to_string).as_deref(), Some("grafana"));
         assert_eq!(one.urgency, Urgency::Normal);
         assert_eq!(one.spawn.cwd().to_str().unwrap(), "/code");
     }
@@ -160,6 +163,6 @@ mod tests {
 
     #[test]
     fn garbage_json_is_safe() {
-        assert!(parse(TestKind::GrafanaOncall, "not json", &MockEnvironment::new(), 5).is_empty());
+        assert!(parse(TestKind::GrafanaOncall, "not json", &MockEnvironment::new(), 5, &izumi::Origin::service("grafana")).is_empty());
     }
 }

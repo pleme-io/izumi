@@ -53,7 +53,8 @@ impl<K: Catalog> Source<K, SpawnSpec> for ConfluenceMentions<K> {
         let Some(body) = env.http_get(&req) else {
             return PollOutcome::error();
         };
-        let mut items = parse(self.kind, &body, env);
+        let origin = crate::util::origin_of("confluence", cfg, Some(base));
+        let mut items = parse(self.kind, &body, env, &origin);
         items.truncate(cfg.max_items.max(1));
         PollOutcome::Fetched(items)
     }
@@ -61,7 +62,12 @@ impl<K: Catalog> Source<K, SpawnSpec> for ConfluenceMentions<K> {
 
 /// Parse `/wiki/rest/api/search` output into items. Pure — the unit the
 /// source is tested through.
-fn parse<K: Catalog>(kind: K, json: &str, env: &dyn Environment) -> Vec<Item<K, SpawnSpec>> {
+fn parse<K: Catalog>(
+    kind: K,
+    json: &str,
+    env: &dyn Environment,
+    origin: &izumi::Origin,
+) -> Vec<Item<K, SpawnSpec>> {
     let Ok(resp) = serde_json::from_str::<SearchResponse>(json) else {
         return Vec::new();
     };
@@ -78,7 +84,7 @@ fn parse<K: Catalog>(kind: K, json: &str, env: &dyn Environment) -> Vec<Item<K, 
             let spawn = SpawnSpec::new(cwd, name)?;
             Some(
                 Item::new(kind, &id, title.trim(), spawn)
-                    .detail("confluence")
+                    .origin(origin.clone())
                     .urgent(Urgency::Low),
             )
         })
@@ -147,7 +153,14 @@ mod tests {
             .iter()
             .find(|s| s.title.contains("Q3 planning notes"))
             .unwrap();
-        assert_eq!(notes.detail.as_deref(), Some("confluence"));
+        assert_eq!(notes.detail.as_deref(), None);
+        // The fixture site is `https://x.atlassian.net`, a per-tenant host,
+        // so the account is derived with no config at all — which is the
+        // whole point of the host fallback.
+        assert_eq!(
+            notes.origin.as_ref().map(ToString::to_string).as_deref(),
+            Some("confluence:x"),
+        );
         assert_eq!(notes.urgency, Urgency::Low);
         // Spawn drops you in the code root with the 💬-prefixed session name.
         assert_eq!(notes.spawn.cwd().to_str().unwrap(), "/code");
@@ -179,6 +192,6 @@ mod tests {
 
     #[test]
     fn garbage_json_is_safe() {
-        assert!(parse(TestKind::ConfluenceMentions, "not json", &MockEnvironment::new()).is_empty());
+        assert!(parse(TestKind::ConfluenceMentions, "not json", &MockEnvironment::new(), &izumi::Origin::service("confluence")).is_empty());
     }
 }

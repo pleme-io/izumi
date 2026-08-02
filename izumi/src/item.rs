@@ -269,6 +269,73 @@ impl CorrKey {
     }
 }
 
+/// Where a row came from: the external service, and WHICH TENANT of it.
+///
+/// A board mixes rows from services the operator holds several accounts on —
+/// two Datadog orgs, a work Jira and a personal one, three AWS accounts. The
+/// service alone ("datadog") does not answer the only question that decides
+/// whether a row is yours to act on: *whose* Datadog.
+///
+/// Typed rather than prose because it used to be prose: six sources each
+/// opened their `detail` with a hand-written service token
+/// (`String::from("datadog")`, `.detail("grafana")`, …), which made the
+/// service a free-text prefix nothing could read, align, filter or style —
+/// and left no place at all to put the account. One typed field replaces all
+/// six spellings and gives the tenant a home.
+///
+/// Renders through [`Display`] as `service` or `service:account` — the
+/// compact form, because this rides on every row of a dense board.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct Origin {
+    /// The external service, lowercase and stable: `datadog`, `grafana`.
+    pub service: String,
+    /// The tenant within that service: an org, site, cluster or profile.
+    /// `None` renders as bare `service` — correct for a service with only
+    /// one possible account (and honest when it simply is not configured).
+    #[serde(default)]
+    pub account: Option<String>,
+}
+
+impl Origin {
+    /// An origin naming only its service.
+    #[must_use]
+    pub fn service(service: impl Into<String>) -> Self {
+        Self { service: service.into(), account: None }
+    }
+
+    /// Attach the tenant. Blank/whitespace is treated as absent rather than
+    /// rendered as a dangling `service:` — an unset config param arrives as
+    /// `""` far more often than anyone expects.
+    #[must_use]
+    pub fn account(mut self, account: impl Into<String>) -> Self {
+        let a = account.into();
+        let a = a.trim();
+        self.account = if a.is_empty() { None } else { Some(a.to_string()) };
+        self
+    }
+
+    /// Attach an optional tenant — the shape a `cfg.param("account")` lookup
+    /// already has, so a source wires it without an `if let`.
+    #[must_use]
+    pub fn maybe_account(self, account: Option<impl Into<String>>) -> Self {
+        match account {
+            Some(a) => self.account(a),
+            None => self,
+        }
+    }
+}
+
+impl core::fmt::Display for Origin {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str(&self.service)?;
+        if let Some(a) = &self.account {
+            f.write_str(":")?;
+            f.write_str(a)?;
+        }
+        Ok(())
+    }
+}
+
 /// One latent task a board can shade in + act on. Plain typed data — built
 /// by a source's `poll`, ranked by the store, rendered by the consumer.
 ///
@@ -293,6 +360,18 @@ pub struct Item<K, A> {
     /// collapses rows sharing it. `None` (the default) never collapses.
     #[serde(default)]
     pub corr: Option<CorrKey>,
+    /// Which external service + account this row came from ([`Origin`]).
+    /// `None` for a local, zero-auth source (git branches, TODOs, recent
+    /// dirs) — those have no tenant and must not carry a badge.
+    ///
+    /// `skip_serializing_if` is LOAD-BEARING, not tidiness: this struct's
+    /// field names are exactly the mado v1 codec's, and `golden.rs` asserts
+    /// a v1 fixture round-trips VALUE-identically. A plain `Option` emits
+    /// `"origin": null` on every item and fails that — which it did, before
+    /// this attribute. An origin-less item must serialize byte-for-byte as
+    /// it did before the field existed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin: Option<Origin>,
 }
 
 impl<K: Catalog, A: Payload> Item<K, A> {
@@ -309,6 +388,7 @@ impl<K: Catalog, A: Payload> Item<K, A> {
             spawn,
             score: 500,
             corr: None,
+            origin: None,
         }
     }
 
@@ -317,6 +397,15 @@ impl<K: Catalog, A: Payload> Item<K, A> {
     #[must_use]
     pub fn correlated(mut self, c: Option<CorrKey>) -> Self {
         self.corr = c;
+        self
+    }
+
+    /// Attach the originating service + account ([`Origin`]). Sources that
+    /// speak to an external tenant set this INSTEAD of opening `detail`
+    /// with a hand-written service name.
+    #[must_use]
+    pub fn origin(mut self, o: Origin) -> Self {
+        self.origin = Some(o);
         self
     }
 
@@ -376,6 +465,13 @@ impl<K: Catalog, A: Payload> core::fmt::Display for PickerLabel<'_, K, A> {
         let emoji = self.0.source.emoji();
         let title = self.0.title.trim();
         write!(f, "{emoji} {title}")?;
+        // Origin sits between title and detail: the row reads
+        // `what happened` → `whose it is` → `how bad`. It costs the width
+        // of one token, which is why it replaced the hand-written service
+        // prefix in `detail` rather than being added beside it.
+        if let Some(o) = &self.0.origin {
+            write!(f, "  {o}")?;
+        }
         if let Some(d) = &self.0.detail {
             let d = d.trim();
             write!(f, "  {d}")?;
@@ -428,6 +524,72 @@ mod tests {
             .ranked(Rank::new(Urgency::High, 5000));
         assert_eq!(s.urgency, Urgency::High);
         assert_eq!(s.score, 1000, "ranked clamps score to 1000");
+    }
+
+    /// `Origin` renders compactly, and an absent/blank account never
+    /// leaves a dangling separator — an unset config param arrives as ""
+    /// far more often than expected.
+    #[test]
+    fn origin_renders_compactly_and_drops_a_blank_account() {
+        assert_eq!(Origin::service("datadog").to_string(), "datadog");
+        assert_eq!(
+            Origin::service("datadog").account("akeyless").to_string(),
+            "datadog:akeyless"
+        );
+        assert_eq!(Origin::service("datadog").account("   ").to_string(), "datadog");
+        assert_eq!(
+            Origin::service("datadog").account("  akeyless ").to_string(),
+            "datadog:akeyless",
+            "the account is trimmed, not rendered with its padding"
+        );
+        // maybe_account is the cfg.param() shape.
+        let none: Option<&str> = None;
+        assert_eq!(Origin::service("grafana").maybe_account(none).to_string(), "grafana");
+        assert_eq!(
+            Origin::service("grafana").maybe_account(Some("rio")).to_string(),
+            "grafana:rio"
+        );
+    }
+
+    /// The row reads `what happened` → `whose it is` → `how bad`, and an
+    /// item with no origin renders EXACTLY as before (local sources must
+    /// not grow a badge or a stray double space).
+    #[test]
+    fn picker_label_places_origin_between_title_and_detail() {
+        let spawn = SpawnSpec::new("/code", "n").unwrap();
+        let plain = Item::new(TestKind::JiraSprint, "k", "ship it", spawn.clone()).detail("P2");
+        let before = plain.picker_label().to_string();
+
+        let with_origin = Item::new(TestKind::JiraSprint, "k", "ship it", spawn.clone())
+            .origin(Origin::service("datadog").account("akeyless"))
+            .detail("P2");
+        let rendered = with_origin.picker_label().to_string();
+
+        assert!(rendered.contains("datadog:akeyless"), "{rendered}");
+        assert!(
+            rendered.find("ship it").unwrap() < rendered.find("datadog:akeyless").unwrap(),
+            "origin comes after the title: {rendered}"
+        );
+        assert!(
+            rendered.find("datadog:akeyless").unwrap() < rendered.find("P2").unwrap(),
+            "origin comes before the detail: {rendered}"
+        );
+        // A local, origin-less row is byte-identical to the old render.
+        assert!(!before.contains(':'), "{before}");
+        assert_eq!(before, rendered.replace("  datadog:akeyless", ""));
+    }
+
+    /// Wire back-compat: mado persists board snapshots, so an item written
+    /// before `origin` existed must still load — as `None`, not an error.
+    #[test]
+    fn origin_is_absent_from_older_persisted_items() {
+        let spawn = SpawnSpec::new("/code", "n").unwrap();
+        let item = Item::new(TestKind::JiraSprint, "k", "t", spawn).detail("d");
+        let mut json: serde_json::Value = serde_json::to_value(&item).unwrap();
+        json.as_object_mut().unwrap().remove("origin");
+        let back: Item<TestKind, SpawnSpec> = serde_json::from_value(json).unwrap();
+        assert_eq!(back.origin, None);
+        assert_eq!(back, item, "a pre-origin snapshot round-trips unchanged");
     }
 
     #[test]

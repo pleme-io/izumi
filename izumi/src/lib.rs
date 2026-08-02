@@ -54,7 +54,7 @@ pub use engine::Engine;
 pub use env::{
     Cmd, Environment, HttpReq, LatencyBudget, MockEnvironment, RealEnvironment, RunOutcome,
 };
-pub use item::{fnv1a, CorrKey, Item, ItemId, PickerLabel, Rank, SourceStatus, Urgency};
+pub use item::{fnv1a, CorrKey, Item, ItemId, Origin, PickerLabel, Rank, SourceStatus, Urgency};
 pub use payload::Payload;
 pub use prewarm::{reject_injection, PrewarmSpec, PrewarmStep};
 pub use source::{apply_poll, refresh_once, EngineConfig, PollOutcome, Source, SourceConfig};
