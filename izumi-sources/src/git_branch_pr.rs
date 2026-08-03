@@ -9,7 +9,7 @@
 //! `Unavailable(Error)` — only an OBSERVED run output is `Fetched` (so a
 //! network blip never reads as "all your PRs merged").
 
-use izumi::{Catalog, Cmd, CorrKey, Environment, Item, PollOutcome, SourceConfig, Source, SpawnSpec, Urgency};
+use izumi::{Catalog, Environment, PollOutcome, Source, SourceConfig, SpawnSpec, Urgency};
 
 pub struct GitBranchPr<K: Catalog> {
     kind: K,
@@ -28,91 +28,22 @@ impl<K: Catalog> Source<K, SpawnSpec> for GitBranchPr<K> {
     }
 
     fn poll(&self, env: &dyn Environment, cfg: &SourceConfig) -> PollOutcome<K, SpawnSpec> {
-        let limit = cfg.max_items.max(1).to_string();
-        let mut cmd = Cmd::new("gh")
-            .arg("search")
-            .arg("prs")
-            .arg("--author=@me")
-            .arg("--state=open")
-            .arg("--json")
-            .arg("number,title,url,repository")
-            .arg("--limit")
-            .arg(limit);
-        // A Dock-launched consumer carries no shell env, so the sops-rendered
-        // token authenticates gh. The mock key is unchanged (envs are
-        // excluded from Cmd::key).
-        if let Some(tok) = env.secret("github/token") {
-            cmd = cmd.env("GH_TOKEN", tok);
-        }
+        let cmd = crate::gh_pr::search_cmd(DEFAULT_SELECTOR, cfg, env);
         let Some(out) = env.run(&cmd) else {
             return PollOutcome::error();
         };
-        PollOutcome::Fetched(parse(self.kind, &out, env))
+        PollOutcome::Fetched(crate::gh_pr::parse(
+            self.kind,
+            &out,
+            env,
+            "\u{1F33F}", // 🌿
+            Urgency::Low,
+        ))
     }
 }
 
-/// Parse `gh search prs --json …` output into items. Pure — the unit the
-/// source is tested through.
-fn parse<K: Catalog>(kind: K, json: &str, env: &dyn Environment) -> Vec<Item<K, SpawnSpec>> {
-    let Ok(rows) = serde_json::from_str::<Vec<PrRow>>(json) else {
-        return Vec::new();
-    };
-    rows.into_iter()
-        .filter_map(|pr| {
-            let owner = pr.repository.name_with_owner();
-            let cwd = crate::util::repo_cwd(env, &owner);
-            let mut name = String::from("\u{1F33F} pr#"); // 🌿
-            name.push_str(&pr.number.to_string());
-            let checkout = {
-                let mut c = String::from("gh pr checkout ");
-                c.push_str(&pr.number.to_string());
-                c
-            };
-            let spawn = SpawnSpec::new(cwd, name)?.with_command(checkout);
-            let mut key = String::new();
-            key.push_str(&owner);
-            key.push('#');
-            key.push_str(&pr.number.to_string());
-            let mut title = String::from("pr#");
-            title.push_str(&pr.number.to_string());
-            title.push(' ');
-            title.push_str(pr.title.trim());
-            Some(
-                Item::new(kind, &key, title, spawn)
-                    .correlated(CorrKey::github(&owner, pr.number))
-                    .detail(owner)
-                    .urgent(Urgency::Low),
-            )
-        })
-        .collect()
-}
-
-#[derive(serde::Deserialize)]
-struct PrRow {
-    number: u64,
-    #[serde(default)]
-    title: String,
-    #[serde(default)]
-    repository: Repo,
-}
-
-#[derive(serde::Deserialize, Default)]
-struct Repo {
-    #[serde(default)]
-    name: String,
-    #[serde(default, rename = "nameWithOwner")]
-    name_with_owner: String,
-}
-
-impl Repo {
-    fn name_with_owner(&self) -> String {
-        if self.name_with_owner.is_empty() {
-            self.name.clone()
-        } else {
-            self.name_with_owner.clone()
-        }
-    }
-}
+/// This lane's identity. `params.query` overrides it — see [`crate::gh_pr`].
+const DEFAULT_SELECTOR: &str = "--author=@me";
 
 #[cfg(test)]
 mod tests {
@@ -170,6 +101,6 @@ mod tests {
 
     #[test]
     fn garbage_json_is_safe() {
-        assert!(parse(TestKind::GitBranchPr, "not json", &MockEnvironment::new()).is_empty());
+        assert!(crate::gh_pr::parse(TestKind::GitBranchPr, "not json", &MockEnvironment::new(), "\u{1F33F}", Urgency::Low).is_empty());
     }
 }

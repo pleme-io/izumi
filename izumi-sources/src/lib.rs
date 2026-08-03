@@ -37,6 +37,10 @@ pub mod confluence_mentions;
 pub mod datadog_monitors;
 pub mod engenho_nodes;
 pub mod flux_failing;
+/// Shared `gh search prs` builder + parser. Private: the two PR lanes are
+/// the only consumers, and a third lane should be a `DEFAULT_SELECTOR`
+/// const, never a third copy of the argv.
+mod gh_pr;
 pub mod git_branch_pr;
 pub mod github_actions_failing;
 pub mod github_assigned_issues;
