@@ -26,7 +26,7 @@ ranked, deduplicated, always-actionable rows
 |---|---|
 | [`izumi`](./izumi) | The core algebra: `Item<K, A>`, the `Catalog` trait + `catalog!{}` macro (typed source catalogs with **compile-time slug uniqueness**), `Source`/`PollOutcome`, the living-board `Store`, the freshness-nudged watcher `Engine`, the typed `Environment` seam (argv `Cmd` + `HttpReq` — no shell, ever), per-host pacing (`samba`), BLAKE3-framed atomic snapshots, a K-erased `raw` reader |
 | [`izumi-sources`](./izumi-sources) | 25 generic providers (GitHub, Jira, Confluence, Grafana, Datadog, Opsgenie, Flux, k8s, AWS, Cloudflare, Google, tend, cargo, …), each generic over your catalog — verification-matrix-tested |
-| [`izumi-config`](./izumi-config) | The [shikumi](https://github.com/pleme-io/shikumi) `TieredConfig` board surface (`BoardConfig`, `SourceEntry`, the `effective_sources` prescribed⊕override merge) |
+| [`izumi-config`](./izumi-config) | The [shikumi](https://github.com/pleme-io/shikumi) `TieredConfig` board surface (`BoardConfig`, `SourceEntry`, the `effective_sources` prescribed⊕override merge, and the `to_engine_config` catalog border that reports an unknown kind slug as a typed `UnknownKind` instead of dropping it) |
 | [`izumi-lisp`](./izumi-lisp) | tatara-lisp authoring: `(defizumiboard …)` + `(defizumisource …)` |
 | [`izumi-board`](./izumi-board) | A headless board daemon/CLI: run the engine on any machine, query/act over a unix socket |
 

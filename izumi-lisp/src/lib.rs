@@ -87,8 +87,11 @@ use tatara_lisp::DeriveTataraDomain;
 #[tatara(keyword = "defizumisource")]
 pub struct IzumiSourceForm {
     /// Source kind kebab slug (e.g. `git-branch-pr`). Required — a source
-    /// override with no kind targets nothing. Unknown slugs ride along and
-    /// are ignored downstream, mirroring the YAML surface.
+    /// override with no kind targets nothing. Unknown slugs ride along to the
+    /// catalog border exactly as the YAML surface does, where
+    /// `izumi_config::to_engine_config` REPORTS them as a typed
+    /// `UnknownKind` (naming the nearest valid slug) instead of dropping
+    /// them silently.
     pub kind: String,
     /// Run this source. `None` = keep the config default (`true`), so a
     /// bare `(defizumisource :kind "x")` arms the source exactly like a

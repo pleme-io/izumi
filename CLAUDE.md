@@ -21,7 +21,7 @@ carries a valid-by-construction action payload.
 |---|---|
 | `izumi` | Core algebra: `Item<K, A>`, `Catalog` trait + `catalog!{}` (compile-time slug uniqueness), `Source`/`PollOutcome`, `Store` living-board, `Engine` + freshness nudge, `Environment` seam (typed Cmd/HTTP argv — NO SHELL), `HostPacer` (samba), BLAKE3-framed snapshot `persist` (magic-parameterized), K-erased `raw` reader, `writer` flock election, `maintain` loop |
 | `izumi-sources` | Generic provider catalog (github/jira/grafana/k8s/flux/tend/cargo/…), each generic over K (kind at construction), payload = `SpawnSpec`; verification-matrix-tested |
-| `izumi-config` | shikumi `TieredConfig` board surface — `BoardConfig` incl `sources_replace` + `per_source_cap` + the `effective_sources()` merge |
+| `izumi-config` | shikumi `TieredConfig` board surface — `BoardConfig` incl `sources_replace` + `per_source_cap` + the `effective_sources()` merge + the `to_engine_config` catalog border, which returns a `Resolved` carrying the typed `UnknownKind` report |
 | `izumi-lisp` | tatara-lisp authoring: `(defizumiboard …)` + `(defizumisource …)` |
 | `izumi-board` | Headless board daemon/CLI (consumer #2): shikumi config, engine over izumi-sources, unix-socket lifecycle ingress (list/dismiss/snooze/accept), snapshot persist |
 
@@ -63,6 +63,32 @@ Two things the type carries that a boolean could not:
 
 `izumi-board health` exits 2 on `Blind` only — a finding. `Unknown` is
 reported in words and does not gate.
+
+## An unresolvable source slug is a FINDING, never a no-op
+
+`izumi_config::to_engine_config` is the ONE place a config slug meets a
+consumer's `Catalog`. It used to be `if let Some(kind) = K::from_slug(&s.kind)`
+— a slug the catalog did not know just vanished: no error, no warning, nothing
+to grep for. That is the worst shape for this surface specifically, because a
+lane that produces nothing looks exactly like a lane with nothing to say. (The
+same board has already lost a source for 1407 consecutive polls unnoticed.)
+
+The border now returns `Resolved<K>`, which carries the armed `EngineConfig`
+AND a typed `UnknownKind` per unresolvable slug (with the nearest valid slugs
+by edit distance ≤ 3). There is **no accessor that yields the config without
+answering for the report** — the only ways out are `into_result()` (FATAL) and
+`report_then_arm(sink)` (COLLECTED). Restoring a silent drop takes writing an
+empty sink, in the open, on purpose.
+
+`izumi-board` chooses **COLLECTED**: `tracing::warn!` the bad slugs, arm every
+lane that did resolve. Refusing to serve over one misspelled *optional* source
+is a worse outage than the lane it disarms, and the daemon's standing contract
+is "the board degrades, never wedges". The defect was never the degrading — it
+was degrading in silence. A validator or test that wants strictness takes
+`into_result()`.
+
+A typo'd `enabled: false` is reported too: the operator believes a source is
+off and it is still polling.
 
 ## Wire-compat contracts (do not break)
 

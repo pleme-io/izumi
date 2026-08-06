@@ -26,7 +26,7 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-pub use bridge::to_engine_config;
+pub use bridge::{Resolved, UnknownKind, UnknownKinds, to_engine_config};
 
 /// serde default helper — mirrors mado's `default_true` so a partial YAML
 /// entry (`kind` only) arms the source, byte-compatible with the mado
@@ -41,7 +41,11 @@ const fn default_true() -> bool {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SourceEntry {
-    /// Source kind kebab slug (e.g. `git-branch-pr`). Unknown slugs ignored.
+    /// Source kind kebab slug (e.g. `git-branch-pr`). This crate does not
+    /// know the consumer's catalog, so a slug is carried verbatim through
+    /// [`BoardConfig::effective_sources`]; it is resolved — and, when it
+    /// matches nothing, REPORTED as a typed [`bridge::UnknownKind`] rather
+    /// than dropped — at the catalog border in [`bridge::to_engine_config`].
     pub kind: String,
     /// Run this source. Defaults `true`.
     #[serde(default = "default_true")]
@@ -176,8 +180,12 @@ impl BoardConfig {
     /// The EFFECTIVE per-source override list the engine runs from: the
     /// consumer's prescribed arm-list (`prescribed`, kind slugs) with the
     /// operator's `sources` entries merged over it by kind slug (an operator
-    /// entry wins wholesale for its kind; unknown slugs ride along and are
-    /// ignored downstream). This is the load-bearing fix for the "a
+    /// entry wins wholesale for its kind; a slug in neither the arm-list nor
+    /// the consumer's catalog rides along here and is REPORTED, not dropped,
+    /// at the catalog border — see [`bridge::to_engine_config`]). This
+    /// merge deliberately stays catalog-blind so it can be a parity oracle
+    /// for a consumer that keeps its own copy (mado does). This is the
+    /// load-bearing fix for the "a
     /// params-only yaml override disarmed 22 sources" failure: serde replaces
     /// a yaml `Vec` outright, so the merge has to happen here, after
     /// deserialize. `sources_replace = true` restores replace semantics as an

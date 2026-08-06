@@ -76,9 +76,27 @@ pub fn load_board_config() -> BoardConfig {
 /// operator's `sources:` overrides merge over (the load-bearing
 /// params-only-override-never-disarms semantics live in
 /// [`izumi_config::to_engine_config`]).
+///
+/// COLLECTED, not fatal: a `sources:` entry whose slug matches no
+/// [`BoardKind`] is WARNED about by slug (with the nearest valid slug) and
+/// the rest of the board still arms. The daemon's standing contract is "the
+/// board degrades, never wedges" (see [`load_board_config`]), and refusing to
+/// serve at all because one optional lane was misspelled is a strictly worse
+/// outage than the lane it disarms. What was actually wrong before was the
+/// SILENCE: the slug hit `from_slug(..) -> None` inside an `if let Some`, the
+/// lane vanished, and a lane producing nothing is indistinguishable from a
+/// lane with nothing to say. A caller that does want strictness (a config
+/// validator, a test) takes [`izumi_config::Resolved::into_result`] instead.
 #[must_use]
 pub fn engine_config(cfg: &BoardConfig) -> izumi::EngineConfig<BoardKind> {
-    izumi_config::to_engine_config(cfg, BoardKind::ALL)
+    izumi_config::to_engine_config(cfg, BoardKind::ALL).report_then_arm(|unknown| {
+        tracing::warn!(
+            unknown_kinds = ?unknown.slugs(),
+            detail = %unknown,
+            "board config names source kinds this build does not have — those entries armed NOTHING; \
+             every other source is unaffected"
+        );
+    })
 }
 
 #[cfg(test)]
@@ -114,8 +132,10 @@ mod tests {
 
     /// The exact failure the merge exists for: a params-only YAML override
     /// for one source must NOT disarm the other 24; an explicit disable
-    /// disarms exactly its kind; an unknown slug is ignored at the catalog
-    /// gate; `sources_replace` restores allow-list semantics.
+    /// disarms exactly its kind; an unknown slug arms nothing at the catalog
+    /// gate (and is REPORTED there — see
+    /// [`an_unknown_slug_is_reported_against_the_real_catalog`]);
+    /// `sources_replace` restores allow-list semantics.
     #[test]
     fn operator_overrides_merge_into_the_engine_config() {
         let mut over = SourceEntry::enable(BoardKind::JiraAssigned.slug());
@@ -133,7 +153,7 @@ mod tests {
         assert_eq!(
             ec.per_source.len(),
             BoardKind::ALL.len(),
-            "the unknown slug is ignored at the catalog gate"
+            "the unknown slug arms nothing, and costs no other lane"
         );
         let jira = ec.config_for(BoardKind::JiraAssigned);
         assert!(jira.enabled);
@@ -162,6 +182,87 @@ mod tests {
         assert!(
             !ec.config_for(BoardKind::TendRepos).enabled,
             "unlisted kinds follow default_enabled"
+        );
+    }
+
+    /// The regression, against the REAL 25-kind catalog: a misspelled slug
+    /// must come back as a typed finding naming the offender and the kind the
+    /// operator meant. Before this change it resolved to `None` inside an
+    /// `if let Some(kind)` and vanished — no error, no warning, no string to
+    /// grep for, and a board silently missing a lane.
+    #[test]
+    fn an_unknown_slug_is_reported_against_the_real_catalog() {
+        let cfg = BoardConfig {
+            sources: vec![
+                SourceEntry::enable("gihub-actions-failing"),
+                SourceEntry::enable("jira-assigne"),
+            ],
+            ..BoardConfig::prescribed_default()
+        };
+        let err = izumi_config::to_engine_config(&cfg, BoardKind::ALL)
+            .into_result()
+            .expect_err("two misspelled slugs are a finding");
+        assert_eq!(err.slugs(), vec!["gihub-actions-failing", "jira-assigne"]);
+        let msg = err.to_string();
+        assert!(
+            msg.contains("github-actions-failing"),
+            "names the kind the operator meant: {msg}"
+        );
+        assert!(
+            msg.contains("jira-assigned"),
+            "names the kind the operator meant: {msg}"
+        );
+
+        // …and the daemon's chosen policy still arms every real kind.
+        let ec = engine_config(&cfg);
+        assert_eq!(ec.per_source.len(), BoardKind::ALL.len());
+    }
+
+    /// The suggestion in that message can never be ambiguous between two REAL
+    /// kinds: no two distinct `BoardKind` slugs are within the bridge's
+    /// suggestion threshold (3 edits) of each other. Measured here rather than
+    /// asserted in prose — run 2026-08-06 over all 300 pairs of the 25-kind
+    /// catalog, the closest is `k8s-unhealthy` ↔ `aws-health` at 5. Adding a
+    /// near-twin slug fails this test rather than quietly degrading the hint.
+    #[test]
+    fn catalog_slugs_are_farther_apart_than_the_suggestion_threshold() {
+        /// The bridge's `SUGGEST_MAX_DISTANCE` (private there — this is the
+        /// consumer-side restatement the assertion is about).
+        const SUGGEST_MAX_DISTANCE: usize = 3;
+
+        fn distance(a: &str, b: &str) -> usize {
+            let (a, b) = (a.as_bytes(), b.as_bytes());
+            let mut prev: Vec<usize> = (0..=b.len()).collect();
+            let mut cur: Vec<usize> = vec![0; b.len() + 1];
+            for (i, &ca) in a.iter().enumerate() {
+                cur[0] = i + 1;
+                for (j, &cb) in b.iter().enumerate() {
+                    let sub = prev[j] + usize::from(ca != cb);
+                    cur[j + 1] = sub.min(prev[j + 1] + 1).min(cur[j] + 1);
+                }
+                std::mem::swap(&mut prev, &mut cur);
+            }
+            prev[b.len()]
+        }
+
+        let slugs: Vec<&str> = BoardKind::ALL.iter().map(|k| k.slug()).collect();
+        let mut closest: (usize, &str, &str) = (usize::MAX, "", "");
+        for (i, a) in slugs.iter().enumerate() {
+            for b in &slugs[i + 1..] {
+                let d = distance(a, b);
+                if d < closest.0 {
+                    closest = (d, a, b);
+                }
+                assert!(
+                    d > SUGGEST_MAX_DISTANCE,
+                    "{a} and {b} are only {d} edits apart — a \"did you mean\" could name the wrong kind"
+                );
+            }
+        }
+        assert_eq!(
+            closest.0, 5,
+            "the measured closest-valid-pair distance, pinned (closest pair: {} ↔ {})",
+            closest.1, closest.2
         );
     }
 

@@ -77,7 +77,7 @@ let
           options = {
             kind = lib.mkOption {
               type = lib.types.str;
-              description = "Source kind slug (e.g. jira-assigned, flux-failing, github-actions-failing).";
+              description = "Source kind slug (e.g. jira-assigned, flux-failing, github-actions-failing). Free-form here because this module does not know the consumer's catalog — a typo therefore passes Nix eval, and is caught one layer down: izumi_config::to_engine_config reports an unresolvable slug as a typed UnknownKind naming the nearest valid slug, which izumi-board logs at WARN. It is not silently dropped.";
             };
             enabled = lib.mkOption {
               type = lib.types.nullOr lib.types.bool;
