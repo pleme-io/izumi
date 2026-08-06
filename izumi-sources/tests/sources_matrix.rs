@@ -148,10 +148,12 @@ const PODS: &str = r#"{
     ]
 }"#;
 
+// Per-item `kind` is load-bearing, not decoration: the lane lists the `breathe`
+// CATEGORY, which spans kinds, so items are keyed `namespace/kind/name`.
 const BANDS: &str = r#"{
     "items": [
-        {"metadata":{"name":"ntfy","namespace":"observability"},"status":{"phase":"Conflict","conditions":[]}},
-        {"metadata":{"name":"grafana","namespace":"monitoring"},"status":{"phase":"Ready","conditions":[{"type":"Conflict","status":"True"}]}}
+        {"kind":"MemoryBand","metadata":{"name":"ntfy","namespace":"observability"},"status":{"phase":"Conflict","conditions":[]}},
+        {"kind":"CpuBand","metadata":{"name":"grafana","namespace":"monitoring"},"status":{"phase":"Ready","conditions":[{"type":"Conflict","status":"True"}]}}
     ]
 }"#;
 
@@ -444,7 +446,7 @@ fn matrix() -> Vec<MatrixRow> {
             env: || {
                 MockEnvironment::new()
                     .roots("/code", "/home/op")
-                    .cmd("kubectl get breathebands -A -o json", BANDS)
+                    .cmd("kubectl get breathe -A -o json", BANDS)
             },
             cfg: SourceConfig::for_kind,
             min_items: 2,
