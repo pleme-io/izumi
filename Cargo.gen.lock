@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "cargo_lock_sha256": "adc580ec1f3fe428e62cf46014f6637c4533c00c08f6a73a2edcc85f1943c27f",
+  "cargo_lock_sha256": "e3ded76124e2e35cbbbc08dfe0878f8209d40a781e20a78fcb4591312de3a737",
   "manifest_sha256": {
-    "Cargo.toml": "0b03ebd317e8c77299ce5fd936dce4755ae90c7834d98a823291cb4c17559eb0",
+    "Cargo.toml": "55a154e56d5e5aba76d9d3a68ec873b6cc8f0573fe6d14f38d0c67c53596837f",
     "izumi-board/Cargo.toml": "12072dd08c732e50557ac2bb397bc334fd5b089633b8072db66413164f53e047",
     "izumi-config/Cargo.toml": "72a2c84d8613d3c252b77effe64e7b0bbe5005c3a9821ebb62fe001a97cea28f",
     "izumi-lisp/Cargo.toml": "841b03be57744c68e46fcfaed08261ce981009fe263cb791f8d97ccd1b43b21b",
@@ -1597,7 +1597,7 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-0.1.14": {
+      "izumi-0.1.15": {
         "runtime_dependencies": [
           {
             "name": "blake3",
@@ -1702,7 +1702,7 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-board-0.1.14": {
+      "izumi-board-0.1.15": {
         "runtime_dependencies": [
           {
             "name": "clap",
@@ -1728,7 +1728,7 @@
           },
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.14",
+            "package_key": "izumi-0.1.15",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -1738,7 +1738,7 @@
           },
           {
             "name": "izumi_config",
-            "package_key": "izumi-config-0.1.14",
+            "package_key": "izumi-config-0.1.15",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -1748,7 +1748,7 @@
           },
           {
             "name": "izumi_sources",
-            "package_key": "izumi-sources-0.1.14",
+            "package_key": "izumi-sources-0.1.15",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -1830,11 +1830,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-config-0.1.14": {
+      "izumi-config-0.1.15": {
         "runtime_dependencies": [
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.14",
+            "package_key": "izumi-0.1.15",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -1868,11 +1868,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-lisp-0.1.14": {
+      "izumi-lisp-0.1.15": {
         "runtime_dependencies": [
           {
             "name": "izumi_config",
-            "package_key": "izumi-config-0.1.14",
+            "package_key": "izumi-config-0.1.15",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -1916,11 +1916,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-sources-0.1.14": {
+      "izumi-sources-0.1.15": {
         "runtime_dependencies": [
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.14",
+            "package_key": "izumi-0.1.15",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -6890,14 +6890,14 @@
     "itoa-1.0.18": {
       "edition": "2021"
     },
-    "izumi-0.1.14": {
+    "izumi-0.1.15": {
       "edition": "2024",
       "lib_target": {
         "name": "izumi",
         "path": "src/lib.rs"
       }
     },
-    "izumi-board-0.1.14": {
+    "izumi-board-0.1.15": {
       "edition": "2024",
       "binaries": [
         {
@@ -6906,21 +6906,21 @@
         }
       ]
     },
-    "izumi-config-0.1.14": {
+    "izumi-config-0.1.15": {
       "edition": "2024",
       "lib_target": {
         "name": "izumi_config",
         "path": "src/lib.rs"
       }
     },
-    "izumi-lisp-0.1.14": {
+    "izumi-lisp-0.1.15": {
       "edition": "2024",
       "lib_target": {
         "name": "izumi_lisp",
         "path": "src/lib.rs"
       }
     },
-    "izumi-sources-0.1.14": {
+    "izumi-sources-0.1.15": {
       "edition": "2024",
       "lib_target": {
         "name": "izumi_sources",
