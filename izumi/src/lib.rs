@@ -25,8 +25,8 @@
 //! * [`Engine`] — one paced watcher task per enabled source, with an optional
 //!   freshness nudge;
 //! * [`Environment`] — the one mockable side-effect boundary (typed argv
-//!   subprocess, typed-curl HTTP with per-host [`pace`] + 429 cooldown, files,
-//!   secrets, clock);
+//!   subprocess, in-process `todoku` HTTP with per-host [`pace`] + 429
+//!   cooldown, files, secrets, clock);
 //! * [`persist`] / [`raw`] / [`writer`] / [`maintain`] — the shared snapshot
 //!   framing, the catalog-erased cross-process reader, the single-writer
 //!   election, and the shared decay+gc tick.

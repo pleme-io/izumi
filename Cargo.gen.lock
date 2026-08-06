@@ -1,22 +1,48 @@
 {
   "schema_version": 2,
-  "cargo_lock_sha256": "4839adf8d121807d26fc057be7a482ce209d30f435a411c1029b0f9f24721f48",
+  "cargo_lock_sha256": "8cdc261bcb766d49df671c59d23e258d0f25e2b392f6a5a85de81b91fce0950a",
   "manifest_sha256": {
     "Cargo.toml": "a12cf9ad0c88ff0046e8e26f96a6b877b97a88bb938210286b7735b406bdeb14",
     "izumi-board/Cargo.toml": "12072dd08c732e50557ac2bb397bc334fd5b089633b8072db66413164f53e047",
     "izumi-config/Cargo.toml": "72a2c84d8613d3c252b77effe64e7b0bbe5005c3a9821ebb62fe001a97cea28f",
     "izumi-lisp/Cargo.toml": "841b03be57744c68e46fcfaed08261ce981009fe263cb791f8d97ccd1b43b21b",
     "izumi-sources/Cargo.toml": "32e469901c475e27492bb9276b02afbcda0666baa7b4eda3ed351fa1ab53c6f6",
-    "izumi/Cargo.toml": "532e34a0bb041fbc53460393833e375fa5c3cb689fee6c05be6a5ebac0079dbd"
+    "izumi/Cargo.toml": "3cc6a537abfccc6616ad4c73fb71aed6f1858e590f87aad6ecb8993857dfc86b"
   },
   "target_resolves": {
     "base": {
+      "adler2-2.0.1": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
       "aho-corasick-1.1.4": {
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": [
           "std"
         ]
+      },
+      "alloc-no-stdlib-2.0.4": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "alloc-stdlib-0.2.4": {
+        "runtime_dependencies": [
+          {
+            "name": "alloc_no_stdlib",
+            "package_key": "alloc-no-stdlib-2.0.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": []
       },
       "anstream-1.0.0": {
         "runtime_dependencies": [
@@ -146,6 +172,56 @@
         "build_dependencies": [],
         "features": []
       },
+      "async-compression-0.4.43": {
+        "runtime_dependencies": [
+          {
+            "name": "compression_codecs",
+            "package_key": "compression-codecs-0.4.38",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "compression_core",
+            "package_key": "compression-core-0.4.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "pin_project_lite",
+            "package_key": "pin-project-lite-0.2.17",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio",
+            "package_key": "tokio-1.52.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "brotli",
+          "gzip",
+          "tokio"
+        ]
+      },
       "async-trait-0.1.89": {
         "runtime_dependencies": [
           {
@@ -189,10 +265,24 @@
         "build_dependencies": [],
         "features": []
       },
+      "atomic-waker-1.1.2": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
       "autocfg-1.5.1": {
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": []
+      },
+      "base64-0.22.1": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "default",
+          "std"
+        ]
       },
       "bit-set-0.8.0": {
         "runtime_dependencies": [
@@ -225,6 +315,75 @@
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": [
+          "std"
+        ]
+      },
+      "brotli-8.0.4": {
+        "runtime_dependencies": [
+          {
+            "name": "alloc_no_stdlib",
+            "package_key": "alloc-no-stdlib-2.0.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "alloc_stdlib",
+            "package_key": "alloc-stdlib-0.2.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "brotli_decompressor",
+            "package_key": "brotli-decompressor-5.0.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc-stdlib",
+          "default",
+          "std"
+        ]
+      },
+      "brotli-decompressor-5.0.3": {
+        "runtime_dependencies": [
+          {
+            "name": "alloc_no_stdlib",
+            "package_key": "alloc-no-stdlib-2.0.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "alloc_stdlib",
+            "package_key": "alloc-stdlib-0.2.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc-stdlib",
           "std"
         ]
       },
@@ -263,6 +422,11 @@
         "features": []
       },
       "cfg-if-1.0.4": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "cfg_aliases-0.2.2": {
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": []
@@ -467,11 +631,251 @@
         "build_dependencies": [],
         "features": []
       },
+      "compression-codecs-0.4.38": {
+        "runtime_dependencies": [
+          {
+            "name": "brotli",
+            "package_key": "brotli-8.0.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "compression_core",
+            "package_key": "compression-core-0.4.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "flate2",
+            "package_key": "flate2-1.1.9",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "memchr",
+            "package_key": "memchr-2.8.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "brotli",
+          "flate2",
+          "gzip",
+          "memchr"
+        ]
+      },
+      "compression-core-0.4.32": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
       "constant_time_eq-0.4.2": {
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": [
           "std"
+        ]
+      },
+      "cookie-0.18.1": {
+        "runtime_dependencies": [
+          {
+            "name": "percent_encoding",
+            "package_key": "percent-encoding-2.3.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "time",
+            "package_key": "time-0.3.55",
+            "kind": "normal",
+            "features": [
+              "formatting",
+              "macros",
+              "parsing",
+              "std"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [
+          {
+            "name": "version_check",
+            "package_key": "version_check-0.9.5",
+            "kind": "build",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "host"
+          }
+        ],
+        "features": [
+          "percent-encode",
+          "percent-encoding"
+        ]
+      },
+      "cookie_store-0.22.1": {
+        "runtime_dependencies": [
+          {
+            "name": "cookie",
+            "package_key": "cookie-0.18.1",
+            "kind": "normal",
+            "features": [
+              "percent-encode"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "document_features",
+            "package_key": "document-features-0.2.12",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "host"
+          },
+          {
+            "name": "idna",
+            "package_key": "idna-1.1.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "log",
+            "package_key": "log-0.4.33",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "publicsuffix",
+            "package_key": "publicsuffix-2.3.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "serde",
+            "package_key": "serde-1.0.228",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "serde_derive",
+            "package_key": "serde_derive-1.0.228",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "host"
+          },
+          {
+            "name": "serde_json",
+            "package_key": "serde_json-1.0.150",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "time",
+            "package_key": "time-0.3.55",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "url",
+            "package_key": "url-2.5.8",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "default",
+          "public_suffix",
+          "serde",
+          "serde_json"
+        ]
+      },
+      "crc32fast-1.5.0": {
+        "runtime_dependencies": [
+          {
+            "name": "cfg_if",
+            "package_key": "cfg-if-1.0.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "default",
+          "std"
+        ]
+      },
+      "deranged-0.5.8": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": [
+          "default"
         ]
       },
       "dirs-5.0.1": {
@@ -551,6 +955,43 @@
         ],
         "build_dependencies": [],
         "features": []
+      },
+      "document-features-0.2.12": {
+        "runtime_dependencies": [
+          {
+            "name": "litrs",
+            "package_key": "litrs-1.0.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "default"
+        ]
+      },
+      "encoding_rs-0.8.35": {
+        "runtime_dependencies": [
+          {
+            "name": "cfg_if",
+            "package_key": "cfg-if-1.0.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "default"
+        ]
       },
       "equivalent-1.0.2": {
         "runtime_dependencies": [],
@@ -684,6 +1125,53 @@
         "build_dependencies": [],
         "features": []
       },
+      "flate2-1.1.9": {
+        "runtime_dependencies": [
+          {
+            "name": "crc32fast",
+            "package_key": "crc32fast-1.5.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "miniz_oxide",
+            "package_key": "miniz_oxide-0.8.9",
+            "kind": "normal",
+            "features": [
+              "simd",
+              "with-alloc"
+            ],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "miniz_oxide",
+            "package_key": "miniz_oxide-0.8.9",
+            "kind": "normal",
+            "features": [
+              "simd",
+              "with-alloc"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": "cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))",
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "any_impl",
+          "default",
+          "miniz_oxide",
+          "rust_backend"
+        ]
+      },
       "fnv-1.0.7": {
         "runtime_dependencies": [],
         "build_dependencies": [],
@@ -708,6 +1196,103 @@
         "build_dependencies": [],
         "features": [
           "alloc",
+          "default",
+          "std"
+        ]
+      },
+      "futures-channel-0.3.32": {
+        "runtime_dependencies": [
+          {
+            "name": "futures_core",
+            "package_key": "futures-core-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "default",
+          "std"
+        ]
+      },
+      "futures-core-0.3.32": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "default",
+          "std"
+        ]
+      },
+      "futures-sink-0.3.33": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "default",
+          "std"
+        ]
+      },
+      "futures-task-0.3.32": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "std"
+        ]
+      },
+      "futures-util-0.3.32": {
+        "runtime_dependencies": [
+          {
+            "name": "futures_core",
+            "package_key": "futures-core-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "futures_task",
+            "package_key": "futures-task-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "pin_project_lite",
+            "package_key": "pin-project-lite-0.2.17",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "slab",
+            "package_key": "slab-0.4.12",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "slab",
           "std"
         ]
       },
@@ -900,6 +1485,37 @@
         "build_dependencies": [],
         "features": []
       },
+      "getrandom-0.2.17": {
+        "runtime_dependencies": [
+          {
+            "name": "cfg_if",
+            "package_key": "cfg-if-1.0.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "libc",
+            "package_key": "libc-0.2.186",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": "cfg(unix)",
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "js",
+          "js-sys",
+          "std",
+          "wasm-bindgen"
+        ]
+      },
       "getrandom-0.3.4": {
         "runtime_dependencies": [
           {
@@ -1089,6 +1705,145 @@
             "optional": false,
             "target": "cfg(target_os = \"vxworks\")",
             "tree": "target"
+          },
+          {
+            "name": "rand_core",
+            "package_key": "rand_core-0.10.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "std",
+          "sys_rng",
+          "wasm_js"
+        ]
+      },
+      "h2-0.4.15": {
+        "runtime_dependencies": [
+          {
+            "name": "atomic_waker",
+            "package_key": "atomic-waker-1.1.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "bytes",
+            "package_key": "bytes-1.12.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "fnv",
+            "package_key": "fnv-1.0.7",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "futures_core",
+            "package_key": "futures-core-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "futures_sink",
+            "package_key": "futures-sink-0.3.33",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "http",
+            "package_key": "http-1.5.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "indexmap",
+            "package_key": "indexmap-2.14.0",
+            "kind": "normal",
+            "features": [
+              "std"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "slab",
+            "package_key": "slab-0.4.12",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio",
+            "package_key": "tokio-1.52.3",
+            "kind": "normal",
+            "features": [
+              "io-util"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio_util",
+            "package_key": "tokio-util-0.7.19",
+            "kind": "normal",
+            "features": [
+              "codec",
+              "io"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tracing",
+            "package_key": "tracing-0.1.44",
+            "kind": "normal",
+            "features": [
+              "std"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
           }
         ],
         "build_dependencies": [],
@@ -1103,6 +1858,369 @@
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": []
+      },
+      "http-1.5.0": {
+        "runtime_dependencies": [
+          {
+            "name": "bytes",
+            "package_key": "bytes-1.12.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "itoa",
+            "package_key": "itoa-1.0.18",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "default",
+          "std"
+        ]
+      },
+      "http-body-1.1.0": {
+        "runtime_dependencies": [
+          {
+            "name": "bytes",
+            "package_key": "bytes-1.12.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "http",
+            "package_key": "http-1.5.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": []
+      },
+      "http-body-util-0.1.4": {
+        "runtime_dependencies": [
+          {
+            "name": "bytes",
+            "package_key": "bytes-1.12.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "futures_core",
+            "package_key": "futures-core-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "http",
+            "package_key": "http-1.5.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "http_body",
+            "package_key": "http-body-1.1.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "pin_project_lite",
+            "package_key": "pin-project-lite-0.2.17",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "default"
+        ]
+      },
+      "httparse-1.10.1": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": [
+          "default",
+          "std"
+        ]
+      },
+      "hyper-1.11.0": {
+        "runtime_dependencies": [
+          {
+            "name": "atomic_waker",
+            "package_key": "atomic-waker-1.1.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "bytes",
+            "package_key": "bytes-1.12.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "futures_channel",
+            "package_key": "futures-channel-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "futures_core",
+            "package_key": "futures-core-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "h2",
+            "package_key": "h2-0.4.15",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "http",
+            "package_key": "http-1.5.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "http_body",
+            "package_key": "http-body-1.1.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "httparse",
+            "package_key": "httparse-1.10.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "itoa",
+            "package_key": "itoa-1.0.18",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "pin_project_lite",
+            "package_key": "pin-project-lite-0.2.17",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "smallvec",
+            "package_key": "smallvec-1.15.2",
+            "kind": "normal",
+            "features": [
+              "const_generics",
+              "const_new"
+            ],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio",
+            "package_key": "tokio-1.52.3",
+            "kind": "normal",
+            "features": [
+              "sync"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "want",
+            "package_key": "want-0.3.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "client",
+          "default",
+          "http1",
+          "http2"
+        ]
+      },
+      "hyper-rustls-0.27.9": {
+        "runtime_dependencies": [
+          {
+            "name": "http",
+            "package_key": "http-1.5.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "hyper",
+            "package_key": "hyper-1.11.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "hyper_util",
+            "package_key": "hyper-util-0.1.20",
+            "kind": "normal",
+            "features": [
+              "client-legacy",
+              "tokio"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "rustls",
+            "package_key": "rustls-0.23.43",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio",
+            "package_key": "tokio-1.52.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio_rustls",
+            "package_key": "tokio-rustls-0.26.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tower_service",
+            "package_key": "tower-service-0.3.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "webpki_roots",
+            "package_key": "webpki-roots-1.0.9",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "http1",
+          "http2",
+          "ring",
+          "tls12",
+          "webpki-roots",
+          "webpki-tokio"
+        ]
       },
       "icu_collections-2.2.0": {
         "runtime_dependencies": [
@@ -1504,6 +2622,7 @@
         "features": [
           "alloc",
           "compiled_data",
+          "default",
           "std"
         ]
       },
@@ -1585,6 +2704,14 @@
         "build_dependencies": [],
         "features": []
       },
+      "ipnet-2.12.1": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": [
+          "default",
+          "std"
+        ]
+      },
       "is_terminal_polyfill-1.70.2": {
         "runtime_dependencies": [],
         "build_dependencies": [],
@@ -1630,6 +2757,16 @@
             "tree": "target"
           },
           {
+            "name": "reqwest",
+            "package_key": "reqwest-0.12.28",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
             "name": "samba",
             "package_key": "samba-0.1.3",
             "kind": "normal",
@@ -1654,6 +2791,16 @@
           {
             "name": "serde_json",
             "package_key": "serde_json-1.0.150",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "todoku",
+            "package_key": "todoku-0.1.1",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -1972,6 +3119,11 @@
         "build_dependencies": [],
         "features": []
       },
+      "litrs-1.0.0": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
       "lock_api-0.4.14": {
         "runtime_dependencies": [
           {
@@ -1998,6 +3150,11 @@
           "std"
         ]
       },
+      "lru-slab-0.1.2": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
       "matchers-0.2.0": {
         "runtime_dependencies": [
           {
@@ -2023,7 +3180,43 @@
         "build_dependencies": [],
         "features": [
           "alloc",
+          "default",
           "std"
+        ]
+      },
+      "mime-0.3.17": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "miniz_oxide-0.8.9": {
+        "runtime_dependencies": [
+          {
+            "name": "adler2",
+            "package_key": "adler2-2.0.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "simd_adler32",
+            "package_key": "simd-adler32-0.3.10",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "simd",
+          "simd-adler32",
+          "with-alloc"
         ]
       },
       "mio-1.2.1": {
@@ -2081,6 +3274,11 @@
           "default",
           "std"
         ]
+      },
+      "num-conv-0.2.2": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
       },
       "num-traits-0.2.19": {
         "runtime_dependencies": [],
@@ -2274,6 +3472,7 @@
         "build_dependencies": [],
         "features": [
           "alloc",
+          "default",
           "std"
         ]
       },
@@ -2299,6 +3498,11 @@
         "features": [
           "zerovec"
         ]
+      },
+      "powerfmt-0.2.0": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
       },
       "ppv-lite86-0.2.21": {
         "runtime_dependencies": [
@@ -2528,10 +3732,364 @@
           "timeout"
         ]
       },
+      "psl-types-2.0.11": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "publicsuffix-2.3.0": {
+        "runtime_dependencies": [
+          {
+            "name": "idna",
+            "package_key": "idna-1.1.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "psl_types",
+            "package_key": "psl-types-2.0.11",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "default",
+          "idna",
+          "punycode"
+        ]
+      },
       "quick-error-1.2.3": {
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": []
+      },
+      "quinn-0.11.11": {
+        "runtime_dependencies": [
+          {
+            "name": "bytes",
+            "package_key": "bytes-1.12.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "pin_project_lite",
+            "package_key": "pin-project-lite-0.2.17",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "proto",
+            "package_key": "quinn-proto-0.11.16",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "udp",
+            "package_key": "quinn-udp-0.5.15",
+            "kind": "normal",
+            "features": [
+              "tracing"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "rustc_hash",
+            "package_key": "rustc-hash-2.1.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "rustls",
+            "package_key": "rustls-0.23.43",
+            "kind": "normal",
+            "features": [
+              "std"
+            ],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "socket2",
+            "package_key": "socket2-0.6.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(not(all(target_family = \"wasm\", target_os = \"unknown\")))",
+            "tree": "target"
+          },
+          {
+            "name": "thiserror",
+            "package_key": "thiserror-2.0.18",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio",
+            "package_key": "tokio-1.52.3",
+            "kind": "normal",
+            "features": [
+              "sync"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tracing",
+            "package_key": "tracing-0.1.44",
+            "kind": "normal",
+            "features": [
+              "std"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [
+          {
+            "name": "cfg_aliases",
+            "package_key": "cfg_aliases-0.2.2",
+            "kind": "build",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "host"
+          }
+        ],
+        "features": [
+          "ring",
+          "runtime-tokio",
+          "rustls",
+          "rustls-ring"
+        ]
+      },
+      "quinn-proto-0.11.16": {
+        "runtime_dependencies": [
+          {
+            "name": "bytes",
+            "package_key": "bytes-1.12.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "lru_slab",
+            "package_key": "lru-slab-0.1.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "rand",
+            "package_key": "rand-0.10.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "rand_pcg",
+            "package_key": "rand_pcg-0.10.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "ring",
+            "package_key": "ring-0.17.14",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "ring",
+            "package_key": "ring-0.17.14",
+            "kind": "normal",
+            "features": [
+              "wasm32_unknown_unknown_js"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(all(target_family = \"wasm\", target_os = \"unknown\"))",
+            "tree": "target"
+          },
+          {
+            "name": "rustc_hash",
+            "package_key": "rustc-hash-2.1.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "rustls",
+            "package_key": "rustls-0.23.43",
+            "kind": "normal",
+            "features": [
+              "std"
+            ],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "slab",
+            "package_key": "slab-0.4.12",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "thiserror",
+            "package_key": "thiserror-2.0.18",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tinyvec",
+            "package_key": "tinyvec-1.12.0",
+            "kind": "normal",
+            "features": [
+              "alloc",
+              "alloc"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tracing",
+            "package_key": "tracing-0.1.44",
+            "kind": "normal",
+            "features": [
+              "std"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "ring",
+          "rustls-ring"
+        ]
+      },
+      "quinn-udp-0.5.15": {
+        "runtime_dependencies": [
+          {
+            "name": "libc",
+            "package_key": "libc-0.2.186",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "socket2",
+            "package_key": "socket2-0.6.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(not(all(target_family = \"wasm\", target_os = \"unknown\")))",
+            "tree": "target"
+          },
+          {
+            "name": "tracing",
+            "package_key": "tracing-0.1.44",
+            "kind": "normal",
+            "features": [
+              "std"
+            ],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [
+          {
+            "name": "cfg_aliases",
+            "package_key": "cfg_aliases-0.2.2",
+            "kind": "build",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "host"
+          }
+        ],
+        "features": [
+          "tracing"
+        ]
       },
       "quote-1.0.46": {
         "runtime_dependencies": [
@@ -2550,6 +4108,51 @@
         "features": [
           "default",
           "proc-macro"
+        ]
+      },
+      "rand-0.10.2": {
+        "runtime_dependencies": [
+          {
+            "name": "chacha20",
+            "package_key": "chacha20-0.10.1",
+            "kind": "normal",
+            "features": [
+              "rng"
+            ],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "getrandom",
+            "package_key": "getrandom-0.4.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "rand_core",
+            "package_key": "rand_core-0.10.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "default",
+          "std",
+          "std_rng",
+          "sys_rng",
+          "thread_rng"
         ]
       },
       "rand-0.9.4": {
@@ -2616,6 +4219,11 @@
           "std"
         ]
       },
+      "rand_core-0.10.1": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
       "rand_core-0.9.5": {
         "runtime_dependencies": [
           {
@@ -2634,6 +4242,22 @@
           "os_rng",
           "std"
         ]
+      },
+      "rand_pcg-0.10.2": {
+        "runtime_dependencies": [
+          {
+            "name": "rand_core",
+            "package_key": "rand_core-0.10.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": []
       },
       "rand_xorshift-0.4.0": {
         "runtime_dependencies": [
@@ -2688,6 +4312,515 @@
           "unicode-perl",
           "unicode-script",
           "unicode-segment"
+        ]
+      },
+      "reqwest-0.12.28": {
+        "runtime_dependencies": [
+          {
+            "name": "base64",
+            "package_key": "base64-0.22.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "bytes",
+            "package_key": "bytes-1.12.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "cookie_crate",
+            "package_key": "cookie-0.18.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "cookie_store",
+            "package_key": "cookie_store-0.22.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "encoding_rs",
+            "package_key": "encoding_rs-0.8.35",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "futures_core",
+            "package_key": "futures-core-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "h2",
+            "package_key": "h2-0.4.15",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "http",
+            "package_key": "http-1.5.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "http_body",
+            "package_key": "http-body-1.1.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "http_body_util",
+            "package_key": "http-body-util-0.1.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "hyper",
+            "package_key": "hyper-1.11.0",
+            "kind": "normal",
+            "features": [
+              "client",
+              "http1"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "hyper_rustls",
+            "package_key": "hyper-rustls-0.27.9",
+            "kind": "normal",
+            "features": [
+              "http1",
+              "tls12"
+            ],
+            "uses_default_features": false,
+            "optional": true,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "hyper_util",
+            "package_key": "hyper-util-0.1.20",
+            "kind": "normal",
+            "features": [
+              "client",
+              "client-legacy",
+              "client-proxy",
+              "http1",
+              "tokio"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "log",
+            "package_key": "log-0.4.33",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "mime",
+            "package_key": "mime-0.3.17",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "percent_encoding",
+            "package_key": "percent-encoding-2.3.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "pin_project_lite",
+            "package_key": "pin-project-lite-0.2.17",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "rustls",
+            "package_key": "rustls-0.23.43",
+            "kind": "normal",
+            "features": [
+              "std",
+              "tls12"
+            ],
+            "uses_default_features": false,
+            "optional": true,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "rustls_pki_types",
+            "package_key": "rustls-pki-types-1.15.1",
+            "kind": "normal",
+            "features": [
+              "std"
+            ],
+            "uses_default_features": true,
+            "optional": true,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "serde",
+            "package_key": "serde-1.0.228",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "serde_json",
+            "package_key": "serde_json-1.0.150",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "serde_json",
+            "package_key": "serde_json-1.0.150",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(target_arch = \"wasm32\")",
+            "tree": "target"
+          },
+          {
+            "name": "serde_urlencoded",
+            "package_key": "serde_urlencoded-0.7.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "sync_wrapper",
+            "package_key": "sync_wrapper-1.0.2",
+            "kind": "normal",
+            "features": [
+              "futures"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio",
+            "package_key": "tokio-1.52.3",
+            "kind": "normal",
+            "features": [
+              "net",
+              "time"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "tokio_rustls",
+            "package_key": "tokio-rustls-0.26.4",
+            "kind": "normal",
+            "features": [
+              "tls12"
+            ],
+            "uses_default_features": false,
+            "optional": true,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "tower",
+            "package_key": "tower-0.5.3",
+            "kind": "normal",
+            "features": [
+              "retry",
+              "timeout",
+              "util"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "tower_http",
+            "package_key": "tower-http-0.6.11",
+            "kind": "normal",
+            "features": [
+              "follow-redirect"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "tower_service",
+            "package_key": "tower-service-0.3.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          },
+          {
+            "name": "url",
+            "package_key": "url-2.5.8",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "webpki_roots",
+            "package_key": "webpki-roots-1.0.9",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": "cfg(not(target_arch = \"wasm32\"))",
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "__rustls",
+          "__rustls-ring",
+          "__tls",
+          "brotli",
+          "charset",
+          "cookies",
+          "gzip",
+          "h2",
+          "http2",
+          "json",
+          "macos-system-configuration",
+          "rustls-tls",
+          "rustls-tls-webpki-roots",
+          "rustls-tls-webpki-roots-no-provider",
+          "system-proxy"
+        ]
+      },
+      "rustc-hash-2.1.3": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": [
+          "default",
+          "std"
+        ]
+      },
+      "rustls-0.23.43": {
+        "runtime_dependencies": [
+          {
+            "name": "once_cell",
+            "package_key": "once_cell-1.21.4",
+            "kind": "normal",
+            "features": [
+              "alloc",
+              "race"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "ring",
+            "package_key": "ring-0.17.14",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "pki_types",
+            "package_key": "rustls-pki-types-1.15.1",
+            "kind": "normal",
+            "features": [
+              "alloc"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "webpki",
+            "package_key": "rustls-webpki-0.103.13",
+            "kind": "normal",
+            "features": [
+              "alloc"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "subtle",
+            "package_key": "subtle-2.6.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "zeroize",
+            "package_key": "zeroize-1.9.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "ring",
+          "std",
+          "tls12"
+        ]
+      },
+      "rustls-pki-types-1.15.1": {
+        "runtime_dependencies": [
+          {
+            "name": "zeroize",
+            "package_key": "zeroize-1.9.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "default",
+          "std",
+          "web",
+          "web-time"
+        ]
+      },
+      "rustls-webpki-0.103.13": {
+        "runtime_dependencies": [
+          {
+            "name": "ring",
+            "package_key": "ring-0.17.14",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "pki_types",
+            "package_key": "rustls-pki-types-1.15.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "untrusted",
+            "package_key": "untrusted-0.9.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "ring",
+          "std"
         ]
       },
       "rustversion-1.0.22": {
@@ -2858,6 +4991,7 @@
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": [
+          "alloc",
           "result",
           "std"
         ]
@@ -2976,6 +5110,52 @@
         "features": [
           "serde"
         ]
+      },
+      "serde_urlencoded-0.7.1": {
+        "runtime_dependencies": [
+          {
+            "name": "form_urlencoded",
+            "package_key": "form_urlencoded-1.2.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "itoa",
+            "package_key": "itoa-1.0.18",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "ryu",
+            "package_key": "ryu-1.0.23",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "serde",
+            "package_key": "serde-1.0.228",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": []
       },
       "serde_yaml-0.9.34+deprecated": {
         "runtime_dependencies": [
@@ -3219,11 +5399,25 @@
         "build_dependencies": [],
         "features": []
       },
+      "simd-adler32-0.3.10": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "slab-0.4.12": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": [
+          "default",
+          "std"
+        ]
+      },
       "smallvec-1.15.2": {
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": [
-          "const_generics"
+          "const_generics",
+          "const_new"
         ]
       },
       "socket2-0.6.4": {
@@ -3250,6 +5444,11 @@
         "features": []
       },
       "strsim-0.11.1": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "subtle-2.6.1": {
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": []
@@ -3300,6 +5499,25 @@
           "proc-macro",
           "visit",
           "visit-mut"
+        ]
+      },
+      "sync_wrapper-1.0.2": {
+        "runtime_dependencies": [
+          {
+            "name": "futures_core",
+            "package_key": "futures-core-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "futures",
+          "futures-core"
         ]
       },
       "synstructure-0.13.2": {
@@ -3570,6 +5788,103 @@
         "build_dependencies": [],
         "features": []
       },
+      "time-0.3.55": {
+        "runtime_dependencies": [
+          {
+            "name": "deranged",
+            "package_key": "deranged-0.5.8",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "num_conv",
+            "package_key": "num-conv-0.2.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "powerfmt",
+            "package_key": "powerfmt-0.2.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "time_core",
+            "package_key": "time-core-0.1.9",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "time_macros",
+            "package_key": "time-macros-0.2.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "host"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "default",
+          "formatting",
+          "macros",
+          "parsing",
+          "std"
+        ]
+      },
+      "time-core-0.1.9": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "time-macros-0.2.32": {
+        "runtime_dependencies": [
+          {
+            "name": "num_conv",
+            "package_key": "num-conv-0.2.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "time_core",
+            "package_key": "time-core-0.1.9",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "formatting",
+          "parsing"
+        ]
+      },
       "tinystr-0.8.3": {
         "runtime_dependencies": [
           {
@@ -3596,6 +5911,134 @@
         "build_dependencies": [],
         "features": [
           "zerovec"
+        ]
+      },
+      "tinyvec-1.12.0": {
+        "runtime_dependencies": [
+          {
+            "name": "tinyvec_macros",
+            "package_key": "tinyvec_macros-0.1.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "default",
+          "tinyvec_macros"
+        ]
+      },
+      "tinyvec_macros-0.1.1": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "todoku-0.1.1": {
+        "runtime_dependencies": [
+          {
+            "name": "async_trait",
+            "package_key": "async-trait-0.1.89",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "host"
+          },
+          {
+            "name": "reqwest",
+            "package_key": "reqwest-0.12.28",
+            "kind": "normal",
+            "features": [
+              "brotli",
+              "charset",
+              "cookies",
+              "gzip",
+              "http2",
+              "json",
+              "macos-system-configuration",
+              "rustls-tls"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "serde",
+            "package_key": "serde-1.0.228",
+            "kind": "normal",
+            "features": [
+              "derive"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "serde_json",
+            "package_key": "serde_json-1.0.150",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "thiserror",
+            "package_key": "thiserror-2.0.18",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio",
+            "package_key": "tokio-1.52.3",
+            "kind": "normal",
+            "features": [
+              "net",
+              "rt",
+              "time"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tracing",
+            "package_key": "tracing-0.1.44",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "url",
+            "package_key": "url-2.5.8",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "default"
         ]
       },
       "tokio-1.52.3": {
@@ -3765,6 +6208,110 @@
         "build_dependencies": [],
         "features": []
       },
+      "tokio-rustls-0.26.4": {
+        "runtime_dependencies": [
+          {
+            "name": "rustls",
+            "package_key": "rustls-0.23.43",
+            "kind": "normal",
+            "features": [
+              "std"
+            ],
+            "uses_default_features": false,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio",
+            "package_key": "tokio-1.52.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "ring",
+          "tls12"
+        ]
+      },
+      "tokio-util-0.7.19": {
+        "runtime_dependencies": [
+          {
+            "name": "bytes",
+            "package_key": "bytes-1.12.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "futures_core",
+            "package_key": "futures-core-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "futures_sink",
+            "package_key": "futures-sink-0.3.33",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "libc",
+            "package_key": "libc-0.2.186",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": "cfg(unix)",
+            "tree": "target"
+          },
+          {
+            "name": "pin_project_lite",
+            "package_key": "pin-project-lite-0.2.17",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio",
+            "package_key": "tokio-1.52.3",
+            "kind": "normal",
+            "features": [
+              "sync"
+            ],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "codec",
+          "default",
+          "io",
+          "libc"
+        ]
+      },
       "toml-0.8.23": {
         "runtime_dependencies": [
           {
@@ -3921,6 +6468,271 @@
           "default",
           "std"
         ]
+      },
+      "tower-0.5.3": {
+        "runtime_dependencies": [
+          {
+            "name": "futures_core",
+            "package_key": "futures-core-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "futures_util",
+            "package_key": "futures-util-0.3.32",
+            "kind": "normal",
+            "features": [
+              "alloc"
+            ],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "pin_project_lite",
+            "package_key": "pin-project-lite-0.2.17",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "sync_wrapper",
+            "package_key": "sync_wrapper-1.0.2",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio",
+            "package_key": "tokio-1.52.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tower_layer",
+            "package_key": "tower-layer-0.3.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tower_service",
+            "package_key": "tower-service-0.3.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "futures-core",
+          "futures-util",
+          "pin-project-lite",
+          "retry",
+          "sync_wrapper",
+          "timeout",
+          "tokio",
+          "util"
+        ]
+      },
+      "tower-http-0.6.11": {
+        "runtime_dependencies": [
+          {
+            "name": "async_compression",
+            "package_key": "async-compression-0.4.43",
+            "kind": "normal",
+            "features": [
+              "tokio"
+            ],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "bitflags",
+            "package_key": "bitflags-2.13.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "bytes",
+            "package_key": "bytes-1.12.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "futures_core",
+            "package_key": "futures-core-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "futures_util",
+            "package_key": "futures-util-0.3.32",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "http",
+            "package_key": "http-1.5.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "http_body",
+            "package_key": "http-body-1.1.0",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "http_body_util",
+            "package_key": "http-body-util-0.1.4",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "pin_project_lite",
+            "package_key": "pin-project-lite-0.2.17",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio",
+            "package_key": "tokio-1.52.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tokio_util",
+            "package_key": "tokio-util-0.7.19",
+            "kind": "normal",
+            "features": [
+              "io"
+            ],
+            "uses_default_features": false,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tower",
+            "package_key": "tower-0.5.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tower_layer",
+            "package_key": "tower-layer-0.3.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "tower_service",
+            "package_key": "tower-service-0.3.3",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          },
+          {
+            "name": "url",
+            "package_key": "url-2.5.8",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": true,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": [
+          "decompression-br",
+          "decompression-gzip",
+          "follow-redirect",
+          "futures-core",
+          "futures-util",
+          "tokio-util",
+          "tower"
+        ]
+      },
+      "tower-layer-0.3.3": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "tower-service-0.3.3": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
       },
       "tracing-0.1.44": {
         "runtime_dependencies": [
@@ -4193,6 +7005,11 @@
           "tracing-log"
         ]
       },
+      "try-lock-0.2.5": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
       "unarray-0.1.4": {
         "runtime_dependencies": [],
         "build_dependencies": [],
@@ -4223,6 +7040,11 @@
         "features": []
       },
       "unsafe-libyaml-0.2.11": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": []
+      },
+      "untrusted-0.9.0": {
         "runtime_dependencies": [],
         "build_dependencies": [],
         "features": []
@@ -4335,6 +7157,38 @@
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": []
+      },
+      "want-0.3.1": {
+        "runtime_dependencies": [
+          {
+            "name": "try_lock",
+            "package_key": "try-lock-0.2.5",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": true,
+            "optional": false,
+            "target": null,
+            "tree": "target"
+          }
+        ],
+        "build_dependencies": [],
+        "features": []
+      },
+      "webpki-roots-1.0.9": {
+        "runtime_dependencies": [
+          {
+            "name": "pki_types",
+            "package_key": "rustls-pki-types-1.15.1",
+            "kind": "normal",
+            "features": [],
+            "uses_default_features": false,
             "optional": false,
             "target": null,
             "tree": "target"
@@ -4526,6 +7380,14 @@
         "build_dependencies": [],
         "features": []
       },
+      "zeroize-1.9.0": {
+        "runtime_dependencies": [],
+        "build_dependencies": [],
+        "features": [
+          "alloc",
+          "default"
+        ]
+      },
       "zerotrie-0.2.4": {
         "runtime_dependencies": [
           {
@@ -4713,12 +7575,248 @@
               "std"
             ]
           },
+          "chacha20-0.10.1": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "rand_core",
+                "package_key": "rand_core-0.10.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "rng"
+            ]
+          },
+          "core-foundation-0.9.4": {
+            "runtime_dependencies": [
+              {
+                "name": "core_foundation_sys",
+                "package_key": "core-foundation-sys-0.8.7",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "default",
+              "link"
+            ]
+          },
           "core-foundation-sys-0.8.7": {
             "runtime_dependencies": [],
             "build_dependencies": [],
             "features": [
               "default",
               "link"
+            ]
+          },
+          "hyper-util-0.1.20": {
+            "runtime_dependencies": [
+              {
+                "name": "base64",
+                "package_key": "base64-0.22.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "bytes",
+                "package_key": "bytes-1.12.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_channel",
+                "package_key": "futures-channel-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_util",
+                "package_key": "futures-util-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http",
+                "package_key": "http-1.5.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http_body",
+                "package_key": "http-body-1.1.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "hyper",
+                "package_key": "hyper-1.11.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "ipnet",
+                "package_key": "ipnet-2.12.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "percent_encoding",
+                "package_key": "percent-encoding-2.3.2",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "pin_project_lite",
+                "package_key": "pin-project-lite-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "socket2",
+                "package_key": "socket2-0.6.4",
+                "kind": "normal",
+                "features": [
+                  "all"
+                ],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "system_configuration",
+                "package_key": "system-configuration-0.7.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": "cfg(target_os = \"macos\")",
+                "tree": "target"
+              },
+              {
+                "name": "tokio",
+                "package_key": "tokio-1.52.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tower_service",
+                "package_key": "tower-service-0.3.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tracing",
+                "package_key": "tracing-0.1.44",
+                "kind": "normal",
+                "features": [
+                  "std"
+                ],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "client",
+              "client-legacy",
+              "client-proxy",
+              "client-proxy-system",
+              "default",
+              "http1",
+              "http2",
+              "tokio"
             ]
           },
           "iana-time-zone-0.1.65": {
@@ -4907,6 +8005,78 @@
               "mio"
             ]
           },
+          "ring-0.17.14": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "getrandom",
+                "package_key": "getrandom-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": "cfg(all(all(target_arch = \"aarch64\", target_endian = \"little\"), target_vendor = \"apple\", any(target_os = \"ios\", target_os = \"macos\", target_os = \"tvos\", target_os = \"visionos\", target_os = \"watchos\")))",
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": "cfg(all(any(all(target_arch = \"aarch64\", target_endian = \"little\"), all(target_arch = \"arm\", target_endian = \"little\")), any(target_os = \"android\", target_os = \"linux\")))",
+                "tree": "target"
+              },
+              {
+                "name": "untrusted",
+                "package_key": "untrusted-0.9.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [
+              {
+                "name": "cc",
+                "package_key": "cc-1.2.65",
+                "kind": "build",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "host"
+              }
+            ],
+            "features": [
+              "alloc",
+              "default",
+              "dev_urandom_fallback",
+              "wasm32_unknown_unknown_js"
+            ]
+          },
           "rustix-1.1.4": {
             "runtime_dependencies": [
               {
@@ -4977,6 +8147,68 @@
               "fs",
               "std"
             ]
+          },
+          "system-configuration-0.7.0": {
+            "runtime_dependencies": [
+              {
+                "name": "bitflags",
+                "package_key": "bitflags-2.13.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "core_foundation",
+                "package_key": "core-foundation-0.9.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "system_configuration_sys",
+                "package_key": "system-configuration-sys-0.6.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": []
+          },
+          "system-configuration-sys-0.6.0": {
+            "runtime_dependencies": [
+              {
+                "name": "core_foundation_sys",
+                "package_key": "core-foundation-sys-0.8.7",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": []
           }
         }
       },
@@ -5040,6 +8272,203 @@
             "features": [
               "default",
               "std"
+            ]
+          },
+          "chacha20-0.10.1": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "rand_core",
+                "package_key": "rand_core-0.10.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "rng"
+            ]
+          },
+          "hyper-util-0.1.20": {
+            "runtime_dependencies": [
+              {
+                "name": "base64",
+                "package_key": "base64-0.22.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "bytes",
+                "package_key": "bytes-1.12.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_channel",
+                "package_key": "futures-channel-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_util",
+                "package_key": "futures-util-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http",
+                "package_key": "http-1.5.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http_body",
+                "package_key": "http-body-1.1.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "hyper",
+                "package_key": "hyper-1.11.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "ipnet",
+                "package_key": "ipnet-2.12.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "percent_encoding",
+                "package_key": "percent-encoding-2.3.2",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "pin_project_lite",
+                "package_key": "pin-project-lite-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "socket2",
+                "package_key": "socket2-0.6.4",
+                "kind": "normal",
+                "features": [
+                  "all"
+                ],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tokio",
+                "package_key": "tokio-1.52.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tower_service",
+                "package_key": "tower-service-0.3.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tracing",
+                "package_key": "tracing-0.1.44",
+                "kind": "normal",
+                "features": [
+                  "std"
+                ],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "client",
+              "client-legacy",
+              "client-proxy",
+              "client-proxy-system",
+              "default",
+              "http1",
+              "http2",
+              "tokio"
             ]
           },
           "iana-time-zone-0.1.65": {
@@ -5207,6 +8636,78 @@
               "kqueue",
               "macos_kqueue",
               "mio"
+            ]
+          },
+          "ring-0.17.14": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "getrandom",
+                "package_key": "getrandom-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": "cfg(all(all(target_arch = \"aarch64\", target_endian = \"little\"), target_vendor = \"apple\", any(target_os = \"ios\", target_os = \"macos\", target_os = \"tvos\", target_os = \"visionos\", target_os = \"watchos\")))",
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": "cfg(all(any(all(target_arch = \"aarch64\", target_endian = \"little\"), all(target_arch = \"arm\", target_endian = \"little\")), any(target_os = \"android\", target_os = \"linux\")))",
+                "tree": "target"
+              },
+              {
+                "name": "untrusted",
+                "package_key": "untrusted-0.9.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [
+              {
+                "name": "cc",
+                "package_key": "cc-1.2.65",
+                "kind": "build",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "host"
+              }
+            ],
+            "features": [
+              "alloc",
+              "default",
+              "dev_urandom_fallback",
+              "wasm32_unknown_unknown_js"
             ]
           },
           "rustix-1.1.4": {
@@ -5375,6 +8876,203 @@
               "std"
             ]
           },
+          "chacha20-0.10.1": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "rand_core",
+                "package_key": "rand_core-0.10.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "rng"
+            ]
+          },
+          "hyper-util-0.1.20": {
+            "runtime_dependencies": [
+              {
+                "name": "base64",
+                "package_key": "base64-0.22.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "bytes",
+                "package_key": "bytes-1.12.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_channel",
+                "package_key": "futures-channel-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_util",
+                "package_key": "futures-util-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http",
+                "package_key": "http-1.5.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http_body",
+                "package_key": "http-body-1.1.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "hyper",
+                "package_key": "hyper-1.11.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "ipnet",
+                "package_key": "ipnet-2.12.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "percent_encoding",
+                "package_key": "percent-encoding-2.3.2",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "pin_project_lite",
+                "package_key": "pin-project-lite-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "socket2",
+                "package_key": "socket2-0.6.4",
+                "kind": "normal",
+                "features": [
+                  "all"
+                ],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tokio",
+                "package_key": "tokio-1.52.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tower_service",
+                "package_key": "tower-service-0.3.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tracing",
+                "package_key": "tracing-0.1.44",
+                "kind": "normal",
+                "features": [
+                  "std"
+                ],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "client",
+              "client-legacy",
+              "client-proxy",
+              "client-proxy-system",
+              "default",
+              "http1",
+              "http2",
+              "tokio"
+            ]
+          },
           "iana-time-zone-0.1.65": {
             "runtime_dependencies": [],
             "build_dependencies": [],
@@ -5540,6 +9238,78 @@
               "kqueue",
               "macos_kqueue",
               "mio"
+            ]
+          },
+          "ring-0.17.14": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "getrandom",
+                "package_key": "getrandom-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": "cfg(all(all(target_arch = \"aarch64\", target_endian = \"little\"), target_vendor = \"apple\", any(target_os = \"ios\", target_os = \"macos\", target_os = \"tvos\", target_os = \"visionos\", target_os = \"watchos\")))",
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": "cfg(all(any(all(target_arch = \"aarch64\", target_endian = \"little\"), all(target_arch = \"arm\", target_endian = \"little\")), any(target_os = \"android\", target_os = \"linux\")))",
+                "tree": "target"
+              },
+              {
+                "name": "untrusted",
+                "package_key": "untrusted-0.9.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [
+              {
+                "name": "cc",
+                "package_key": "cc-1.2.65",
+                "kind": "build",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "host"
+              }
+            ],
+            "features": [
+              "alloc",
+              "default",
+              "dev_urandom_fallback",
+              "wasm32_unknown_unknown_js"
             ]
           },
           "rustix-1.1.4": {
@@ -5718,6 +9488,73 @@
               "std"
             ]
           },
+          "chacha20-0.10.1": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "cpufeatures",
+                "package_key": "cpufeatures-0.3.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": "cfg(any(target_arch = \"x86_64\", target_arch = \"x86\"))",
+                "tree": "target"
+              },
+              {
+                "name": "rand_core",
+                "package_key": "rand_core-0.10.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "rng"
+            ]
+          },
+          "core-foundation-0.9.4": {
+            "runtime_dependencies": [
+              {
+                "name": "core_foundation_sys",
+                "package_key": "core-foundation-sys-0.8.7",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "default",
+              "link"
+            ]
+          },
           "core-foundation-sys-0.8.7": {
             "runtime_dependencies": [],
             "build_dependencies": [],
@@ -5730,6 +9567,185 @@
             "runtime_dependencies": [],
             "build_dependencies": [],
             "features": []
+          },
+          "hyper-util-0.1.20": {
+            "runtime_dependencies": [
+              {
+                "name": "base64",
+                "package_key": "base64-0.22.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "bytes",
+                "package_key": "bytes-1.12.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_channel",
+                "package_key": "futures-channel-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_util",
+                "package_key": "futures-util-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http",
+                "package_key": "http-1.5.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http_body",
+                "package_key": "http-body-1.1.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "hyper",
+                "package_key": "hyper-1.11.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "ipnet",
+                "package_key": "ipnet-2.12.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "percent_encoding",
+                "package_key": "percent-encoding-2.3.2",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "pin_project_lite",
+                "package_key": "pin-project-lite-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "socket2",
+                "package_key": "socket2-0.6.4",
+                "kind": "normal",
+                "features": [
+                  "all"
+                ],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "system_configuration",
+                "package_key": "system-configuration-0.7.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": "cfg(target_os = \"macos\")",
+                "tree": "target"
+              },
+              {
+                "name": "tokio",
+                "package_key": "tokio-1.52.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tower_service",
+                "package_key": "tower-service-0.3.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tracing",
+                "package_key": "tracing-0.1.44",
+                "kind": "normal",
+                "features": [
+                  "std"
+                ],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "client",
+              "client-legacy",
+              "client-proxy",
+              "client-proxy-system",
+              "default",
+              "http1",
+              "http2",
+              "tokio"
+            ]
           },
           "iana-time-zone-0.1.65": {
             "runtime_dependencies": [
@@ -5917,6 +9933,58 @@
               "mio"
             ]
           },
+          "ring-0.17.14": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "getrandom",
+                "package_key": "getrandom-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "untrusted",
+                "package_key": "untrusted-0.9.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [
+              {
+                "name": "cc",
+                "package_key": "cc-1.2.65",
+                "kind": "build",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "host"
+              }
+            ],
+            "features": [
+              "alloc",
+              "default",
+              "dev_urandom_fallback",
+              "wasm32_unknown_unknown_js"
+            ]
+          },
           "rustix-1.1.4": {
             "runtime_dependencies": [
               {
@@ -5987,6 +10055,68 @@
               "fs",
               "std"
             ]
+          },
+          "system-configuration-0.7.0": {
+            "runtime_dependencies": [
+              {
+                "name": "bitflags",
+                "package_key": "bitflags-2.13.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "core_foundation",
+                "package_key": "core-foundation-0.9.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "system_configuration_sys",
+                "package_key": "system-configuration-sys-0.6.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": []
+          },
+          "system-configuration-sys-0.6.0": {
+            "runtime_dependencies": [
+              {
+                "name": "core_foundation_sys",
+                "package_key": "core-foundation-sys-0.8.7",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": []
           }
         }
       },
@@ -6062,10 +10192,217 @@
               "std"
             ]
           },
+          "chacha20-0.10.1": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "cpufeatures",
+                "package_key": "cpufeatures-0.3.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": "cfg(any(target_arch = \"x86_64\", target_arch = \"x86\"))",
+                "tree": "target"
+              },
+              {
+                "name": "rand_core",
+                "package_key": "rand_core-0.10.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "rng"
+            ]
+          },
           "cpufeatures-0.3.0": {
             "runtime_dependencies": [],
             "build_dependencies": [],
             "features": []
+          },
+          "hyper-util-0.1.20": {
+            "runtime_dependencies": [
+              {
+                "name": "base64",
+                "package_key": "base64-0.22.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "bytes",
+                "package_key": "bytes-1.12.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_channel",
+                "package_key": "futures-channel-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_util",
+                "package_key": "futures-util-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http",
+                "package_key": "http-1.5.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http_body",
+                "package_key": "http-body-1.1.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "hyper",
+                "package_key": "hyper-1.11.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "ipnet",
+                "package_key": "ipnet-2.12.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "percent_encoding",
+                "package_key": "percent-encoding-2.3.2",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "pin_project_lite",
+                "package_key": "pin-project-lite-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "socket2",
+                "package_key": "socket2-0.6.4",
+                "kind": "normal",
+                "features": [
+                  "all"
+                ],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tokio",
+                "package_key": "tokio-1.52.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tower_service",
+                "package_key": "tower-service-0.3.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tracing",
+                "package_key": "tracing-0.1.44",
+                "kind": "normal",
+                "features": [
+                  "std"
+                ],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "client",
+              "client-legacy",
+              "client-proxy",
+              "client-proxy-system",
+              "default",
+              "http1",
+              "http2",
+              "tokio"
+            ]
           },
           "iana-time-zone-0.1.65": {
             "runtime_dependencies": [],
@@ -6232,6 +10569,58 @@
               "kqueue",
               "macos_kqueue",
               "mio"
+            ]
+          },
+          "ring-0.17.14": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "getrandom",
+                "package_key": "getrandom-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "untrusted",
+                "package_key": "untrusted-0.9.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [
+              {
+                "name": "cc",
+                "package_key": "cc-1.2.65",
+                "kind": "build",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "host"
+              }
+            ],
+            "features": [
+              "alloc",
+              "default",
+              "dev_urandom_fallback",
+              "wasm32_unknown_unknown_js"
             ]
           },
           "rustix-1.1.4": {
@@ -6410,10 +10799,217 @@
               "std"
             ]
           },
+          "chacha20-0.10.1": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "cpufeatures",
+                "package_key": "cpufeatures-0.3.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": "cfg(any(target_arch = \"x86_64\", target_arch = \"x86\"))",
+                "tree": "target"
+              },
+              {
+                "name": "rand_core",
+                "package_key": "rand_core-0.10.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "rng"
+            ]
+          },
           "cpufeatures-0.3.0": {
             "runtime_dependencies": [],
             "build_dependencies": [],
             "features": []
+          },
+          "hyper-util-0.1.20": {
+            "runtime_dependencies": [
+              {
+                "name": "base64",
+                "package_key": "base64-0.22.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "bytes",
+                "package_key": "bytes-1.12.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_channel",
+                "package_key": "futures-channel-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "futures_util",
+                "package_key": "futures-util-0.3.32",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http",
+                "package_key": "http-1.5.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "http_body",
+                "package_key": "http-body-1.1.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "hyper",
+                "package_key": "hyper-1.11.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "ipnet",
+                "package_key": "ipnet-2.12.1",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "libc",
+                "package_key": "libc-0.2.186",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "percent_encoding",
+                "package_key": "percent-encoding-2.3.2",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "pin_project_lite",
+                "package_key": "pin-project-lite-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "socket2",
+                "package_key": "socket2-0.6.4",
+                "kind": "normal",
+                "features": [
+                  "all"
+                ],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tokio",
+                "package_key": "tokio-1.52.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tower_service",
+                "package_key": "tower-service-0.3.3",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "tracing",
+                "package_key": "tracing-0.1.44",
+                "kind": "normal",
+                "features": [
+                  "std"
+                ],
+                "uses_default_features": false,
+                "optional": true,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [],
+            "features": [
+              "client",
+              "client-legacy",
+              "client-proxy",
+              "client-proxy-system",
+              "default",
+              "http1",
+              "http2",
+              "tokio"
+            ]
           },
           "iana-time-zone-0.1.65": {
             "runtime_dependencies": [],
@@ -6582,6 +11178,58 @@
               "mio"
             ]
           },
+          "ring-0.17.14": {
+            "runtime_dependencies": [
+              {
+                "name": "cfg_if",
+                "package_key": "cfg-if-1.0.4",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "getrandom",
+                "package_key": "getrandom-0.2.17",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              },
+              {
+                "name": "untrusted",
+                "package_key": "untrusted-0.9.0",
+                "kind": "normal",
+                "features": [],
+                "uses_default_features": true,
+                "optional": false,
+                "target": null,
+                "tree": "target"
+              }
+            ],
+            "build_dependencies": [
+              {
+                "name": "cc",
+                "package_key": "cc-1.2.65",
+                "kind": "build",
+                "features": [],
+                "uses_default_features": false,
+                "optional": false,
+                "target": null,
+                "tree": "host"
+              }
+            ],
+            "features": [
+              "alloc",
+              "default",
+              "dev_urandom_fallback",
+              "wasm32_unknown_unknown_js"
+            ]
+          },
           "rustix-1.1.4": {
             "runtime_dependencies": [
               {
@@ -6689,8 +11337,29 @@
     }
   },
   "per_crate": {
+    "adler2-2.0.1": {
+      "edition": "2021"
+    },
     "aho-corasick-1.1.4": {
       "edition": "2021"
+    },
+    "alloc-no-stdlib-2.0.4": {
+      "edition": "2015",
+      "binaries": [
+        {
+          "name": "example",
+          "path": "src/bin/example.rs"
+        }
+      ]
+    },
+    "alloc-stdlib-0.2.4": {
+      "edition": "2015",
+      "binaries": [
+        {
+          "name": "example",
+          "path": "src/bin/example.rs"
+        }
+      ]
     },
     "anstream-1.0.0": {
       "edition": "2021"
@@ -6713,12 +11382,21 @@
     "arrayvec-0.7.8": {
       "edition": "2018"
     },
+    "async-compression-0.4.43": {
+      "edition": "2018"
+    },
     "async-trait-0.1.89": {
       "edition": "2021",
       "proc_macro": true
     },
+    "atomic-waker-1.1.2": {
+      "edition": "2018"
+    },
     "autocfg-1.5.1": {
       "edition": "2015"
+    },
+    "base64-0.22.1": {
+      "edition": "2018"
     },
     "bit-set-0.8.0": {
       "edition": "2015"
@@ -6733,6 +11411,28 @@
       "edition": "2024",
       "build_script": "build.rs"
     },
+    "brotli-8.0.4": {
+      "edition": "2015",
+      "binaries": [
+        {
+          "name": "brotli",
+          "path": "src/bin/brotli.rs"
+        },
+        {
+          "name": "catbrotli",
+          "path": "src/bin/catbrotli.rs"
+        }
+      ]
+    },
+    "brotli-decompressor-5.0.3": {
+      "edition": "2015",
+      "binaries": [
+        {
+          "name": "brotli-decompressor",
+          "path": "src/bin/brotli-decompressor.rs"
+        }
+      ]
+    },
     "bytes-1.12.0": {
       "edition": "2021"
     },
@@ -6741,6 +11441,12 @@
     },
     "cfg-if-1.0.4": {
       "edition": "2018"
+    },
+    "cfg_aliases-0.2.2": {
+      "edition": "2018"
+    },
+    "chacha20-0.10.1": {
+      "edition": "2024"
     },
     "chrono-0.4.45": {
       "edition": "2021"
@@ -6767,14 +11473,37 @@
     "colorchoice-1.0.5": {
       "edition": "2021"
     },
+    "compression-codecs-0.4.38": {
+      "edition": "2018"
+    },
+    "compression-core-0.4.32": {
+      "edition": "2018"
+    },
     "constant_time_eq-0.4.2": {
       "edition": "2024"
+    },
+    "cookie-0.18.1": {
+      "edition": "2018",
+      "build_script": "build.rs"
+    },
+    "cookie_store-0.22.1": {
+      "edition": "2021"
+    },
+    "core-foundation-0.9.4": {
+      "edition": "2018"
     },
     "core-foundation-sys-0.8.7": {
       "edition": "2018"
     },
     "cpufeatures-0.3.0": {
       "edition": "2024"
+    },
+    "crc32fast-1.5.0": {
+      "edition": "2021",
+      "build_script": "build.rs"
+    },
+    "deranged-0.5.8": {
+      "edition": "2021"
     },
     "dirs-5.0.1": {
       "edition": "2015"
@@ -6785,6 +11514,17 @@
     "displaydoc-0.2.6": {
       "edition": "2021",
       "proc_macro": true
+    },
+    "document-features-0.2.12": {
+      "edition": "2018",
+      "proc_macro": true,
+      "lib_target": {
+        "name": "document_features",
+        "path": "lib.rs"
+      }
+    },
+    "encoding_rs-0.8.35": {
+      "edition": "2018"
     },
     "equivalent-1.0.2": {
       "edition": "2015"
@@ -6802,6 +11542,9 @@
     "find-msvc-tools-0.1.9": {
       "edition": "2018"
     },
+    "flate2-1.1.9": {
+      "edition": "2018"
+    },
     "fnv-1.0.7": {
       "edition": "2015",
       "lib_target": {
@@ -6810,6 +11553,21 @@
       }
     },
     "form_urlencoded-1.2.2": {
+      "edition": "2018"
+    },
+    "futures-channel-0.3.32": {
+      "edition": "2018"
+    },
+    "futures-core-0.3.32": {
+      "edition": "2018"
+    },
+    "futures-sink-0.3.33": {
+      "edition": "2018"
+    },
+    "futures-task-0.3.32": {
+      "edition": "2018"
+    },
+    "futures-util-0.3.32": {
       "edition": "2018"
     },
     "gen-macros-0.1.17": {
@@ -6822,6 +11580,9 @@
     "gen-types-0.1.17": {
       "edition": "2024"
     },
+    "getrandom-0.2.17": {
+      "edition": "2018"
+    },
     "getrandom-0.3.4": {
       "edition": "2021",
       "build_script": "build.rs"
@@ -6830,10 +11591,35 @@
       "edition": "2024",
       "build_script": "build.rs"
     },
+    "h2-0.4.15": {
+      "edition": "2021"
+    },
     "hashbrown-0.17.1": {
       "edition": "2024"
     },
     "heck-0.5.0": {
+      "edition": "2021"
+    },
+    "http-1.5.0": {
+      "edition": "2021"
+    },
+    "http-body-1.1.0": {
+      "edition": "2018"
+    },
+    "http-body-util-0.1.4": {
+      "edition": "2018"
+    },
+    "httparse-1.10.1": {
+      "edition": "2018",
+      "build_script": "build.rs"
+    },
+    "hyper-1.11.0": {
+      "edition": "2021"
+    },
+    "hyper-rustls-0.27.9": {
+      "edition": "2021"
+    },
+    "hyper-util-0.1.20": {
       "edition": "2021"
     },
     "iana-time-zone-0.1.65": {
@@ -6883,6 +11669,9 @@
     },
     "inventory-0.3.24": {
       "edition": "2021"
+    },
+    "ipnet-2.12.1": {
+      "edition": "2018"
     },
     "is_terminal_polyfill-1.70.2": {
       "edition": "2021"
@@ -6946,16 +11735,28 @@
     "litemap-0.8.2": {
       "edition": "2021"
     },
+    "litrs-1.0.0": {
+      "edition": "2021"
+    },
     "lock_api-0.4.14": {
       "edition": "2021"
     },
     "log-0.4.33": {
       "edition": "2021"
     },
+    "lru-slab-0.1.2": {
+      "edition": "2021"
+    },
     "matchers-0.2.0": {
       "edition": "2018"
     },
     "memchr-2.8.2": {
+      "edition": "2021"
+    },
+    "mime-0.3.17": {
+      "edition": "2015"
+    },
+    "miniz_oxide-0.8.9": {
       "edition": "2021"
     },
     "mio-1.2.1": {
@@ -6968,6 +11769,9 @@
       "edition": "2021"
     },
     "nu-ansi-term-0.50.3": {
+      "edition": "2021"
+    },
+    "num-conv-0.2.2": {
       "edition": "2021"
     },
     "num-traits-0.2.19": {
@@ -7003,6 +11807,9 @@
     "potential_utf-0.1.5": {
       "edition": "2021"
     },
+    "powerfmt-0.2.0": {
+      "edition": "2021"
+    },
     "ppv-lite86-0.2.21": {
       "edition": "2021"
     },
@@ -7017,12 +11824,32 @@
     "proptest-1.11.0": {
       "edition": "2021"
     },
+    "psl-types-2.0.11": {
+      "edition": "2018"
+    },
+    "publicsuffix-2.3.0": {
+      "edition": "2018"
+    },
     "quick-error-1.2.3": {
       "edition": "2015"
+    },
+    "quinn-0.11.11": {
+      "edition": "2021",
+      "build_script": "build.rs"
+    },
+    "quinn-proto-0.11.16": {
+      "edition": "2021"
+    },
+    "quinn-udp-0.5.15": {
+      "edition": "2021",
+      "build_script": "build.rs"
     },
     "quote-1.0.46": {
       "edition": "2021",
       "build_script": "build.rs"
+    },
+    "rand-0.10.2": {
+      "edition": "2024"
     },
     "rand-0.9.4": {
       "edition": "2021"
@@ -7030,8 +11857,14 @@
     "rand_chacha-0.9.0": {
       "edition": "2021"
     },
+    "rand_core-0.10.1": {
+      "edition": "2024"
+    },
     "rand_core-0.9.5": {
       "edition": "2021"
+    },
+    "rand_pcg-0.10.2": {
+      "edition": "2024"
     },
     "rand_xorshift-0.4.0": {
       "edition": "2021"
@@ -7042,9 +11875,34 @@
     "regex-syntax-0.8.11": {
       "edition": "2021"
     },
+    "reqwest-0.12.28": {
+      "edition": "2021"
+    },
+    "ring-0.17.14": {
+      "edition": "2021",
+      "build_script": "build.rs",
+      "links": "ring_core_0_17_14_"
+    },
+    "rustc-hash-2.1.3": {
+      "edition": "2021"
+    },
     "rustix-1.1.4": {
       "edition": "2021",
       "build_script": "build.rs"
+    },
+    "rustls-0.23.43": {
+      "edition": "2021",
+      "build_script": "build.rs"
+    },
+    "rustls-pki-types-1.15.1": {
+      "edition": "2021"
+    },
+    "rustls-webpki-0.103.13": {
+      "edition": "2021",
+      "lib_target": {
+        "name": "webpki",
+        "path": "src/lib.rs"
+      }
     },
     "rustversion-1.0.22": {
       "edition": "2018",
@@ -7085,6 +11943,9 @@
     "serde_spanned-0.6.9": {
       "edition": "2021"
     },
+    "serde_urlencoded-0.7.1": {
+      "edition": "2018"
+    },
     "serde_yaml-0.9.34+deprecated": {
       "edition": "2021"
     },
@@ -7100,6 +11961,12 @@
     "signal-hook-registry-1.4.8": {
       "edition": "2015"
     },
+    "simd-adler32-0.3.10": {
+      "edition": "2018"
+    },
+    "slab-0.4.12": {
+      "edition": "2018"
+    },
     "smallvec-1.15.2": {
       "edition": "2018"
     },
@@ -7112,11 +11979,24 @@
     "strsim-0.11.1": {
       "edition": "2015"
     },
+    "subtle-2.6.1": {
+      "edition": "2018"
+    },
     "syn-2.0.118": {
+      "edition": "2021"
+    },
+    "sync_wrapper-1.0.2": {
       "edition": "2021"
     },
     "synstructure-0.13.2": {
       "edition": "2018"
+    },
+    "system-configuration-0.7.0": {
+      "edition": "2021"
+    },
+    "system-configuration-sys-0.6.0": {
+      "edition": "2021",
+      "build_script": "build.rs"
     },
     "tatara-lisp-0.3.4": {
       "edition": "2021"
@@ -7139,8 +12019,27 @@
     "thread_local-1.1.9": {
       "edition": "2021"
     },
+    "time-0.3.55": {
+      "edition": "2024"
+    },
+    "time-core-0.1.9": {
+      "edition": "2024"
+    },
+    "time-macros-0.2.32": {
+      "edition": "2024",
+      "proc_macro": true
+    },
     "tinystr-0.8.3": {
       "edition": "2021"
+    },
+    "tinyvec-1.12.0": {
+      "edition": "2018"
+    },
+    "tinyvec_macros-0.1.1": {
+      "edition": "2018"
+    },
+    "todoku-0.1.1": {
+      "edition": "2024"
     },
     "tokio-1.52.3": {
       "edition": "2021"
@@ -7148,6 +12047,12 @@
     "tokio-macros-2.7.0": {
       "edition": "2021",
       "proc_macro": true
+    },
+    "tokio-rustls-0.26.4": {
+      "edition": "2021"
+    },
+    "tokio-util-0.7.19": {
+      "edition": "2021"
     },
     "toml-0.8.23": {
       "edition": "2021"
@@ -7160,6 +12065,18 @@
     },
     "toml_write-0.1.2": {
       "edition": "2021"
+    },
+    "tower-0.5.3": {
+      "edition": "2018"
+    },
+    "tower-http-0.6.11": {
+      "edition": "2018"
+    },
+    "tower-layer-0.3.3": {
+      "edition": "2018"
+    },
+    "tower-service-0.3.3": {
+      "edition": "2018"
     },
     "tracing-0.1.44": {
       "edition": "2018"
@@ -7176,6 +12093,9 @@
     },
     "tracing-subscriber-0.3.23": {
       "edition": "2018"
+    },
+    "try-lock-0.2.5": {
+      "edition": "2015"
     },
     "unarray-0.1.4": {
       "edition": "2018"
@@ -7199,6 +12119,9 @@
           "path": "src/bin/run-parser-test-suite.rs"
         }
       ]
+    },
+    "untrusted-0.9.0": {
+      "edition": "2018"
     },
     "url-2.5.8": {
       "edition": "2018"
@@ -7232,6 +12155,12 @@
     "walkdir-2.5.0": {
       "edition": "2018"
     },
+    "want-0.3.1": {
+      "edition": "2018"
+    },
+    "webpki-roots-1.0.9": {
+      "edition": "2021"
+    },
     "winnow-0.7.15": {
       "edition": "2021"
     },
@@ -7258,6 +12187,9 @@
     "zerofrom-derive-0.1.7": {
       "edition": "2021",
       "proc_macro": true
+    },
+    "zeroize-1.9.0": {
+      "edition": "2024"
     },
     "zerotrie-0.2.4": {
       "edition": "2021"

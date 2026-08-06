@@ -22,6 +22,20 @@ dirs = { workspace = true }
 # samba light core (default-features = false: LeakyBucket + PressureLevel only —
 # no NATS, no hyper, no prometheus). Crate-local dep, NOT workspace.
 samba = { version = "0.1", default-features = false }
+# The fleet's HTTP primitive. `Environment::http_get` used to SPAWN `curl` for
+# every network call — a whole capability delegated to a subprocess. todoku's
+# blocking facade owns it typed instead: a status as a `u16` (no `-w` trailer to
+# split off a stdout tail), connection pooling across polls, and rustls TLS.
+# todoku's default features are empty upstream (`stealth` is the only optional
+# one), so this is the plain reqwest+rustls stack.
+todoku = "0.1"
+# Named ONLY to build the `HeaderName` todoku's builder takes — that typed name
+# is exactly why a malformed header can't reach the wire, and naming the type is
+# its price. Pinned to 0.12 to match todoku's own requirement so ONE reqwest
+# compiles; `default-features = false` keeps `default-tls`/openssl out of the
+# graph (todoku's Cargo.toml records how that additive-features trap broke
+# mado's CI on 2026-08-01 — do not re-open it from this side).
+reqwest = { version = "0.12", default-features = false }
 
 [dev-dependencies]
 proptest = { workspace = true }
