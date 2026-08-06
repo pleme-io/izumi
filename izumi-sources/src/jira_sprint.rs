@@ -3,7 +3,7 @@
 //! search API; auth is the `atlassian/api-token` secret + an `email` param
 //! (HTTP Basic). Enter spawns a session rooted at your code root.
 //!
-//! Live wiring: `GET <base_url>/rest/api/3/search?maxResults=N&fields=summary&jql=<jql>`
+//! Live wiring: `GET <base_url>/rest/api/3/search/jql?maxResults=N&fields=summary,priority&jql=<jql>`
 //! with `Authorization: Basic <email:token>`. Config params: `base_url`
 //! (required), `email`, `jql` (override the default query), `secret` (override
 //! the token's `category/name`). Honesty contract: a missing `base_url` is

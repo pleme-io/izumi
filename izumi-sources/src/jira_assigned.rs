@@ -2,7 +2,7 @@
 //! surfaced as "go work this ticket" items. Atlassian Cloud REST, no
 //! local CLI.
 //!
-//! Live wiring: `GET https://<site>/rest/api/3/search?jql=<jql>&maxResults=N&
+//! Live wiring: `GET https://<site>/rest/api/3/search/jql?jql=<jql>&maxResults=N&
 //! fields=summary,status,priority`, HTTP-Basic with the operator's email +
 //! the `atlassian/api-token` sops secret. Config params: `site` (the
 //! `*.atlassian.net` host, required), `email` (the account email, required),

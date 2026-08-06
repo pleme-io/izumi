@@ -4,8 +4,10 @@
 //! overridable via the `secret` param) gets you the events list.
 //!
 //! Live wiring: `GET
-//! https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=N`
-//! with a bearer token → `{items:[{id, summary, start:{dateTime}}]}`. Each
+//! https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=N&timeMin=<now>`
+//! with a bearer token → `{items:[{id, summary, start:{dateTime}}]}`. The
+//! `timeMin` cursor is load-bearing, not decoration: without it the API
+//! returns the whole history and past meetings surface as stale items. Each
 //! event becomes an item whose spawn drops you in the code root.
 //! Honesty contract: a missing token is `Unavailable(AuthMissing)` (no request
 //! is fired), a failed fetch `Unavailable(Error)` — only an OBSERVED response
