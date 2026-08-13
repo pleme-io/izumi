@@ -14,6 +14,7 @@
 //! never a panic — an unconfigured source simply contributes nothing.
 
 use std::collections::BTreeMap;
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -301,14 +302,15 @@ pub struct RealEnvironment {
 }
 
 impl RealEnvironment {
-    /// Discover roots from the environment (`PLEME_CODE_ROOT` override, else
-    /// `~/code`) plus the session env a GUI-launched process lacks (`PATH`
-    /// augmentation, kubeconfig chain).
+    /// Discover roots from the environment (`PLEME_CODE_ROOT` override when
+    /// ABSOLUTE, else `~/code`) plus the session env a GUI-launched process
+    /// lacks (`PATH` augmentation, kubeconfig chain). Both root arms are
+    /// absolute-filtered — see [`resolve_home`] and [`resolve_code_root`] for
+    /// why the fallback arm needed it too.
     #[must_use]
     pub fn discover() -> Self {
-        let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"));
-        let code_root = std::env::var_os("PLEME_CODE_ROOT")
-            .map_or_else(|| home.join("code"), PathBuf::from);
+        let home = resolve_home(dirs::home_dir());
+        let code_root = resolve_code_root(std::env::var_os("PLEME_CODE_ROOT").as_deref(), &home);
         let current_path = std::env::var("PATH").ok();
         let path = augmented_path(current_path.as_deref(), &home);
         let kubeconfig = if std::env::var_os("KUBECONFIG").is_some() {
@@ -464,6 +466,48 @@ fn classify_status(status: u16, host: Option<&str>) -> StatusVerdict {
         403 if host == Some(crate::pace::GH_HOST) => StatusVerdict::Cooldown,
         _ => StatusVerdict::NoBody,
     }
+}
+
+/// The operator's home directory, guarded to ABSOLUTE.
+///
+/// `dirs::home_dir()` filters `$HOME` for EMPTINESS only (dirs-sys 0.4.1
+/// `lib.rs:33`) — unlike dirs' XDG accessors, it never checks `is_absolute`.
+/// So a relative `$HOME` (`HOME=h`) walks straight past the `/` fallback this
+/// function already declares, and every value derived from it silently becomes
+/// cwd-relative: the code root, the [`session_path_candidates`] entries, the
+/// `~/.kube` chain, and [`Environment::home`]. Filtering here closes the arm
+/// the fallback only *looked* closed on. Pure — unit-tested without touching
+/// the process env.
+fn resolve_home(discovered: Option<PathBuf>) -> PathBuf {
+    discovered
+        .filter(|p| p.is_absolute())
+        .unwrap_or_else(|| PathBuf::from("/"))
+}
+
+/// The operator's code root: the `PLEME_CODE_ROOT` override when it is
+/// ABSOLUTE, else `<home>/code`. A relative override is IGNORED rather than
+/// honoured — do not "restore" the verbatim form.
+///
+/// That override arm used to take its value verbatim through `PathBuf::from`
+/// while the fallback arm read as safe, so the two invalid values failed in two
+/// different ways and neither announced itself. An EMPTY value produced an
+/// empty `PathBuf`, which [`crate::spawn::SpawnSpec::new`] rejects — every
+/// spawn-bearing board item silently VANISHED, with no error anywhere. A
+/// RELATIVE value passed that guard cleanly and resolved against whatever cwd
+/// the board daemon happened to be started in, sending every "open a terminal
+/// on this alert" spawn and `todo_backlog`'s `rg` search root at the wrong
+/// tree. Both now land on the same `<home>/code` fallback.
+///
+/// Deliberately NOT routed through `okiba`: `PLEME_CODE_ROOT` is an
+/// app-specific variable whose fallback is a home-relative convention path, not
+/// an XDG tier. Tiering it would resolve `~/.local/share/izumi` instead of
+/// `~/code` — a relocation of the operator's source tree, not a hardening.
+/// Pure — unit-tested without touching the process env.
+fn resolve_code_root(overridden: Option<&OsStr>, home: &Path) -> PathBuf {
+    overridden
+        .map(PathBuf::from)
+        .filter(|p| p.is_absolute())
+        .unwrap_or_else(|| home.join("code"))
 }
 
 /// Well-known bin dirs a login shell puts on `PATH` but a Dock/GUI launch
@@ -846,6 +890,78 @@ impl Environment for MockEnvironment {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn code_root_ignores_a_non_absolute_override_and_falls_back() {
+        // The masked-branch seal. The fallback arm READ as safe (`dirs::home_dir()`
+        // with a `/` fallback) while the override arm took its value verbatim, so
+        // the two invalid values failed in two different ways and neither said so.
+        //
+        // Driven through the pure seam rather than `std::env` — edition-2024 env
+        // mutation is `unsafe` and races under parallel test execution.
+        let home = Path::new("/Users/op");
+
+        // Unchanged for every valid configuration: unset -> ~/code (the fleet
+        // default; nothing in the fleet sets PLEME_CODE_ROOT), absolute -> verbatim.
+        assert_eq!(
+            resolve_code_root(None, home),
+            PathBuf::from("/Users/op/code")
+        );
+        assert_eq!(
+            resolve_code_root(Some(OsStr::new("/srv/src")), home),
+            PathBuf::from("/srv/src")
+        );
+
+        // EMPTY: was an empty PathBuf, which SpawnSpec::new rejects — every
+        // spawn-bearing board item silently VANISHED with no error message.
+        assert_eq!(
+            resolve_code_root(Some(OsStr::new("")), home),
+            PathBuf::from("/Users/op/code")
+        );
+        // RELATIVE: passed that guard cleanly and resolved against whatever cwd
+        // the board daemon was started in — every "open a terminal here" spawn
+        // and todo_backlog's `rg` root landed on the wrong tree.
+        assert_eq!(
+            resolve_code_root(Some(OsStr::new("code")), home),
+            PathBuf::from("/Users/op/code")
+        );
+        assert_eq!(
+            resolve_code_root(Some(OsStr::new("../elsewhere")), home),
+            PathBuf::from("/Users/op/code")
+        );
+
+        // The empty case's downstream harm, pinned: an empty cwd is not merely
+        // wrong, it is INVISIBLE — SpawnSpec refuses it and the item disappears.
+        assert!(crate::spawn::SpawnSpec::new(PathBuf::new(), "item").is_none());
+        assert!(
+            crate::spawn::SpawnSpec::new(resolve_code_root(Some(OsStr::new("")), home), "item")
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn home_ignores_a_relative_discovery_and_uses_the_declared_root() {
+        // `dirs::home_dir()` filters $HOME for EMPTINESS only — the case anyone
+        // would test — and never for absoluteness, so `HOME=h` walked straight
+        // past the `/` fallback this code already declared. Four consumers ride
+        // on it: code_root, session PATH candidates, ~/.kube, Environment::home.
+        assert_eq!(
+            resolve_home(Some(PathBuf::from("/Users/op"))),
+            PathBuf::from("/Users/op")
+        );
+        assert_eq!(resolve_home(None), PathBuf::from("/"));
+        assert_eq!(resolve_home(Some(PathBuf::from("h"))), PathBuf::from("/"));
+        assert_eq!(resolve_home(Some(PathBuf::new())), PathBuf::from("/"));
+
+        // And the derived paths follow, rather than being separately guarded.
+        let home = resolve_home(Some(PathBuf::from("h")));
+        assert!(home.join(".kube").is_absolute());
+        assert!(
+            session_path_candidates(&home)
+                .iter()
+                .all(|p| p.is_absolute())
+        );
+    }
 
     #[test]
     fn cmd_key_is_program_plus_args() {
