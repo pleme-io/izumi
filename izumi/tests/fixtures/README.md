@@ -16,6 +16,12 @@ deliberate format-version event.
   `cargo test -p mado golden_fixture_dump`, then reverted
   (`git checkout -- src/suggest/store.rs`; mado left byte-clean, nothing
   committed). All timestamps are FIXED so the output is deterministic.
+- **Amended:** the jira row's ticket key was later rewritten in place to the
+  neutral placeholder `PROJ-1234` (it had been a real-looking project key).
+  Only that row's key-derived strings changed — its `SuggestionId` was
+  re-derived with the same FNV-1a rule and the snapshot's BLAKE3 body hash
+  recomputed, so both files are still exactly what `persist_file` /
+  `to_vec_pretty` would emit for these inputs. The wire FORMAT is untouched.
 
 ## Test body summary
 
@@ -24,10 +30,10 @@ The temporary test:
 1. Built a `SuggestionStore` and, at a fixed `now_ms = 1_000_000`, ingested
    four representative suggestions (one per source, each via
    `store.ingest(source, vec![…], 1_000_000)`):
-   - **`jira-sprint`** — `Suggestion::new(JiraSprint, "ASM-1234",
-     "ASM-1234 fix the parser", SpawnSpec::new("/code/asm", "asm-1234"))`
+   - **`jira-sprint`** — `Suggestion::new(JiraSprint, "PROJ-1234",
+     "PROJ-1234 fix the parser", SpawnSpec::new("/code/proj", "proj-1234"))`
      `.detail("sprint 42 · in progress")`
-     `.correlated(CorrKey::jira("ASM-1234"))` `.urgent(Urgency::Normal)`
+     `.correlated(CorrKey::jira("PROJ-1234"))` `.urgent(Urgency::Normal)`
      → then `mark_accepted(id, "work")` ⇒ state `accepted { session: "work" }`.
    - **`grafana-alerts`** — key `HighCPU`, title `HighCPU firing`, spawn
      `SpawnSpec::new("/code/ops", "highcpu")`, `.urgent(Urgency::Critical)`
@@ -49,7 +55,7 @@ The temporary test:
 
 Both files were then copied here verbatim.
 
-## `mado-suggest-v1.snapshot` (1479 bytes)
+## `mado-suggest-v1.snapshot` (1483 bytes)
 
 The framed warm-restart snapshot, exactly as `SuggestionStore::persist_file`
 writes it:
@@ -60,8 +66,8 @@ writes it:
 <compact JSON>                 ← serde_json::to_vec(&StoreSnapshot)
 ```
 
-Body hash of this fixture (65-byte header, 1398-byte body):
-`ad695a1aff7e0cf32d3f45a8d4f2430872cbdb00696d34e55622790726dd6013`.
+Body hash of this fixture (81-byte header, 1402-byte body):
+`624825d8e6be23dec16bc559949d2ec12ddc683a984c8f794905802d5cc71b10`.
 
 The JSON body is `StoreSnapshot { entries: Vec<StoredSuggestion>,
 saved_at_ms: 1000000 }`; entries are `BTreeMap`-ordered by `SuggestionId`
@@ -71,7 +77,7 @@ in this fixture the order is `grafana-alerts`, `github-review-requested`,
 (`snoozed { until_ms: 9999999 }` / `dismissed` / `accepted { session:
 "work" }` / `offered`, kebab-case internally-tagged on `kind`), each with
 `first_seen_ms = last_seen_ms = 1000000`, `times_seen = 1`. The jira row
-carries `detail` + `corr` (`"jira:ASM-1234"`); the github row carries
+carries `detail` + `corr` (`"jira:PROJ-1234"`); the github row carries
 `spawn.initial_command` (`"gh pr checkout 1"`); the grafana row carries
 `urgency: "critical"`.
 
@@ -80,12 +86,12 @@ body, parse the body, and recover all 4 rows with their exact states — and
 must treat wrong-magic / hash-mismatch as start-empty (never an error crash,
 never garbage rows).
 
-## `suggestion.json` (296 bytes)
+## `suggestion.json` (300 bytes)
 
 `serde_json::to_vec_pretty` of one `Suggestion` (the jira row as constructed,
 before ingest — no store bookkeeping). Exercises the full field surface:
 `id` (u64), `source` (kebab-case slug), `title`, `detail`, `urgency`
 (kebab-case), `spawn` (`cwd`/`name`/`initial_command: null`), `score`, `corr`
-(transparent string `"jira:ASM-1234"`). A conforming `Suggestion` deserializer
+(transparent string `"jira:PROJ-1234"`). A conforming `Suggestion` deserializer
 must load it; note `spawn` deserializes through the validated
 `SpawnSpecWire` `try_from` border (non-empty cwd/name).

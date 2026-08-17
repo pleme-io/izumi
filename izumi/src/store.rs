@@ -1617,13 +1617,13 @@ mod tests {
     #[test]
     fn collapse_folds_cross_source_twins_keeping_first_and_badge_honesty() {
         use crate::catalog::Catalog as _;
-        let corr = CorrKey::jira("ASM-1");
+        let corr = CorrKey::jira("PROJ-1");
         // Sprint twin ranked first (input is display-ordered), assigned twin
         // second and ACCEPTED — the survivor keeps its slot but inherits the
         // in-progress badge, and wears the absorbed source's emoji.
-        let mut sprint = stored(TestKind::JiraSprint, "ASM-1");
+        let mut sprint = stored(TestKind::JiraSprint, "PROJ-1");
         sprint.item = sprint.item.clone().correlated(corr.clone()).detail("Highest");
-        let mut assigned = stored(TestKind::JiraAssigned, "ASM-1");
+        let mut assigned = stored(TestKind::JiraAssigned, "PROJ-1");
         assigned.item = assigned.item.clone().correlated(corr.clone());
         assigned.state = ItemState::Accepted { session: String::from("s") };
         let none1 = stored(TestKind::GrafanaIncidents, "a");
@@ -1657,8 +1657,8 @@ mod tests {
 
     #[test]
     fn collapse_drops_twins_of_live_suppressed_rows() {
-        let corr = CorrKey::jira("ASM-2").unwrap();
-        let mut twin = stored(TestKind::JiraAssigned, "ASM-2");
+        let corr = CorrKey::jira("PROJ-2").unwrap();
+        let mut twin = stored(TestKind::JiraAssigned, "PROJ-2");
         twin.item = twin.item.clone().correlated(Some(corr.clone()));
         let other = stored(TestKind::TendRepos, "r");
         let mut live: std::collections::HashSet<CorrKey> = std::collections::HashSet::new();

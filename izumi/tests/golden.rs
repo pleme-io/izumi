@@ -112,19 +112,19 @@ fn golden_mado_suggestion_json_deserializes_full_field_surface() {
         serde_json::from_slice(&bytes).expect("a conforming Item deserializer loads the fixture");
 
     assert_eq!(item.source, GoldenKind::JiraSprint);
-    assert_eq!(item.title, "ASM-1234 fix the parser");
+    assert_eq!(item.title, "PROJ-1234 fix the parser");
     assert_eq!(item.detail.as_deref(), Some("sprint 42 · in progress"));
     assert_eq!(item.urgency, Urgency::Normal);
-    assert_eq!(item.spawn.cwd(), std::path::Path::new("/code/asm"));
-    assert_eq!(item.spawn.name(), "asm-1234");
+    assert_eq!(item.spawn.cwd(), std::path::Path::new("/code/proj"));
+    assert_eq!(item.spawn.name(), "proj-1234");
     assert_eq!(item.spawn.initial_command(), None);
     assert_eq!(item.score, 500);
-    assert_eq!(item.corr, CorrKey::jira("ASM-1234"));
+    assert_eq!(item.corr, CorrKey::jira("PROJ-1234"));
 
     // The persisted id is EXACTLY the fnv1a derivation over `slug ':' key` —
     // identity is preserved bit-for-bit across the extraction.
-    assert_eq!(item.id, ItemId::derive_slug("jira-sprint", "ASM-1234"));
-    assert_eq!(item.id, ItemId::derive(GoldenKind::JiraSprint, "ASM-1234"));
+    assert_eq!(item.id, ItemId::derive_slug("jira-sprint", "PROJ-1234"));
+    assert_eq!(item.id, ItemId::derive(GoldenKind::JiraSprint, "PROJ-1234"));
 
     // Round-trip: re-serializing keeps every v1 field name (in particular the
     // payload's legacy wire name `spawn`).
