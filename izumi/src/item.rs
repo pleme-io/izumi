@@ -221,7 +221,7 @@ impl ItemId {
 pub struct CorrKey(String);
 
 impl CorrKey {
-    /// A Jira issue: `jira:ASM-1234`.
+    /// A Jira issue: `jira:PROJ-1234`.
     #[must_use]
     pub fn jira(key: &str) -> Option<Self> {
         let k = key.trim();
@@ -533,13 +533,13 @@ mod tests {
     fn origin_renders_compactly_and_drops_a_blank_account() {
         assert_eq!(Origin::service("datadog").to_string(), "datadog");
         assert_eq!(
-            Origin::service("datadog").account("akeyless").to_string(),
-            "datadog:akeyless"
+            Origin::service("datadog").account("acme").to_string(),
+            "datadog:acme"
         );
         assert_eq!(Origin::service("datadog").account("   ").to_string(), "datadog");
         assert_eq!(
-            Origin::service("datadog").account("  akeyless ").to_string(),
-            "datadog:akeyless",
+            Origin::service("datadog").account("  acme ").to_string(),
+            "datadog:acme",
             "the account is trimmed, not rendered with its padding"
         );
         // maybe_account is the cfg.param() shape.
@@ -561,22 +561,22 @@ mod tests {
         let before = plain.picker_label().to_string();
 
         let with_origin = Item::new(TestKind::JiraSprint, "k", "ship it", spawn.clone())
-            .origin(Origin::service("datadog").account("akeyless"))
+            .origin(Origin::service("datadog").account("acme"))
             .detail("P2");
         let rendered = with_origin.picker_label().to_string();
 
-        assert!(rendered.contains("datadog:akeyless"), "{rendered}");
+        assert!(rendered.contains("datadog:acme"), "{rendered}");
         assert!(
-            rendered.find("ship it").unwrap() < rendered.find("datadog:akeyless").unwrap(),
+            rendered.find("ship it").unwrap() < rendered.find("datadog:acme").unwrap(),
             "origin comes after the title: {rendered}"
         );
         assert!(
-            rendered.find("datadog:akeyless").unwrap() < rendered.find("P2").unwrap(),
+            rendered.find("datadog:acme").unwrap() < rendered.find("P2").unwrap(),
             "origin comes before the detail: {rendered}"
         );
         // A local, origin-less row is byte-identical to the old render.
         assert!(!before.contains(':'), "{before}");
-        assert_eq!(before, rendered.replace("  datadog:akeyless", ""));
+        assert_eq!(before, rendered.replace("  datadog:acme", ""));
     }
 
     /// Wire back-compat: mado persists board snapshots, so an item written

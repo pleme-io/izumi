@@ -424,13 +424,13 @@ mod tests {
             .origin(Origin::service("datadog").account("other"));
 
         let out = PollOutcome::Fetched(vec![plain, preset])
-            .tagged(Origin::service("jira").account("akeyless"));
+            .tagged(Origin::service("jira").account("acme"));
         let PollOutcome::Fetched(items) = out else {
             panic!("still fetched");
         };
         assert_eq!(
             items[0].origin.as_ref().map(ToString::to_string).as_deref(),
-            Some("jira:akeyless"),
+            Some("jira:acme"),
             "an unattributed row takes the source's origin"
         );
         assert_eq!(

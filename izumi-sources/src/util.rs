@@ -501,7 +501,7 @@ mod tests {
 /// The tenant is taken from the explicit `account` param when set. Absent
 /// that, it is derived from the endpoint host's first label — which is the
 /// right answer exactly when the vendor gives each customer their own
-/// hostname (`akeyless.atlassian.net` → `akeyless`) and the wrong answer on a
+/// hostname (`acme.atlassian.net` → `acme`) and the wrong answer on a
 /// shared API host, where the first label is a generic service word. So those
 /// are refused rather than rendered: a shared host yields NO tenant, which
 /// prints as a bare `datadog` instead of the confidently-wrong `datadog:api`.
@@ -561,15 +561,15 @@ mod origin_tests {
 
     #[test]
     fn explicit_account_param_always_wins() {
-        let c = cfg_with(&[("account", "akeyless")]);
+        let c = cfg_with(&[("account", "acme")]);
         assert_eq!(
             origin_of("datadog", &c, Some("https://api.datadoghq.com")).to_string(),
-            "datadog:akeyless"
+            "datadog:acme"
         );
         // …even over a host that would have derived something else.
         assert_eq!(
             origin_of("confluence", &c, Some("https://other.atlassian.net")).to_string(),
-            "confluence:akeyless"
+            "confluence:acme"
         );
     }
 
@@ -577,8 +577,8 @@ mod origin_tests {
     fn per_tenant_host_derives_the_customer() {
         let c = cfg_with(&[]);
         assert_eq!(
-            origin_of("confluence", &c, Some("https://akeyless.atlassian.net/wiki")).to_string(),
-            "confluence:akeyless"
+            origin_of("confluence", &c, Some("https://acme.atlassian.net/wiki")).to_string(),
+            "confluence:acme"
         );
     }
 
