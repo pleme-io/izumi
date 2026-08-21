@@ -287,8 +287,8 @@ impl HealthView {
     /// `Error` — the safe direction, since nothing may invent an `Ok`.
     #[must_use]
     pub fn verdict(&self) -> HealthVerdict {
-        let status = izumi::SourceStatus::from_label(&self.status)
-            .unwrap_or(izumi::SourceStatus::Error);
+        let status =
+            izumi::SourceStatus::from_label(&self.status).unwrap_or(izumi::SourceStatus::Error);
         HealthVerdict::of(status, self.evidence)
     }
 }
@@ -369,7 +369,10 @@ mod health_verdict_tests {
         let never = view("erroring", false);
         let was_fine = view("erroring", true);
 
-        assert_eq!(never.status, was_fine.status, "the premise: status cannot tell them apart");
+        assert_eq!(
+            never.status, was_fine.status,
+            "the premise: status cannot tell them apart"
+        );
 
         assert_eq!(never.verdict(), HealthVerdict::Blind);
         assert_eq!(was_fine.verdict(), HealthVerdict::Degraded);
@@ -415,10 +418,14 @@ mod health_verdict_tests {
     /// reads the field, but a human catches the shape.
     #[test]
     fn labels_are_column_aligned() {
-        let widths: Vec<usize> = [HealthVerdict::Ok, HealthVerdict::Degraded, HealthVerdict::Blind]
-            .iter()
-            .map(|v| v.label().len())
-            .collect();
+        let widths: Vec<usize> = [
+            HealthVerdict::Ok,
+            HealthVerdict::Degraded,
+            HealthVerdict::Blind,
+        ]
+        .iter()
+        .map(|v| v.label().len())
+        .collect();
         assert!(
             widths.windows(2).all(|w| w[0] == w[1]),
             "labels must share one width, got {widths:?}"
@@ -496,7 +503,10 @@ mod health_verdict_tests {
         let mut v = view("erroring", false);
         v.observed_secs = 4 * 86_400;
         let rendered = v.to_string();
-        assert!(rendered.contains("never once succeeded in 4d"), "{rendered}");
+        assert!(
+            rendered.contains("never once succeeded in 4d"),
+            "{rendered}"
+        );
     }
 
     /// A peer that predates the `evidence` field sends none — and none must
@@ -509,7 +519,11 @@ mod health_verdict_tests {
         .expect("a pre-evidence row still decodes");
         assert_eq!(row.evidence, izumi::OkEvidence::Unobserved);
         assert_eq!(row.verdict(), HealthVerdict::Unknown);
-        assert_ne!(row.verdict(), HealthVerdict::Ok, "absence never reads as ok");
+        assert_ne!(
+            row.verdict(),
+            HealthVerdict::Ok,
+            "absence never reads as ok"
+        );
     }
 }
 
@@ -525,6 +539,7 @@ mod tests {
             .unwrap()
             .with_command("git status");
         StoredItem {
+            observed_at_ms: None,
             item: Item::new(BoardKind::TendRepos, "mado", "mado — dirty", spawn)
                 .detail("dirty")
                 .urgent(Urgency::Low),
@@ -542,9 +557,17 @@ mod tests {
         let reqs = [
             Request::List { max: 12 },
             Request::Json { max: 50 },
-            Request::Dismiss { id: String::from("42") },
-            Request::Snooze { id: String::from("42"), secs: 900 },
-            Request::Accept { id: String::from("42"), session: String::from("🔥 fix") },
+            Request::Dismiss {
+                id: String::from("42"),
+            },
+            Request::Snooze {
+                id: String::from("42"),
+                secs: 900,
+            },
+            Request::Accept {
+                id: String::from("42"),
+                session: String::from("🔥 fix"),
+            },
             Request::Health,
             Request::Nudge,
         ];
@@ -560,14 +583,23 @@ mod tests {
         );
         assert_eq!(serde_json::to_string(&Request::Nudge).unwrap(), "\"nudge\"");
         let parsed: Request = serde_json::from_str(r#"{"snooze":{"id":"7","secs":60}}"#).unwrap();
-        assert_eq!(parsed, Request::Snooze { id: String::from("7"), secs: 60 });
+        assert_eq!(
+            parsed,
+            Request::Snooze {
+                id: String::from("7"),
+                secs: 60
+            }
+        );
     }
 
     /// Every response variant survives the wire round-trip.
     #[test]
     fn response_wire_round_trips_every_variant() {
         let resps = [
-            Response::Rows(vec![RowView::from_stored(&stored(ItemState::Offered), 200_000)]),
+            Response::Rows(vec![RowView::from_stored(
+                &stored(ItemState::Offered),
+                200_000,
+            )]),
             Response::Board(serde_json::json!({"suggestions": [], "health": []})),
             Response::Done { ok: true },
             Response::Health(vec![HealthView {
@@ -604,7 +636,9 @@ mod tests {
         }
         for st in [
             ItemState::Offered,
-            ItemState::Accepted { session: String::from("s") },
+            ItemState::Accepted {
+                session: String::from("s"),
+            },
             ItemState::Snoozed { until_ms: 9 },
             ItemState::Dismissed,
         ] {
@@ -619,7 +653,9 @@ mod tests {
     /// SAME row view — one shape, mechanically pinned.
     #[test]
     fn from_stored_and_from_raw_agree() {
-        let st = stored(ItemState::Accepted { session: String::from("s") });
+        let st = stored(ItemState::Accepted {
+            session: String::from("s"),
+        });
         let typed = RowView::from_stored(&st, 200_000);
         let raw = izumi::raw::RawStoredItem {
             id: st.item.id.0.to_string(),
@@ -645,18 +681,29 @@ mod tests {
     /// the ×N recurrence stamp, the lifecycle badge, the aging stamp.
     #[test]
     fn row_view_display_renders_the_board_line() {
-        let st = stored(ItemState::Accepted { session: String::from("s") });
+        let st = stored(ItemState::Accepted {
+            session: String::from("s"),
+        });
         let line = RowView::from_stored(&st, 200_000).to_string();
-        assert!(line.starts_with(&st.item.id.0.to_string()), "leads with the id: {line}");
+        assert!(
+            line.starts_with(&st.item.id.0.to_string()),
+            "leads with the id: {line}"
+        );
         assert!(line.contains("[low] tend-repos: mado — dirty"), "{line}");
         assert!(line.contains("  dirty"), "detail rides dimmer: {line}");
         assert!(line.contains("\u{d7}3"), "recurrence stamp: {line}");
         assert!(line.contains("(accepted)"), "lifecycle badge: {line}");
-        assert!(line.contains("waited 1m"), "aging stamp (100s → 1m): {line}");
+        assert!(
+            line.contains("waited 1m"),
+            "aging stamp (100s → 1m): {line}"
+        );
 
         // A fresh Offered row renders none of the optional stamps.
         let fresh = RowView::from_stored(&stored(ItemState::Offered), 100_000);
-        let fresh = RowView { times_seen: 1, ..fresh };
+        let fresh = RowView {
+            times_seen: 1,
+            ..fresh
+        };
         let line = fresh.to_string();
         assert!(!line.contains('\u{d7}'), "{line}");
         assert!(!line.contains('('), "{line}");

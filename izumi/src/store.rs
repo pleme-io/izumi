@@ -124,9 +124,35 @@ pub struct StoredItem<K, A> {
     /// aging-escalation clock.
     #[serde(default)]
     pub first_seen_ms: u64,
-    /// When this id was last confirmed present (ms) — decay/freshness.
+    /// When this id was last confirmed present (ms) — decay/ranking.
+    ///
+    /// **REBASED on load** (see [`Store::load_snapshot`]), deliberately: a row
+    /// that was mid-decay at save must keep decaying rather than restart, so
+    /// this stamp is *relative* and continues counting across a restart. It is
+    /// therefore NOT a wall-clock fact and must never be used to answer "how
+    /// long ago was this actually observed?" — use [`Self::observed_at_ms`].
     #[serde(default)]
     pub last_seen_ms: u64,
+    /// When a poll last actually observed this row (ms) — **absolute, never
+    /// rebased**.
+    ///
+    /// The distinction from [`Self::last_seen_ms`] is the whole point, and it
+    /// is the same one `load_snapshot` already draws for the health plane:
+    /// health stamps are absolute facts ("succeeded at T") and are restored
+    /// untouched, while entry stamps are relative and are shifted. Rows had
+    /// only the relative kind, so loading a three-day-old snapshot stamped
+    /// every row as *seen right now* — the cache and a live observation became
+    /// the same bytes, and a consumer had nothing truthful to read.
+    ///
+    /// Measured 2026-08-21: mado's Ctrl-S board rendered rows last observed
+    /// 3.23 days earlier as current, indistinguishable from live ones.
+    ///
+    /// `None` means the row predates this field or arrived through a path that
+    /// mints no observation (see [`Store::upsert`]) — **unknown, never "just
+    /// observed"**. Feed it to `jikou::judge` with the source's cadence to get
+    /// a typed verdict rather than deriving an age by hand.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub observed_at_ms: Option<u64>,
     /// How many times this issue has (re)appeared — 1 on first sighting,
     /// bumped when a tombstoned id re-fires (anomaly-recurrence).
     #[serde(default = "default_times_seen")]
@@ -288,7 +314,11 @@ impl SourceHealth {
         Self {
             status,
             last_poll_ms: now_ms,
-            last_ok_ms: if status == SourceStatus::Ok { now_ms } else { 0 },
+            last_ok_ms: if status == SourceStatus::Ok {
+                now_ms
+            } else {
+                0
+            },
             first_poll_ms: now_ms,
         }
     }
@@ -489,11 +519,11 @@ pub fn effective_rank_key<K: Catalog, A: Payload>(st: &StoredItem<K, A>, now_ms:
     let waited_min = now_ms.saturating_sub(st.first_seen_ms) / 60_000;
     // Freshness decays linearly from FRESH_BONUS_MAX (waited 0) to 0 at
     // FRESH_WINDOW_MIN — a new row rises, then recedes as it ages.
-    let freshness = FRESH_BONUS_MAX * FRESH_WINDOW_MIN.saturating_sub(waited_min) / FRESH_WINDOW_MIN;
+    let freshness =
+        FRESH_BONUS_MAX * FRESH_WINDOW_MIN.saturating_sub(waited_min) / FRESH_WINDOW_MIN;
     let bonus = u64::from(st.item.score.min(1000))
         + waited_min.min(AGE_BONUS_CAP_MIN) * AGE_BONUS_PER_MIN
-        + u64::from(st.times_seen.saturating_sub(1).min(RECUR_BONUS_CAP))
-            * RECUR_BONUS_PER_SEEN
+        + u64::from(st.times_seen.saturating_sub(1).min(RECUR_BONUS_CAP)) * RECUR_BONUS_PER_SEEN
         + freshness;
     (u64::from(urgency.weight()) << 20) | (bonus & RANK_LOW_MASK)
 }
@@ -547,22 +577,40 @@ impl<K: Catalog, A: Payload> Store<K, A> {
     /// Insert-or-update ONE row under an already-held lock, honoring the
     /// tombstone window (recurrence restore) and preserving lifecycle state on
     /// update. Returns whether the mutation was meaningful.
-    fn upsert_locked(g: &mut StoreInner<K, A>, s: Item<K, A>, now_ms: u64) -> bool {
+    ///
+    /// `observed_at_ms` is an explicit PARAMETER rather than defaulted to
+    /// `now_ms`, because the two callers differ on exactly this point:
+    /// [`Store::ingest`] runs behind a completed poll and mints an observation,
+    /// while [`Store::upsert`] is the agent/MCP inject path and observes
+    /// nothing. Defaulting would have silently stamped injected rows as freshly
+    /// polled — manufacturing the very claim this field exists to make honest.
+    fn upsert_locked(
+        g: &mut StoreInner<K, A>,
+        s: Item<K, A>,
+        now_ms: u64,
+        observed_at_ms: Option<u64>,
+    ) -> bool {
         if let Some(existing) = g.entries.get_mut(&s.id) {
             // Bump only on a DISPLAYED/RANKED change, not a mere
             // last_seen heartbeat — else every 30s poll would force a
             // re-render + a disk write for an unchanged row.
             let meaningful = existing.item != s;
             existing.last_seen_ms = now_ms;
+            // A real observation advances the stamp; a receipt-less inject
+            // leaves whatever was there (never clearing a known observation).
+            if observed_at_ms.is_some() {
+                existing.observed_at_ms = observed_at_ms;
+            }
             existing.item = s;
             meaningful
         } else {
             // A re-fire inside the tombstone window keeps its identity:
             // original birth (aging keeps counting), bumped times_seen
             // (recurrence escalation), and a sticky Dismissed.
-            let tomb = g.tombstones.remove(&s.id).filter(|t| {
-                now_ms.saturating_sub(t.vanished_ms) <= TOMBSTONE_TTL_MS
-            });
+            let tomb = g
+                .tombstones
+                .remove(&s.id)
+                .filter(|t| now_ms.saturating_sub(t.vanished_ms) <= TOMBSTONE_TTL_MS);
             let (first_seen_ms, times_seen, state) = match tomb {
                 Some(t) => (t.first_seen_ms, t.times_seen.saturating_add(1), t.state),
                 None => (now_ms, 1, ItemState::Offered),
@@ -572,6 +620,7 @@ impl<K: Catalog, A: Payload> Store<K, A> {
                 StoredItem {
                     first_seen_ms,
                     last_seen_ms: now_ms,
+                    observed_at_ms,
                     times_seen,
                     state,
                     item: s,
@@ -631,7 +680,7 @@ impl<K: Catalog, A: Payload> Store<K, A> {
                 changed = true;
             }
             for s in items {
-                if Self::upsert_locked(&mut g, s, now_ms) {
+                if Self::upsert_locked(&mut g, s, now_ms, Some(now_ms)) {
                     changed = true;
                 }
             }
@@ -647,7 +696,7 @@ impl<K: Catalog, A: Payload> Store<K, A> {
     pub fn upsert(&self, s: Item<K, A>, now_ms: u64) {
         let changed = {
             let mut g = self.lock();
-            Self::upsert_locked(&mut g, s, now_ms)
+            Self::upsert_locked(&mut g, s, now_ms, None)
         };
         if changed {
             self.bump();
@@ -820,8 +869,11 @@ impl<K: Catalog, A: Payload> Store<K, A> {
                     .then(b.3.cmp(&a.3))
                     .then(a.0.cmp(&b.0))
             });
-            let keep: BTreeSet<ItemId> =
-                ranked.into_iter().take(max_entries).map(|(id, ..)| id).collect();
+            let keep: BTreeSet<ItemId> = ranked
+                .into_iter()
+                .take(max_entries)
+                .map(|(id, ..)| id)
+                .collect();
             let evicted: Vec<StoredItem<K, A>> = g
                 .entries
                 .values()
@@ -926,7 +978,11 @@ impl<K: Catalog, A: Payload> Store<K, A> {
         StoreSnapshot {
             entries: g.entries.values().cloned().collect(),
             saved_at_ms: now_ms,
-            health: g.health.iter().map(|(k, h)| (k.slug().to_owned(), *h)).collect(),
+            health: g
+                .health
+                .iter()
+                .map(|(k, h)| (k.slug().to_owned(), *h))
+                .collect(),
         }
     }
 
@@ -959,6 +1015,12 @@ impl<K: Catalog, A: Payload> Store<K, A> {
             g.entries.clear();
             for mut st in snap.entries {
                 st.last_seen_ms = st.last_seen_ms.saturating_add(shift);
+                // `observed_at_ms` is deliberately NOT shifted — it is an
+                // absolute fact ("a poll saw this at T"), exactly like the
+                // health stamps below. Adding it to this rebase would restore
+                // the defect the field exists to remove: every loaded row would
+                // claim to have been observed just now. Guarded by
+                // `the_observation_stamp_survives_a_load_unrebased`.
                 g.entries.insert(st.item.id, st);
             }
             for (slug, saved) in snap.health {
@@ -1141,7 +1203,146 @@ mod tests {
     const MAGIC: &[u8] = b"izumi-store-test v1\n";
 
     fn sug(source: TestKind, key: &str, title: &str) -> Item<TestKind, SpawnSpec> {
-        Item::new(source, key, title, SpawnSpec::new("/code/x", title).unwrap())
+        Item::new(
+            source,
+            key,
+            title,
+            SpawnSpec::new("/code/x", title).unwrap(),
+        )
+    }
+
+    /// THE regression guard for the defect this field exists to remove.
+    ///
+    /// `last_seen_ms` is rebased on load so a mid-decay row keeps decaying.
+    /// Before `observed_at_ms`, that rebase was the ONLY per-row time signal —
+    /// so loading a three-day-old snapshot stamped every row as seen right now,
+    /// and a cached row became byte-identical to a live one. Measured on mado's
+    /// Ctrl-S board 2026-08-21: 3.23-day-old rows rendered as current.
+    ///
+    /// If a future edit adds `observed_at_ms` to the shift loop in
+    /// `load_snapshot`, this fails. Without it, that regression is silent and
+    /// every other test stays green.
+    #[test]
+    fn the_observation_stamp_survives_a_load_unrebased() {
+        let store = Store::new();
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            1_000,
+        );
+        let snap = store.to_snapshot(1_000);
+
+        // Reload three days later.
+        const THREE_DAYS_MS: u64 = 3 * 24 * 60 * 60 * 1000;
+        let now = 1_000 + THREE_DAYS_MS;
+        let fresh = Store::new();
+        fresh.load_snapshot(snap, now);
+
+        let st = fresh
+            .get_stored(ItemId::derive(TestKind::TendRepos, "a"))
+            .expect("row survives the load");
+
+        assert_eq!(
+            st.observed_at_ms,
+            Some(1_000),
+            "the observation is an ABSOLUTE fact and must load untouched"
+        );
+        assert_eq!(
+            st.last_seen_ms, now,
+            "…while last_seen_ms is still rebased, because decay must continue"
+        );
+        assert_ne!(
+            st.observed_at_ms,
+            Some(st.last_seen_ms),
+            "the two stamps must not collapse into one — that IS the defect"
+        );
+    }
+
+    /// The receipt-less path must not manufacture an observation.
+    #[test]
+    fn an_injected_row_carries_no_observation_but_a_polled_one_does() {
+        let store = Store::new();
+
+        // The agent/MCP inject path observes nothing.
+        store.upsert(sug(TestKind::TendRepos, "injected", "i"), 5_000);
+        let injected = store
+            .get_stored(ItemId::derive(TestKind::TendRepos, "injected"))
+            .expect("injected row");
+        assert_eq!(
+            injected.observed_at_ms, None,
+            "an inject is not an observation — defaulting to now would have \
+             manufactured the exact claim this field exists to make honest"
+        );
+
+        // The poll path does.
+        store.ingest(
+            TestKind::GitBranchPr,
+            vec![sug(TestKind::GitBranchPr, "polled", "p")],
+            6_000,
+        );
+        let polled = store
+            .get_stored(ItemId::derive(TestKind::GitBranchPr, "polled"))
+            .expect("polled row");
+        assert_eq!(polled.observed_at_ms, Some(6_000));
+    }
+
+    /// A later poll advances the stamp; a later inject never clears it.
+    #[test]
+    fn an_inject_never_walks_a_known_observation_backwards() {
+        let store = Store::new();
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            1_000,
+        );
+        store.upsert(sug(TestKind::TendRepos, "a", "retitled"), 9_000);
+        let st = store
+            .get_stored(ItemId::derive(TestKind::TendRepos, "a"))
+            .expect("row");
+        assert_eq!(
+            st.observed_at_ms,
+            Some(1_000),
+            "an inject must not erase a real observation, nor claim a new one"
+        );
+    }
+
+    /// Wire compat: a row with no observation must serialize to EXACTLY the
+    /// pre-existing key set.
+    ///
+    /// `izumi/tests/golden.rs` asserts value-identity for `Item` but nothing
+    /// asserted it for `StoredItem`, so a mistake here would have failed
+    /// silently against byte-frozen fixtures. Red-run by dropping
+    /// `skip_serializing_if`, which was done 2026-08-21 — the key appears as
+    /// `"observed_at_ms": Null` and this test fails. It is therefore known to
+    /// detect, not merely known to pass.
+    #[test]
+    fn a_row_without_an_observation_adds_no_key_to_the_wire() {
+        let store = Store::new();
+        store.upsert(sug(TestKind::TendRepos, "a", "a"), 1_000);
+        let st = store
+            .get_stored(ItemId::derive(TestKind::TendRepos, "a"))
+            .expect("row");
+        let v = serde_json::to_value(&st).expect("serializes");
+        let obj = v.as_object().expect("an object");
+        assert!(
+            !obj.contains_key("observed_at_ms"),
+            "an absent observation must emit NO key, or every byte-frozen \
+             fixture drifts: {obj:?}"
+        );
+        // And a row that DOES carry one round-trips it.
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "b", "b")],
+            2_000,
+        );
+        let stb = store
+            .get_stored(ItemId::derive(TestKind::TendRepos, "b"))
+            .expect("row b");
+        let vb = serde_json::to_value(&stb).expect("serializes");
+        assert_eq!(vb["observed_at_ms"], serde_json::json!(2_000));
+        let back: StoredItem<TestKind, SpawnSpec> =
+            serde_json::from_value(vb).expect("round-trips");
+        assert_eq!(back.observed_at_ms, Some(2_000));
     }
 
     #[test]
@@ -1149,24 +1350,51 @@ mod tests {
         let store = Store::new();
         store.ingest(
             TestKind::TendRepos,
-            vec![sug(TestKind::TendRepos, "a", "a"), sug(TestKind::TendRepos, "b", "b")],
+            vec![
+                sug(TestKind::TendRepos, "a", "a"),
+                sug(TestKind::TendRepos, "b", "b"),
+            ],
             100,
         );
-        store.ingest(TestKind::GitBranchPr, vec![sug(TestKind::GitBranchPr, "c", "c")], 100);
+        store.ingest(
+            TestKind::GitBranchPr,
+            vec![sug(TestKind::GitBranchPr, "c", "c")],
+            100,
+        );
         assert_eq!(store.len(), 3);
         // Re-ingest tend with only "a" → "b" drops, git "c" untouched.
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "a", "a")], 200);
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            200,
+        );
         assert_eq!(store.len(), 2);
-        assert!(store.get(ItemId::derive(TestKind::GitBranchPr, "c")).is_some());
-        assert!(store.get(ItemId::derive(TestKind::TendRepos, "b")).is_none());
+        assert!(
+            store
+                .get(ItemId::derive(TestKind::GitBranchPr, "c"))
+                .is_some()
+        );
+        assert!(
+            store
+                .get(ItemId::derive(TestKind::TendRepos, "b"))
+                .is_none()
+        );
     }
 
     #[test]
     fn first_seen_is_preserved_across_reingest() {
         let store = Store::new();
         let id = ItemId::derive(TestKind::TendRepos, "a");
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "a", "a")], 100);
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "a", "a")], 500);
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            100,
+        );
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            500,
+        );
         // shade_alpha uses first_seen=100, so at now=100+shade it's full; the
         // re-ingest at 500 must NOT reset birth.
         let st = store.ranked_stored(10, 500);
@@ -1213,6 +1441,7 @@ mod tests {
     fn recurrence_and_aging_escalate_within_a_tier_never_across() {
         let now = 10 * 60 * 60 * 1000; // 10h
         let mk = |first_seen_ms: u64, times_seen: u32, urgency: Urgency| StoredItem {
+            observed_at_ms: None,
             item: sug(TestKind::TendRepos, "k", "t").urgent(urgency),
             first_seen_ms,
             last_seen_ms: now,
@@ -1245,6 +1474,7 @@ mod tests {
         // buried under a pile of chronic alerts), then recedes as it ages and
         // the long-standing escalation reclaims its place.
         let mk = |first_seen_ms: u64, times_seen: u32| StoredItem {
+            observed_at_ms: None,
             item: sug(TestKind::TendRepos, "k", "t").urgent(Urgency::Critical),
             first_seen_ms,
             last_seen_ms: 0,
@@ -1284,7 +1514,10 @@ mod tests {
         assert!(store.mark_accepted(hot_id, "🔥 hot"));
         let ranked = store.ranked(10, 1_000);
         assert_eq!(ranked.len(), 2, "accepted stays on the board");
-        assert_eq!(ranked[0].id, calm_id, "accepted row is demoted (in progress)");
+        assert_eq!(
+            ranked[0].id, calm_id,
+            "accepted row is demoted (in progress)"
+        );
         assert!(matches!(
             store.get_stored(hot_id).unwrap().state,
             ItemState::Accepted { .. }
@@ -1349,7 +1582,10 @@ mod tests {
         store.upsert(sug(TestKind::TendRepos, "a", "a2"), 300);
         assert_eq!(store.len(), 2, "same id updates in place");
         assert_eq!(
-            store.get(ItemId::derive(TestKind::TendRepos, "a")).unwrap().title,
+            store
+                .get(ItemId::derive(TestKind::TendRepos, "a"))
+                .unwrap()
+                .title,
             "a2"
         );
     }
@@ -1362,11 +1598,18 @@ mod tests {
         let g1 = store.generation();
         assert!(g1 > g0, "first poll records (transition from unknown)");
         store.record_poll(TestKind::JiraAssigned, SourceStatus::Ok, 2_000);
-        assert_eq!(store.generation(), g1, "same-status heartbeat must not bump");
+        assert_eq!(
+            store.generation(),
+            g1,
+            "same-status heartbeat must not bump"
+        );
         store.record_poll(TestKind::JiraAssigned, SourceStatus::Error, 3_000);
         assert!(store.generation() > g1, "a status transition bumps");
         let health = store.health();
-        let (_, h) = health.iter().find(|(k, _)| *k == TestKind::JiraAssigned).unwrap();
+        let (_, h) = health
+            .iter()
+            .find(|(k, _)| *k == TestKind::JiraAssigned)
+            .unwrap();
         assert_eq!(h.status, SourceStatus::Error);
         assert_eq!(h.last_ok_ms, 2_000, "last_ok remembers the last good poll");
     }
@@ -1391,7 +1634,11 @@ mod tests {
     #[test]
     fn decay_drops_stale_entries() {
         let store = Store::new();
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "a", "a")], 100);
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            100,
+        );
         store.decay(100 + 5000, 1000);
         assert_eq!(store.len(), 0, "stale entry decayed");
     }
@@ -1408,7 +1655,11 @@ mod tests {
     #[test]
     fn snapshot_round_trips_and_rebases_ages() {
         let store = Store::new();
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "a", "a")], 100_000);
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            100_000,
+        );
         let snap = store.to_snapshot(200_000);
         assert_eq!(snap.saved_at_ms, 200_000);
 
@@ -1420,14 +1671,22 @@ mod tests {
         assert_eq!(restored.len(), 1);
         let st = restored.ranked_stored(1, now)[0].clone();
         assert_eq!(now - st.last_seen_ms, 100_000, "age-at-save preserved");
-        assert_eq!(st.first_seen_ms, 100_000, "birth stays absolute (aging clock)");
+        assert_eq!(
+            st.first_seen_ms, 100_000,
+            "birth stays absolute (aging clock)"
+        );
         // The post-load decay with a 15-min TTL keeps it (it is 100s old).
         restored.decay(now, 900_000);
-        assert_eq!(restored.len(), 1, "fresh-at-save row survives restart decay");
+        assert_eq!(
+            restored.len(),
+            1,
+            "fresh-at-save row survives restart decay"
+        );
 
         // Legacy snapshot (saved_at 0) loads unrebased.
         let legacy = StoreSnapshot {
             entries: vec![StoredItem {
+                observed_at_ms: None,
                 item: sug(TestKind::TendRepos, "b", "b"),
                 first_seen_ms: 50,
                 last_seen_ms: 50,
@@ -1439,7 +1698,11 @@ mod tests {
         };
         let old = Store::new();
         old.load_snapshot(legacy, now);
-        assert_eq!(old.ranked_stored(1, now)[0].last_seen_ms, 50, "legacy: no rebase");
+        assert_eq!(
+            old.ranked_stored(1, now)[0].last_seen_ms,
+            50,
+            "legacy: no rebase"
+        );
     }
 
     #[test]
@@ -1448,7 +1711,11 @@ mod tests {
         let path = dir.path().join("snap.json");
 
         let store = Store::new();
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "a", "a")], 100);
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            100,
+        );
         store.persist_file(&path, MAGIC, 100);
 
         // Round-trip: a fresh store warm-loads the set.
@@ -1476,13 +1743,25 @@ mod tests {
     fn generation_bumps_on_change_not_on_last_seen_heartbeat() {
         let store = Store::new();
         let g0 = store.generation();
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "a", "a")], 100);
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            100,
+        );
         let g1 = store.generation();
         assert!(g1 > g0, "first insert bumps");
 
         // Re-ingest the SAME item (only last_seen advances) → NO bump.
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "a", "a")], 500);
-        assert_eq!(store.generation(), g1, "a last_seen heartbeat must not bump");
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            500,
+        );
+        assert_eq!(
+            store.generation(),
+            g1,
+            "a last_seen heartbeat must not bump"
+        );
 
         // A changed displayed field → bump.
         let mut changed = sug(TestKind::TendRepos, "a", "a");
@@ -1505,16 +1784,34 @@ mod tests {
         let mut rx = store.subscribe();
         assert!(!rx.has_changed().unwrap(), "no change before first ingest");
 
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "a", "a")], 100);
-        assert!(rx.has_changed().unwrap(), "an ingest broadcasts to subscribers");
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            100,
+        );
+        assert!(
+            rx.has_changed().unwrap(),
+            "an ingest broadcasts to subscribers"
+        );
         rx.mark_unchanged();
 
         // Re-ingest the SAME row (only last_seen advances) → no broadcast.
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "a", "a")], 500);
-        assert!(!rx.has_changed().unwrap(), "a heartbeat must not wake a subscriber");
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            500,
+        );
+        assert!(
+            !rx.has_changed().unwrap(),
+            "a heartbeat must not wake a subscriber"
+        );
 
         // A new row → broadcast again.
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "b", "b")], 600);
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "b", "b")],
+            600,
+        );
         assert!(rx.has_changed().unwrap(), "a new row wakes the subscriber");
     }
 
@@ -1536,7 +1833,9 @@ mod tests {
         store.gc(3, 100);
         assert_eq!(store.len(), 3, "capped to 3");
         assert!(
-            store.get(ItemId::derive(TestKind::GrafanaAlerts, "fire")).is_some(),
+            store
+                .get(ItemId::derive(TestKind::GrafanaAlerts, "fire"))
+                .is_some(),
             "the Critical row is kept (highest rank)"
         );
 
@@ -1569,7 +1868,11 @@ mod tests {
         store.gc(2, 200);
         assert_eq!(store.len(), 2);
         assert!(store.get(dead_id).is_none(), "non-offerable evicted first");
-        assert!(store.get(ItemId::derive(TestKind::TendRepos, "mid")).is_some());
+        assert!(
+            store
+                .get(ItemId::derive(TestKind::TendRepos, "mid"))
+                .is_some()
+        );
         // The eviction left a tombstone carrying Dismissed: a re-ingest from
         // the still-firing source must NOT resurrect the row as Offered.
         store.ingest(
@@ -1581,31 +1884,47 @@ mod tests {
             !store.ranked(10, 300).iter().any(|s| s.id == dead_id),
             "gc under pressure must not launder a dismissal"
         );
-        assert!(store.is_dismissed(dead_id), "dismissal restored from the tombstone");
+        assert!(
+            store.is_dismissed(dead_id),
+            "dismissal restored from the tombstone"
+        );
     }
 
     #[test]
     fn decay_per_source_respects_each_sources_ttl() {
         let store = Store::new();
-        store.ingest(TestKind::TendRepos, vec![sug(TestKind::TendRepos, "a", "a")], 1000);
-        store.ingest(TestKind::GrafanaAlerts, vec![sug(TestKind::GrafanaAlerts, "b", "b")], 1000);
+        store.ingest(
+            TestKind::TendRepos,
+            vec![sug(TestKind::TendRepos, "a", "a")],
+            1000,
+        );
+        store.ingest(
+            TestKind::GrafanaAlerts,
+            vec![sug(TestKind::GrafanaAlerts, "b", "b")],
+            1000,
+        );
         // At now=6000: tend (ttl 1000) is 5000ms stale → drop; grafana (ttl huge) kept.
         store.decay_per_source(6000, |k| match k {
             TestKind::TendRepos => 1000,
             _ => 100_000,
         });
         assert!(
-            store.get(ItemId::derive(TestKind::TendRepos, "a")).is_none(),
+            store
+                .get(ItemId::derive(TestKind::TendRepos, "a"))
+                .is_none(),
             "the short-TTL source aged out"
         );
         assert!(
-            store.get(ItemId::derive(TestKind::GrafanaAlerts, "b")).is_some(),
+            store
+                .get(ItemId::derive(TestKind::GrafanaAlerts, "b"))
+                .is_some(),
             "the long-TTL source is kept (no flicker)"
         );
     }
 
     fn stored(source: TestKind, key: &str) -> StoredItem<TestKind, SpawnSpec> {
         StoredItem {
+            observed_at_ms: None,
             item: sug(source, key, key),
             first_seen_ms: 100,
             last_seen_ms: 100,
@@ -1622,10 +1941,16 @@ mod tests {
         // second and ACCEPTED — the survivor keeps its slot but inherits the
         // in-progress badge, and wears the absorbed source's emoji.
         let mut sprint = stored(TestKind::JiraSprint, "PROJ-1");
-        sprint.item = sprint.item.clone().correlated(corr.clone()).detail("Highest");
+        sprint.item = sprint
+            .item
+            .clone()
+            .correlated(corr.clone())
+            .detail("Highest");
         let mut assigned = stored(TestKind::JiraAssigned, "PROJ-1");
         assigned.item = assigned.item.clone().correlated(corr.clone());
-        assigned.state = ItemState::Accepted { session: String::from("s") };
+        assigned.state = ItemState::Accepted {
+            session: String::from("s"),
+        };
         let none1 = stored(TestKind::GrafanaIncidents, "a");
         let none2 = stored(TestKind::GrafanaIncidents, "b");
 
@@ -1634,7 +1959,11 @@ mod tests {
             &std::collections::HashSet::new(),
         );
         assert_eq!(out.len(), 3, "twins folded; None-corr rows pass through");
-        assert_eq!(out[0].item.source, TestKind::JiraSprint, "first occurrence survives");
+        assert_eq!(
+            out[0].item.source,
+            TestKind::JiraSprint,
+            "first occurrence survives"
+        );
         assert!(
             matches!(out[0].state, ItemState::Accepted { .. }),
             "absorbed Accepted state dominates the badge"
@@ -1651,7 +1980,10 @@ mod tests {
             CorrKey::alert("X").unwrap().as_str()
         );
         // gh keys demand a true owner/repo.
-        assert!(CorrKey::github("mado", 1).is_none(), "bare repo name is ambiguous");
+        assert!(
+            CorrKey::github("mado", 1).is_none(),
+            "bare repo name is ambiguous"
+        );
         assert!(CorrKey::github("pleme-io/mado", 1).is_some());
     }
 
@@ -1664,7 +1996,11 @@ mod tests {
         let mut live: std::collections::HashSet<CorrKey> = std::collections::HashSet::new();
         live.insert(corr);
         let out = collapse_correlated(vec![twin, other], &live);
-        assert_eq!(out.len(), 1, "the live task's other spelling never resurfaces");
+        assert_eq!(
+            out.len(),
+            1,
+            "the live task's other spelling never resurfaces"
+        );
         assert_eq!(out[0].item.source, TestKind::TendRepos);
     }
 
@@ -1712,9 +2048,15 @@ mod tests {
         items.sort_by_key(|s| std::cmp::Reverse(s.item.rank_key()));
         let out = balance_per_source(items, 10, 2);
         assert_eq!(out.len(), 3, "1 grafana + 2 (capped) tend");
-        assert_eq!(out[0].item.source, TestKind::GrafanaAlerts, "critical kept on top");
         assert_eq!(
-            out.iter().filter(|s| s.item.source == TestKind::TendRepos).count(),
+            out[0].item.source,
+            TestKind::GrafanaAlerts,
+            "critical kept on top"
+        );
+        assert_eq!(
+            out.iter()
+                .filter(|s| s.item.source == TestKind::TendRepos)
+                .count(),
             2,
             "tend capped at 2"
         );
@@ -1756,6 +2098,7 @@ mod tests {
         ) {
             let now = waited_min.saturating_mul(60_000).saturating_add(1);
             let st = StoredItem {
+                observed_at_ms: None,
                 item: sug(TestKind::TendRepos, "k", "t")
                     .urgent(Urgency::Normal)
                     .scored(score),
@@ -1901,7 +2244,10 @@ mod ever_ok_tests {
         let never = health(SourceStatus::Error, 9_000, 0);
         let broke = health(SourceStatus::Error, 9_000, 5_000);
 
-        assert_eq!(never.status, broke.status, "precondition: status cannot tell them apart");
+        assert_eq!(
+            never.status, broke.status,
+            "precondition: status cannot tell them apart"
+        );
         assert!(!never.ever_ok());
         assert!(broke.ever_ok());
     }
@@ -1914,8 +2260,14 @@ mod ever_ok_tests {
         let unrun = health(SourceStatus::Unconfigured, 0, 0);
         let tried = health(SourceStatus::Error, 9_000, 0);
 
-        assert!(!unrun.ever_polled(), "no poll completed — no verdict is available");
-        assert!(tried.ever_polled(), "a poll completed; it just never succeeded");
+        assert!(
+            !unrun.ever_polled(),
+            "no poll completed — no verdict is available"
+        );
+        assert!(
+            tried.ever_polled(),
+            "a poll completed; it just never succeeded"
+        );
         assert!(!unrun.ever_ok());
         assert!(!tried.ever_ok());
     }
@@ -2158,7 +2510,10 @@ mod health_persistence_tests {
         let snap: StoreSnapshot<TestKind, SpawnSpec> =
             serde_json::from_slice(body).expect("a pre-health snapshot body still loads");
         assert_eq!(snap.saved_at_ms, 42);
-        assert!(snap.health.is_empty(), "absent health is empty, never seeded");
+        assert!(
+            snap.health.is_empty(),
+            "absent health is empty, never seeded"
+        );
     }
 
     /// A health record for a slug this catalog no longer knows drops that ROW
