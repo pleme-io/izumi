@@ -24,6 +24,7 @@ impl Record for Line {
 #[derive(Default, Clone)]
 struct Fake {
     rows: usize,
+    delay_ms: u64,
     feeds: Arc<Mutex<Vec<Feed<Line>>>>,
 }
 
@@ -33,8 +34,10 @@ impl Source for Fake {
 
     fn open(&self, _key: String, _resume: Option<String>, feed: Feed<Line>) -> BoxFuture<()> {
         let rows = self.rows;
+        let delay = Duration::from_millis(self.delay_ms);
         let feeds = Arc::clone(&self.feeds);
         Box::pin(async move {
+            tokio::time::sleep(delay).await;
             feed.reset(
                 (0..rows)
                     .map(|i| Line {
@@ -152,4 +155,26 @@ async fn one_record_larger_than_the_budget_still_makes_progress() {
     let page = s.read("pods".into(), None, &render).await.unwrap();
     assert_eq!(page["count"], 1);
     assert!(page["next"].is_string());
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_first_read_slower_than_the_cursor_ttl_still_hands_back_a_live_cursor() {
+    let fake = Fake {
+        rows: 3,
+        delay_ms: 2000,
+        ..Fake::default()
+    };
+    let s = Streams::new(
+        Armazem::new(fake, ArmazemConfig::default()).unwrap(),
+        StreamConfig {
+            cursor_ttl_ms: 1000,
+            settle_ms: 5000,
+            ..StreamConfig::default()
+        },
+    );
+    let first = s.read("pods".into(), None, &render).await.unwrap();
+    assert_eq!(first["total"], 3);
+    let follow = first["follow"].as_str().unwrap().to_owned();
+    let again = s.read("pods".into(), Some(&follow), &render).await.unwrap();
+    assert_eq!(again["changes"], json!([]));
 }

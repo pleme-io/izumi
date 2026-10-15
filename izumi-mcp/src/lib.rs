@@ -184,7 +184,7 @@ impl<S: Source> Streams<S> {
         let now = Instant::now();
         self.sweep(now);
         match cursor {
-            None => Ok(self.first(key, render, now).await),
+            None => Ok(self.first(key, render).await),
             Some(raw) => {
                 let c = Cursor::decode(raw)?;
                 let mut held = self.held.lock();
@@ -204,7 +204,6 @@ impl<S: Source> Streams<S> {
         &self,
         key: S::Key,
         render: &(dyn Fn(&S::Record) -> Value + Sync),
-        now: Instant,
     ) -> Value {
         let mut lease = self.armazem.interest(key);
         let snap = match lease.read(Duration::from_millis(self.cfg.settle_ms)).await {
@@ -217,7 +216,7 @@ impl<S: Source> Streams<S> {
         let mut h = Held {
             lease,
             pinned: Some((snap.seq, snap.records)),
-            touched: now,
+            touched: Instant::now(),
         };
         let answer = self.page(id, &mut h, 0, render);
         self.held.lock().insert(id, h);
