@@ -1,0 +1,29 @@
+[package]
+name = "izumi-armazem"
+version.workspace = true
+description = "Lazy, demand-driven absorb store: one change-journaled shelf per key, streams opened on interest, parked to dormant on idle and resumed from their cursor, with the lifecycle decided by a vigy policy"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[features]
+default = ["vigy"]
+vigy = ["dep:vigy-eval", "dep:vigy-types", "dep:tatara-lisp-eval"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["macros"] }
+parking_lot = { workspace = true }
+tracing = { workspace = true }
+vigy-eval = { version = "0.1.8", optional = true }
+vigy-types = { version = "0.1.8", optional = true }
+tatara-lisp-eval = { version = "0.4", optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "time", "sync", "macros", "test-util"] }
+proptest = { workspace = true }
+
+[lints]
+workspace = true

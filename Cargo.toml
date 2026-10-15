@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["izumi", "izumi-sources", "izumi-config", "izumi-lisp", "izumi-board"]
+members = ["izumi", "izumi-sources", "izumi-config", "izumi-lisp", "izumi-board", "izumi-armazem", "izumi-mcp"]
 
 [workspace.package]
 version = "0.1.22"

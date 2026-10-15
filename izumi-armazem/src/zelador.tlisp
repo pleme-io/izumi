@@ -1,0 +1,37 @@
+(define cfg (armazem-config))
+(define rows (armazem-demand))
+(define lazy (equal? (hash-map-get cfg :mode) "lazy"))
+(define direct (equal? (hash-map-get cfg :mode) "direct"))
+(define linger (hash-map-get cfg :linger-ms))
+(define max-live (hash-map-get cfg :max-live))
+(define evict-after (hash-map-get cfg :evict-dormant-after-ms))
+
+(define field (lambda (r k) (hash-map-get r k)))
+(define idle-of (lambda (r) (hash-map-get-or r :idle-ms 0)))
+(define wanted (lambda (r) (> (field r :interest) 0)))
+(define live (lambda (r) (field r :live)))
+
+(define lingered
+  (lambda (r)
+    (and lazy (live r) (not (wanted r)) (>= (idle-of r) linger))))
+
+(define starts (filter (lambda (r) (and (wanted r) (not (live r)))) rows))
+(define staying (filter (lambda (r) (and (live r) (not (lingered r)))) rows))
+(define live-after (+ (length starts) (length staying)))
+(define overflow (if (and lazy (> live-after max-live)) (- live-after max-live) 0))
+(define longest-idle
+  (sort-by (lambda (a b) (< (idle-of a) (idle-of b)))
+           (filter (lambda (r) (not (wanted r))) staying)))
+
+(define stale-dormant
+  (lambda (r)
+    (and (not (live r))
+         (not (wanted r))
+         (field r :dormant-ms)
+         (>= (field r :dormant-ms) evict-after))))
+
+(when (not direct)
+  (for-each (lambda (r) (armazem-start (field r :key))) starts)
+  (for-each (lambda (r) (when (lingered r) (armazem-park (field r :key)))) rows)
+  (for-each (lambda (r) (armazem-park (field r :key))) (take overflow longest-idle))
+  (for-each (lambda (r) (when (stale-dormant r) (armazem-evict (field r :key)))) rows))

@@ -1,0 +1,21 @@
+[package]
+name = "izumi-mcp"
+version.workspace = true
+description = "MCP answers that never overflow: byte-budgeted pages, opaque cursors and change-only follow reads served from an izumi-armazem lazy store"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+izumi-armazem = { path = "../izumi-armazem", version = "0.1.22" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["macros"] }
+parking_lot = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "time", "sync", "macros", "test-util"] }
+
+[lints]
+workspace = true

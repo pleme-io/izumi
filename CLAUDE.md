@@ -24,6 +24,8 @@ carries a valid-by-construction action payload.
 | `izumi-config` | shikumi `TieredConfig` board surface — `BoardConfig` incl `sources_replace` + `per_source_cap` + the `effective_sources()` merge + the `to_engine_config` catalog border, which returns a `Resolved` carrying the typed `UnknownKind` report |
 | `izumi-lisp` | tatara-lisp authoring: `(defizumiboard …)` + `(defizumisource …)` |
 | `izumi-board` | Headless board daemon/CLI (consumer #2): shikumi config, engine over izumi-sources, unix-socket lifecycle ingress (list/dismiss/snooze/accept), snapshot persist |
+| `izumi-armazem` | Lazy, demand-driven absorb store. One change-journaled `Shelf` per key: a content-gated sequence, phase flips journaled in order, a bounded journal whose overflow is a typed `Gap`. A stream opens on `Interesse`, parks to `Dormant` (rows kept, resume token kept) after `linger-ms` idle, resumes from that token, and is evicted after `evict-dormant-after-ms`. The lifecycle is decided each tick by the `zelador.tlisp` vigy program (default) or the native policy; a proptest holds the two equal. `mode: lazy` (default) · `eager` (never parks) · `direct` (no stream, fetch per read) |
+| `izumi-mcp` | MCP answers that cannot overflow a client: `Streams` over an Armazém pages every read inside `budget-bytes`, hands back an opaque `next` cursor pinned to one snapshot and a `follow` cursor whose reads return only the changes since it (or a `gap` snapshot when the journal moved past it). Unknown or expired cursors are a typed refusal, never an empty answer |
 
 ## Consumers + non-goals
 

@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc e2c91b22b94d5d8269c40d326af02ea3e41c9c67e6660bc82a8fd3bf1fd51d48 # shrinks to demand = [DemandRow { key: "a", interest: 0, live: true, idle_ms: None, dormant_ms: None }, DemandRow { key: "b", interest: 0, live: true, idle_ms: None, dormant_ms: None }], cfg = ArmazemConfig { mode: Lazy, policy: Vigy, linger_ms: 0, max_live: 1, evict_dormant_after_ms: 3600000, journal_cap: 4096, tick_ms: 1000 }
