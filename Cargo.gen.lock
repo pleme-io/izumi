@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "cargo_lock_sha256": "55661800f5ab12f085d3d8289c6005b7f3607d5016ec79ffdb35d87e29c81258",
+  "cargo_lock_sha256": "11563a552e31be29ea7f0bfe3e5c05bb801532af19609a0a60ed10e488e8d844",
   "manifest_sha256": {
-    "Cargo.toml": "53fc73ce7e2e4e432f6ce9c7d01aba816cf6d6d55228c17ddfa51e055af4a304",
+    "Cargo.toml": "c87d53d9293893991eb0225e16a2750a0a7096ca1eb2b247f95be8ccd620f1de",
     "izumi-armazem/Cargo.toml": "0bf42f37fff031039cb902ff439060ff81065ee238467e3558cc10ced7125b6c",
     "izumi-board/Cargo.toml": "12072dd08c732e50557ac2bb397bc334fd5b089633b8072db66413164f53e047",
     "izumi-config/Cargo.toml": "72a2c84d8613d3c252b77effe64e7b0bbe5005c3a9821ebb62fe001a97cea28f",
@@ -2872,7 +2872,7 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-0.1.24": {
+      "izumi-0.1.25": {
         "runtime_dependencies": [
           {
             "name": "blake3",
@@ -2997,7 +2997,7 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-armazem-0.1.24": {
+      "izumi-armazem-0.1.25": {
         "runtime_dependencies": [
           {
             "name": "parking_lot",
@@ -3093,7 +3093,7 @@
           "vigy"
         ]
       },
-      "izumi-board-0.1.24": {
+      "izumi-board-0.1.25": {
         "runtime_dependencies": [
           {
             "name": "clap",
@@ -3119,7 +3119,7 @@
           },
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.24",
+            "package_key": "izumi-0.1.25",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -3129,7 +3129,7 @@
           },
           {
             "name": "izumi_config",
-            "package_key": "izumi-config-0.1.24",
+            "package_key": "izumi-config-0.1.25",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -3139,7 +3139,7 @@
           },
           {
             "name": "izumi_sources",
-            "package_key": "izumi-sources-0.1.24",
+            "package_key": "izumi-sources-0.1.25",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -3221,11 +3221,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-config-0.1.24": {
+      "izumi-config-0.1.25": {
         "runtime_dependencies": [
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.24",
+            "package_key": "izumi-0.1.25",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -3259,11 +3259,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-lisp-0.1.24": {
+      "izumi-lisp-0.1.25": {
         "runtime_dependencies": [
           {
             "name": "izumi_config",
-            "package_key": "izumi-config-0.1.24",
+            "package_key": "izumi-config-0.1.25",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -3307,11 +3307,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-mcp-0.1.24": {
+      "izumi-mcp-0.1.25": {
         "runtime_dependencies": [
           {
             "name": "izumi_armazem",
-            "package_key": "izumi-armazem-0.1.24",
+            "package_key": "izumi-armazem-0.1.25",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -3370,11 +3370,11 @@
         "build_dependencies": [],
         "features": []
       },
-      "izumi-sources-0.1.24": {
+      "izumi-sources-0.1.25": {
         "runtime_dependencies": [
           {
             "name": "izumi",
-            "package_key": "izumi-0.1.24",
+            "package_key": "izumi-0.1.25",
             "kind": "normal",
             "features": [],
             "uses_default_features": true,
@@ -12901,21 +12901,21 @@
     "itoa-1.0.18": {
       "edition": "2021"
     },
-    "izumi-0.1.24": {
+    "izumi-0.1.25": {
       "edition": "2024",
       "lib_target": {
         "name": "izumi",
         "path": "src/lib.rs"
       }
     },
-    "izumi-armazem-0.1.24": {
+    "izumi-armazem-0.1.25": {
       "edition": "2024",
       "lib_target": {
         "name": "izumi_armazem",
         "path": "src/lib.rs"
       }
     },
-    "izumi-board-0.1.24": {
+    "izumi-board-0.1.25": {
       "edition": "2024",
       "binaries": [
         {
@@ -12924,28 +12924,28 @@
         }
       ]
     },
-    "izumi-config-0.1.24": {
+    "izumi-config-0.1.25": {
       "edition": "2024",
       "lib_target": {
         "name": "izumi_config",
         "path": "src/lib.rs"
       }
     },
-    "izumi-lisp-0.1.24": {
+    "izumi-lisp-0.1.25": {
       "edition": "2024",
       "lib_target": {
         "name": "izumi_lisp",
         "path": "src/lib.rs"
       }
     },
-    "izumi-mcp-0.1.24": {
+    "izumi-mcp-0.1.25": {
       "edition": "2024",
       "lib_target": {
         "name": "izumi_mcp",
         "path": "src/lib.rs"
       }
     },
-    "izumi-sources-0.1.24": {
+    "izumi-sources-0.1.25": {
       "edition": "2024",
       "lib_target": {
         "name": "izumi_sources",
