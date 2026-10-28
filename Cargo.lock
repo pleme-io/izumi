@@ -1310,7 +1310,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "izumi"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "blake3",
  "dirs",
@@ -1329,7 +1329,7 @@ dependencies = [
 
 [[package]]
 name = "izumi-armazem"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "parking_lot",
  "proptest",
@@ -1344,7 +1344,7 @@ dependencies = [
 
 [[package]]
 name = "izumi-board"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "clap",
  "dirs",
@@ -1361,7 +1361,7 @@ dependencies = [
 
 [[package]]
 name = "izumi-config"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "izumi",
  "serde",
@@ -1372,7 +1372,7 @@ dependencies = [
 
 [[package]]
 name = "izumi-lisp"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "izumi-config",
  "serde",
@@ -1382,7 +1382,7 @@ dependencies = [
 
 [[package]]
 name = "izumi-mcp"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "izumi-armazem",
  "parking_lot",
@@ -1393,7 +1393,7 @@ dependencies = [
 
 [[package]]
 name = "izumi-sources"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "izumi",
  "proptest",
