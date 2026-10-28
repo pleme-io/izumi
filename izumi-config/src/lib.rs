@@ -338,7 +338,7 @@ sources:
     interval_secs: 3600
     max_items: 2
 ";
-        let cfg: BoardConfig = serde_yaml::from_str(yaml).expect("operator YAML parses");
+        let cfg: BoardConfig = serde_norway::from_str(yaml).expect("operator YAML parses");
         // Fields absent from the YAML take the prescribed default (container
         // serde(default) = Default = prescribed) — matching mado's partial-
         // yaml semantics.
@@ -382,7 +382,7 @@ sources:
 
         // Round-trip: serialize → deserialize is identity.
         let back: BoardConfig =
-            serde_yaml::from_str(&serde_yaml::to_string(&cfg).expect("serializes"))
+            serde_norway::from_str(&serde_norway::to_string(&cfg).expect("serializes"))
                 .expect("round-trips");
         assert_eq!(back, cfg);
     }
@@ -391,9 +391,9 @@ sources:
     fn unknown_fields_are_rejected() {
         // deny_unknown_fields on both structs — a typo'd operator knob is a
         // parse error, never a silently-ignored no-op.
-        assert!(serde_yaml::from_str::<BoardConfig>("max_visible: 6\n").is_err());
+        assert!(serde_norway::from_str::<BoardConfig>("max_visible: 6\n").is_err());
         assert!(
-            serde_yaml::from_str::<SourceEntry>("kind: jira-assigned\ncadence: 5\n").is_err()
+            serde_norway::from_str::<SourceEntry>("kind: jira-assigned\ncadence: 5\n").is_err()
         );
     }
 }
